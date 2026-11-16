@@ -1,0 +1,27 @@
+{
+  "name": "partycraft-wonder-board",
+  "version": "1.0.0",
+  "description": "PartyCraft: Wonder Board - Browser-based Multiplayer Turn-Based Party Board Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "board-game",
+    "multiplayer",
+    "party-game",
+    "lego-party",
+    "mario-party",
+    "turn-based",
+    "websocket",
+    "browser-game"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}
