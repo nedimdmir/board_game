@@ -442,7 +442,7 @@ class Room {
   startGame() {
     if (this.players.length < 1) return false;
     // Auto fill with bots if single player
-    while (this.players.length < 2) {
+    while (this.players.length < 4) {
       this.addBot();
     }
 
@@ -1423,8 +1423,9 @@ wss.on('connection', (ws) => {
         }
 
         case 'start_game': {
-          const room = ROOMS.get(boundRoomId);
+          const room = ROOMS.get(boundRoomId) || (data.roomId ? ROOMS.get(data.roomId) : null);
           if (room) {
+            boundRoomId = room.id;
             room.startGame();
           }
           break;

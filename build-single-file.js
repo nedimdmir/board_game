@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('Generating standalone single-file game: parti-dunyasi-tek-dosya.html...');
+console.log('Generating standalone single-file game: parti-dunyasi-tek-dosya.html, oyun.html, and index.html...');
 
 const htmlSrc = fs.readFileSync('public/index.html', 'utf8');
 const boardCss = fs.readFileSync('public/css/board.css', 'utf8');
@@ -27,7 +27,7 @@ if (!boardGenMatch || !roomClassMatch) {
   process.exit(1);
 }
 
-// Remove duplicate const BOARD_TILES = generateBoardForTheme('istanbul'); which is already defined in board-map.js
+// Remove duplicate const BOARD_TILES and SHOP_ITEMS
 let cleanBoardGen = boardGenMatch[0].replace(/const BOARD_TILES = generateBoardForTheme\('istanbul'\);/, '// BOARD_TILES already declared in board-map.js');
 cleanBoardGen = cleanBoardGen.replace(/const SHOP_ITEMS =[\s\S]*?\];/, '// SHOP_ITEMS already declared in board-map.js');
 
@@ -41,6 +41,16 @@ ${cleanBoardGen}
 
 ${roomClassMatch[0].replace(/class Room/, 'class LocalRoom')}
 
+// Route all LocalRoom broadcasts directly to GameClient
+LocalRoom.prototype.broadcast = function(type, payload = {}) {
+  const msg = { type, ...payload };
+  setTimeout(() => {
+    if (window.GameClient) {
+      window.GameClient.handleServerMessage(msg);
+    }
+  }, 10);
+};
+
 class LocalGameServer {
   constructor() {
     this.currentRoom = null;
@@ -48,68 +58,101 @@ class LocalGameServer {
 
   createRoom(hostPlayer, settings = {}) {
     const roomId = 'SOLO';
-    this.currentRoom = new LocalRoom(roomId, hostPlayer, settings);
-    // Bind broadcast to GameClient
-    this.currentRoom.broadcast = (type, payload = {}) => {
-      setTimeout(() => {
-        if (window.GameClient) {
-          window.GameClient.handleServerMessage({ type, ...payload });
-        }
-      }, 20);
-    };
+    this.currentRoom = new LocalRoom(roomId, hostPlayer.sessionId, hostPlayer.name, settings);
+    
+    // Register the host player into the room
+    const player = this.currentRoom.addPlayer(
+      hostPlayer.sessionId,
+      hostPlayer.name,
+      hostPlayer.avatar,
+      hostPlayer.diceSkin,
+      hostPlayer.level,
+      hostPlayer.title,
+      null, // ws
+      hostPlayer.hat,
+      hostPlayer.color
+    );
 
     setTimeout(() => {
-      window.GameClient.handleServerMessage({
-        type: 'room_created',
-        roomId: roomId,
-        player: hostPlayer
-      });
+      if (window.GameClient) {
+        window.GameClient.handleServerMessage({
+          type: 'room_created',
+          roomId: roomId,
+          sessionId: hostPlayer.sessionId,
+          player: player
+        });
+      }
       this.currentRoom.broadcastState();
-    }, 50);
+    }, 30);
 
     return this.currentRoom;
   }
 
-  handleMessage(sessionId, type, payload) {
+  handleMessage(sessionId, type, data = {}) {
     if (!this.currentRoom) return;
     const room = this.currentRoom;
 
     switch (type) {
       case 'add_bot':
         room.addBot();
+        room.broadcastState();
         break;
+
       case 'switch_map':
-        room.switchMap(payload.mapTheme);
+        room.mapTheme = data.mapTheme || 'istanbul';
+        room.board = generateBoardForTheme(room.mapTheme);
+        room.addLog('🗺️ Harita seçildi: ' + room.mapTheme.toUpperCase());
+        room.broadcastState();
         break;
+
       case 'start_game':
         room.startGame();
         break;
+
       case 'roll_dice':
         room.rollDice(sessionId);
         break;
-      case 'buy_item':
-        room.buyItem(sessionId, payload.itemId);
+
+      case 'buy_item': {
+        const player = room.players.find(p => p.sessionId === sessionId);
+        const item = SHOP_ITEMS.find(i => i.id === data.itemId);
+        if (player && item && player.coins >= item.cost) {
+          player.coins -= item.cost;
+          player.inventory.push(item.id);
+          room.addLog('🛍️ ' + player.name + ' ' + item.name + ' satın aldı!');
+          room.broadcastState();
+        }
         break;
+      }
+
       case 'use_item':
-        room.useItem(sessionId, payload.itemId);
+        room.useItem(sessionId, data.itemId, data.targetPlayerId);
         break;
-      case 'trade_offer':
-        room.sendTradeOffer(sessionId, payload);
+
+      case 'close_shop':
+        if (room.getCurrentPlayer() && room.getCurrentPlayer().sessionId === sessionId) {
+          room.finishTurn();
+        }
         break;
-      case 'accept_trade':
-        room.acceptTrade(sessionId);
+
+      case 'send_trade_offer':
+        room.handleTradeOffer(sessionId, data.offer || data);
         break;
-      case 'decline_trade':
-        room.declineTrade(sessionId);
+
+      case 'respond_trade_offer':
+        room.resolveTrade(data.tradeId, data.accepted);
         break;
+
       case 'send_emote':
-        room.sendEmote(sessionId, payload.emoteId);
+        room.sendEmote(sessionId, data.emoteId);
         break;
-      case 'quick_chat':
-        room.sendQuickChat(sessionId, payload.text);
+
+      case 'send_quick_chat':
+        room.sendQuickChat(sessionId, data.text);
         break;
+
       case 'minigame_score':
-        room.handleMiniGameScore(sessionId, payload.score);
+        room.handleMiniGameScore(sessionId, data.score);
         break;
     }
   }
@@ -117,58 +160,6 @@ class LocalGameServer {
 
 window.LocalServer = new LocalGameServer();
 `;
-
-// Now adapt game-client.js so it seamlessly falls back to LocalServer if offline/standalone
-const adaptedGameClientJs = gameClientJs.replace(
-  `async connect() {`,
-  `async connect() {
-    // If running from file:// or no websocket server, use standalone LocalServer
-    if (window.location.protocol === 'file:' || !window.location.host) {
-      this.isStandalone = true;
-      return true;
-    }
-  `
-).replace(
-  `this.ws.send(JSON.stringify(data));`,
-  `if (this.isStandalone || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      if (window.LocalServer) {
-        window.LocalServer.handleMessage(this.player ? this.player.sessionId : 'host_session', type, payload);
-      }
-      return;
-    }
-    this.ws.send(JSON.stringify(data));`
-).replace(
-  `joinRoom(roomId) {`,
-  `joinRoom(roomId) {
-    if (this.isStandalone) {
-      this.createRoom({ mapTheme: 'istanbul', totalRounds: 10 });
-      return;
-    }
-  `
-).replace(
-  `createRoom(settings = {}) {`,
-  `createRoom(settings = {}) {
-    if (this.isStandalone || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      this.isStandalone = true;
-      const prof = PlayerProgression.profile;
-      const hostP = {
-        id: 'p_host',
-        sessionId: 'session_host',
-        name: prof.name || 'Oyuncu',
-        avatar: prof.avatar || 'builder',
-        hat: prof.hat || 'none',
-        color: prof.color || '#3B82F6',
-        title: prof.title || 'Gezgin',
-        level: prof.level || 1,
-        isBot: false,
-        isHost: true
-      };
-      this.player = hostP;
-      window.LocalServer.createRoom(hostP, settings);
-      return;
-    }
-  `
-);
 
 // Build single HTML
 // Replace CSS links with <style>
@@ -207,16 +198,17 @@ ${minigamesJs}
 ${localEngineJs}
 
 /* =================== 7. GAME CLIENT =================== */
-${adaptedGameClientJs}
+${gameClientJs}
 
 /* =================== 8. UI MANAGER =================== */
 ${uiJs}
   </script>`
 );
 
-// Write to parti-dunyasi-tek-dosya.html and oyun.html (convenient short name)
+// Write to parti-dunyasi-tek-dosya.html, oyun.html, and root index.html
 fs.writeFileSync('parti-dunyasi-tek-dosya.html', singleHtml, 'utf8');
 fs.writeFileSync('oyun.html', singleHtml, 'utf8');
+fs.writeFileSync('index.html', singleHtml, 'utf8');
 
-console.log('SUCCESS: Generated "parti-dunyasi-tek-dosya.html" and "oyun.html" successfully!');
+console.log('SUCCESS: Generated "parti-dunyasi-tek-dosya.html", "oyun.html", and root "index.html" successfully!');
 console.log('File size:', (Buffer.byteLength(singleHtml) / 1024).toFixed(1), 'KB');

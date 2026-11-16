@@ -458,7 +458,7 @@ body {
   box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8), inset 0 2px 4px rgba(255, 255, 255, 0.9);
   border: 3px solid #E2E8F0;
   width: 100%;
-  max-width: 680px;
+  max-width: 720px;
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
@@ -472,6 +472,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
   border-bottom: 2px dashed #E2E8F0;
   padding-bottom: 12px;
 }
@@ -569,9 +571,10 @@ body {
 }
 
 .studio-controls-col {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
+  width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -602,7 +605,7 @@ body {
 
 .studio-text-input {
   width: 100%;
-  max-width: 100%;
+  max-width: 320px;
   box-sizing: border-box;
   padding: 10px 14px;
   font-family: var(--font-main);
@@ -624,33 +627,22 @@ body {
 
 .studio-chips-carousel {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
   max-width: 100%;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
-  padding: 4px 4px 8px 4px;
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
-  -webkit-overflow-scrolling: touch;
+  padding: 2px 0 4px 0;
 }
 
 .studio-chips-carousel::-webkit-scrollbar {
-  height: 4px;
-}
-
-.studio-chips-carousel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.studio-chips-carousel::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
+  display: none;
 }
 
 .studio-chip-btn {
-  padding: 7px 13px;
-  border-radius: 14px;
+  padding: 6px 12px;
+  border-radius: 12px;
   border: 2px solid #E2E8F0;
   background: #FFFFFF;
   font-family: var(--font-main);
@@ -2985,7 +2977,7 @@ body {
         </label>
       </div>
 
-      <button class="btn-pill" id="btn-confirm-create" style="width: 100%;">Odayı Başlat</button>
+      <button class="btn-pill" id="btn-confirm-create" style="width: 100%;">🏰 Odayı Kur & Lobiye Geç</button>
     </div>
   </div>
 
@@ -7219,7 +7211,7 @@ class LocalRoom {
   startGame() {
     if (this.players.length < 1) return false;
     // Auto fill with bots if single player
-    while (this.players.length < 2) {
+    while (this.players.length < 4) {
       this.addBot();
     }
 
@@ -8093,6 +8085,16 @@ class LocalRoom {
   }
 }
 
+// Route all LocalRoom broadcasts directly to GameClient
+LocalRoom.prototype.broadcast = function(type, payload = {}) {
+  const msg = { type, ...payload };
+  setTimeout(() => {
+    if (window.GameClient) {
+      window.GameClient.handleServerMessage(msg);
+    }
+  }, 10);
+};
+
 class LocalGameServer {
   constructor() {
     this.currentRoom = null;
@@ -8100,68 +8102,101 @@ class LocalGameServer {
 
   createRoom(hostPlayer, settings = {}) {
     const roomId = 'SOLO';
-    this.currentRoom = new LocalRoom(roomId, hostPlayer, settings);
-    // Bind broadcast to GameClient
-    this.currentRoom.broadcast = (type, payload = {}) => {
-      setTimeout(() => {
-        if (window.GameClient) {
-          window.GameClient.handleServerMessage({ type, ...payload });
-        }
-      }, 20);
-    };
+    this.currentRoom = new LocalRoom(roomId, hostPlayer.sessionId, hostPlayer.name, settings);
+    
+    // Register the host player into the room
+    const player = this.currentRoom.addPlayer(
+      hostPlayer.sessionId,
+      hostPlayer.name,
+      hostPlayer.avatar,
+      hostPlayer.diceSkin,
+      hostPlayer.level,
+      hostPlayer.title,
+      null, // ws
+      hostPlayer.hat,
+      hostPlayer.color
+    );
 
     setTimeout(() => {
-      window.GameClient.handleServerMessage({
-        type: 'room_created',
-        roomId: roomId,
-        player: hostPlayer
-      });
+      if (window.GameClient) {
+        window.GameClient.handleServerMessage({
+          type: 'room_created',
+          roomId: roomId,
+          sessionId: hostPlayer.sessionId,
+          player: player
+        });
+      }
       this.currentRoom.broadcastState();
-    }, 50);
+    }, 30);
 
     return this.currentRoom;
   }
 
-  handleMessage(sessionId, type, payload) {
+  handleMessage(sessionId, type, data = {}) {
     if (!this.currentRoom) return;
     const room = this.currentRoom;
 
     switch (type) {
       case 'add_bot':
         room.addBot();
+        room.broadcastState();
         break;
+
       case 'switch_map':
-        room.switchMap(payload.mapTheme);
+        room.mapTheme = data.mapTheme || 'istanbul';
+        room.board = generateBoardForTheme(room.mapTheme);
+        room.addLog('🗺️ Harita seçildi: ' + room.mapTheme.toUpperCase());
+        room.broadcastState();
         break;
+
       case 'start_game':
         room.startGame();
         break;
+
       case 'roll_dice':
         room.rollDice(sessionId);
         break;
-      case 'buy_item':
-        room.buyItem(sessionId, payload.itemId);
+
+      case 'buy_item': {
+        const player = room.players.find(p => p.sessionId === sessionId);
+        const item = SHOP_ITEMS.find(i => i.id === data.itemId);
+        if (player && item && player.coins >= item.cost) {
+          player.coins -= item.cost;
+          player.inventory.push(item.id);
+          room.addLog('🛍️ ' + player.name + ' ' + item.name + ' satın aldı!');
+          room.broadcastState();
+        }
         break;
+      }
+
       case 'use_item':
-        room.useItem(sessionId, payload.itemId);
+        room.useItem(sessionId, data.itemId, data.targetPlayerId);
         break;
-      case 'trade_offer':
-        room.sendTradeOffer(sessionId, payload);
+
+      case 'close_shop':
+        if (room.getCurrentPlayer() && room.getCurrentPlayer().sessionId === sessionId) {
+          room.finishTurn();
+        }
         break;
-      case 'accept_trade':
-        room.acceptTrade(sessionId);
+
+      case 'send_trade_offer':
+        room.handleTradeOffer(sessionId, data.offer || data);
         break;
-      case 'decline_trade':
-        room.declineTrade(sessionId);
+
+      case 'respond_trade_offer':
+        room.resolveTrade(data.tradeId, data.accepted);
         break;
+
       case 'send_emote':
-        room.sendEmote(sessionId, payload.emoteId);
+        room.sendEmote(sessionId, data.emoteId);
         break;
-      case 'quick_chat':
-        room.sendQuickChat(sessionId, payload.text);
+
+      case 'send_quick_chat':
+        room.sendQuickChat(sessionId, data.text);
         break;
+
       case 'minigame_score':
-        room.handleMiniGameScore(sessionId, payload.score);
+        room.handleMiniGameScore(sessionId, data.score);
         break;
     }
   }
@@ -8173,12 +8208,14 @@ window.LocalServer = new LocalGameServer();
 /* =================== 7. GAME CLIENT =================== */
 /**
  * WebSocket Game Client & Networking Layer
- * Connects to the server, keeps game state in sync, and handles reconnection & trading.
+ * Connects to the WebSocket server if available, or seamlessly falls back
+ * to the built-in standalone engine (LocalServer) for GitHub Pages and offline play!
  */
 class ClientEngine {
   constructor() {
     this.ws = null;
     this.connected = false;
+    this.isStandalone = false;
     this.roomId = null;
     this.player = null; // My player object
     this.state = null; // Current room state
@@ -8186,57 +8223,96 @@ class ClientEngine {
   }
 
   connect() {
-    return new Promise((resolve, reject) => {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}`;
+    return new Promise((resolve) => {
+      // 1. If running on file://, GitHub Pages (*.github.io), or static hosts without a Node backend:
+      const isStaticOrFile = window.location.protocol === 'file:' || 
+                             window.location.hostname.endsWith('github.io') ||
+                             window.location.hostname.includes('vercel.app') ||
+                             window.location.hostname.includes('netlify.app') ||
+                             (!window.location.port && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
-      this.ws = new WebSocket(wsUrl);
-
-      this.ws.onopen = () => {
-        console.log('✅ WebSocket sunucusuna bağlanıldı!');
+      if (isStaticOrFile) {
+        console.log('🌐 Statik / GitHub Pages ortamı tespit edildi. Bağımsız Yerel Motor (Standalone) aktif!');
+        this.isStandalone = true;
         this.connected = true;
-        this.reconnectAttempts = 0;
+        return resolve();
+      }
+
+      // 2. If already connected
+      if (this.connected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+        return resolve();
+      }
+
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        this.ws = new WebSocket(wsUrl);
+
+        let timeout = setTimeout(() => {
+          if (!this.connected) {
+            console.warn('⚠️ WebSocket bağlantı zaman aşımı. Bağımsız Yerel Motor (Standalone) moduna geçildi.');
+            this.isStandalone = true;
+            this.connected = true;
+            resolve();
+          }
+        }, 1200);
+
+        this.ws.onopen = () => {
+          clearTimeout(timeout);
+          console.log('✅ WebSocket sunucusuna bağlanıldı!');
+          this.connected = true;
+          this.isStandalone = false;
+          this.reconnectAttempts = 0;
+          resolve();
+        };
+
+        this.ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            this.handleServerMessage(msg);
+          } catch (e) {
+            console.error('Mesaj ayrıştırma hatası:', e);
+          }
+        };
+
+        this.ws.onclose = () => {
+          this.connected = false;
+          if (this.roomId && !this.isStandalone && this.reconnectAttempts < 5) {
+            this.reconnectAttempts++;
+            setTimeout(() => this.reconnect(), 2000);
+          }
+        };
+
+        this.ws.onerror = (err) => {
+          clearTimeout(timeout);
+          console.warn('⚠️ WebSocket sunucusuna ulaşılamadı. Yerel Motor (LocalServer) ile devam ediliyor.');
+          this.isStandalone = true;
+          this.connected = true;
+          resolve(); // Resolve, do NOT reject!
+        };
+      } catch (err) {
+        this.isStandalone = true;
+        this.connected = true;
         resolve();
-      };
-
-      this.ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          this.handleServerMessage(msg);
-        } catch (e) {
-          console.error('Mesaj ayrıştırma hatası:', e);
-        }
-      };
-
-      this.ws.onclose = () => {
-        console.warn('⚠️ WebSocket bağlantısı koptu.');
-        this.connected = false;
-        // Auto-reconnect after short delay
-        if (this.roomId && this.reconnectAttempts < 5) {
-          this.reconnectAttempts++;
-          setTimeout(() => this.reconnect(), 2000);
-        }
-      };
-
-      this.ws.onerror = (err) => {
-        console.error('WebSocket hatası:', err);
-        reject(err);
-      };
+      }
     });
   }
 
   reconnect() {
     console.log(`Yeniden bağlanılıyor (Deneme ${this.reconnectAttempts})...`);
     this.connect().then(() => {
-      if (this.roomId) {
+      if (this.roomId && !this.isStandalone) {
         this.joinRoom(this.roomId);
       }
     });
   }
 
   send(type, payload = {}) {
-    if (!this.connected || !this.ws) {
-      console.warn('Sunucuya bağlı değil.');
+    if (this.isStandalone || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      if (window.LocalServer) {
+        const sessId = this.player ? this.player.sessionId : (PlayerProgression.profile ? PlayerProgression.profile.sessionId : 'host_session');
+        window.LocalServer.handleMessage(sessId, type, payload);
+      }
       return;
     }
     this.ws.send(JSON.stringify({ type, ...payload }));
@@ -8244,6 +8320,25 @@ class ClientEngine {
 
   createRoom(rounds = 10, mapTheme = 'istanbul') {
     const prof = PlayerProgression.profile;
+    if (this.isStandalone && window.LocalServer) {
+      const hostPlayer = {
+        sessionId: prof.sessionId,
+        name: prof.name,
+        avatar: prof.avatar,
+        hat: prof.hat || 'none',
+        color: prof.color || '#3B82F6',
+        diceSkin: prof.diceSkin,
+        level: prof.level,
+        title: prof.title
+      };
+      this.player = hostPlayer;
+      window.LocalServer.createRoom(hostPlayer, {
+        totalRounds: parseInt(rounds) || 10,
+        mapTheme: mapTheme
+      });
+      return;
+    }
+
     this.send('create_room', {
       sessionId: prof.sessionId,
       playerName: prof.name,
@@ -8259,11 +8354,10 @@ class ClientEngine {
   }
 
   joinRoom(roomId) {
-    if (this.isStandalone) {
-      this.createRoom({ mapTheme: 'istanbul', totalRounds: 10 });
+    if (this.isStandalone && window.LocalServer) {
+      this.createRoom(10, 'istanbul');
       return;
     }
-  
     const prof = PlayerProgression.profile;
     this.send('join_room', {
       roomId: roomId.trim().toUpperCase(),
@@ -8283,50 +8377,98 @@ class ClientEngine {
   }
 
   switchMap(mapTheme) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'switch_map', { mapTheme });
+      return;
+    }
     this.send('switch_map', { mapTheme });
   }
 
   addBot() {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'add_bot', {});
+      return;
+    }
     this.send('add_bot');
   }
 
   startGame() {
-    this.send('start_game');
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'start_game', {});
+      return;
+    }
+    this.send('start_game', { roomId: this.roomId });
   }
 
   rollDice() {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'roll_dice', {});
+      return;
+    }
     this.send('roll_dice');
   }
 
   useItem(itemId, targetPlayerId = null) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'use_item', { itemId, targetPlayerId });
+      return;
+    }
     this.send('use_item', { itemId, targetPlayerId });
   }
 
   buyItem(itemId) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'buy_item', { itemId });
+      return;
+    }
     this.send('buy_item', { itemId });
   }
 
   closeShop() {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'close_shop', {});
+      return;
+    }
     this.send('close_shop');
   }
 
   sendEmote(emoteId) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'send_emote', { emoteId });
+      return;
+    }
     this.send('send_emote', { emoteId });
   }
 
   sendQuickChat(text) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'send_quick_chat', { text });
+      return;
+    }
     this.send('send_quick_chat', { text });
   }
 
   sendTradeOffer(offer) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'send_trade_offer', { offer });
+      return;
+    }
     this.send('send_trade_offer', { offer });
   }
 
   respondTradeOffer(tradeId, accepted) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'respond_trade_offer', { tradeId, accepted });
+      return;
+    }
     this.send('respond_trade_offer', { tradeId, accepted });
   }
 
   sendMiniGameScore(score) {
+    if (this.isStandalone && window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'minigame_score', { score });
+      return;
+    }
     this.send('minigame_score', { score });
   }
 
