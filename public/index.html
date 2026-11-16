@@ -84,24 +84,50 @@
         </div>
       </div>
 
-      <!-- Main Play Action Cards -->
+      <!-- Server Status Badge -->
+      <div id="server-status-pill" class="server-status-pill">
+        <span class="status-dot">●</span> <span id="server-status-text">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
+      </div>
+
+      <!-- Main Play Action Cards (5 Choices) -->
       <div class="home-actions-grid">
         <div class="action-card-btn primary" id="btn-quick-play">
           <div class="action-icon">⚡</div>
-          <div class="action-title">Hızlı Oyna (Botlarla)</div>
+          <div class="action-title">Hızlı Oyna</div>
           <div class="action-desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
         </div>
 
-        <div class="action-card-btn" id="btn-create-room">
-          <div class="action-icon">🗺️</div>
-          <div class="action-title">Oda Kur & Şehir Seç</div>
-          <div class="action-desc">İstanbul, Tokyo, Paris veya New York'u seç, arkadaşlarına QR kod gönder!</div>
+        <div class="action-card-btn emerald" id="btn-play-friends">
+          <div class="action-icon">🌐</div>
+          <div class="action-title">Arkadaşlarınla Oyna</div>
+          <div class="action-desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
+        </div>
+      </div>
+
+      <!-- Secondary 3-Card Menu Row -->
+      <div class="home-secondary-grid">
+        <div class="action-card-btn" id="btn-play-bots">
+          <div class="action-icon">🤖</div>
+          <div class="action-title">Botlarla Oyna</div>
+          <div class="action-desc">Şehir & tur seç, çevrimdışı bot partisi kur.</div>
+        </div>
+
+        <div class="action-card-btn" id="btn-how-to-play">
+          <div class="action-icon">📖</div>
+          <div class="action-title">Nasıl Oynanır?</div>
+          <div class="action-desc">Oyun kuralları, karolar ve taktikler.</div>
+        </div>
+
+        <div class="action-card-btn" id="btn-settings">
+          <div class="action-icon">⚙️</div>
+          <div class="action-title">Ayarlar</div>
+          <div class="action-desc">Ses, müzik, zar ve performans ayarları.</div>
         </div>
       </div>
 
       <!-- Join Room Section -->
       <div class="join-room-card">
-        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (örn: ABCD)" maxlength="6">
+        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (örn: ABCD42)" maxlength="6">
         <button class="btn-pill" id="btn-join-room">Odaya Katıl</button>
       </div>
 
@@ -125,7 +151,7 @@
     <div class="lobby-container">
       
       <div class="lobby-header-card">
-        <div>
+        <div style="flex: 1; min-width: 0;">
           <div style="font-size: 13px; font-weight: 800; color: #64748B;">ODA KODU</div>
           <div class="room-code-tag" id="lobby-room-code">----</div>
           <div id="lobby-map-badge" style="font-weight: 800; font-size: 13px; color: #4338CA; margin-top: 2px;">
@@ -139,16 +165,25 @@
             <button class="lobby-map-btn" data-theme="newyork">🇺🇸 New York</button>
           </div>
 
-          <button class="btn-pill" id="btn-copy-link" style="margin-top: 12px; background: #3B82F6; box-shadow: 0 4px 0 #1D4ED8;">
-            📋 Oda Linkini Kopyala
-          </button>
+          <input type="text" id="lobby-share-url" class="lobby-share-url" readonly value="" onclick="this.select()" title="Tıkla ve kopyala">
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+            <button class="btn-pill" id="btn-copy-link" style="background: #3B82F6; box-shadow: 0 4px 0 #1D4ED8;">
+              📋 Bağlantıyı Kopyala
+            </button>
+            <button class="btn-pill" id="btn-show-qr" style="background: #6366F1; box-shadow: 0 4px 0 #4F46E5;">
+              📱 QR Kodu Göster
+            </button>
+          </div>
         </div>
-        <div class="lobby-qr-box">
-          <img id="lobby-qr-img" src="" alt="Oda QR Kodu">
+
+        <div class="lobby-qr-box" id="lobby-qr-container">
+          <div id="lobby-qr-svg"></div>
+          <div style="font-size: 11px; font-weight: 800; color: #64748B; margin-top: 4px; text-align: center;">Telefonunla Tara</div>
         </div>
       </div>
 
-      <h3 style="font-size: 18px; font-weight: 800; color: #1E293B;">Oyuncular (<span id="lobby-player-count">...</span>/6)</h3>
+      <h3 style="font-size: 18px; font-weight: 800; color: #1E293B;">Oyuncular (<span id="lobby-player-count">...</span>/4)</h3>
       <div class="lobby-players-grid" id="lobby-players-list">
         <!-- Rendered dynamically -->
       </div>
@@ -589,6 +624,130 @@
     </div>
   </div>
 
+  <!-- How to Play Rules Modal -->
+  <div id="modal-how-to-play" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📖 Nasıl Oynanır?</h3>
+        <button class="modal-close-btn" id="btn-close-how-to-play">✕</button>
+      </div>
+
+      <div class="rules-container">
+        <div class="rules-card">
+          <div class="rules-card-title">🎯 Oyunun Amacı</div>
+          <div class="rules-card-body">
+            Belirlenen tur sayısı bitmeden önce en çok <strong>Yıldız (⭐)</strong> ve <strong>Altın (🪙)</strong> toplayan oyuncu partinin şampiyonu olur! 1 Yıldız, 20 altın değerindedir ve liderlikte en büyük önceliğe sahiptir.
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-title">🎲 Sıra ve Hareket</div>
+          <div class="rules-card-body">
+            Sıra sana geldiğinde <strong>Zar At</strong> butonuna bas veya klavyeden <strong>SPACE</strong> tuşunu kullan. Zardaki sayı kadar saat yönünde ilerlersin. Başlangıç karosundan her geçişte <strong>+10 Altın</strong> ödülü kazanırsın!
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-title">🗺️ Özel Karolar ve Etkileri</div>
+          <div class="rules-card-body">
+            • <strong>⭐ Yıldız Kaidesi:</strong> 20 altının varsa 1 Yıldız satın alırsın. Yıldız alındığında kaide haritada başka bir şehre/bölgeye ışınlanır!<br>
+            • <strong>🪙 Altın Karosu:</strong> Üzerine bastığında sana +4 ile +8 altın kazandırır.<br>
+            • <strong>🔥 Tuzaklar:</strong> Dikkat! Altın düşürürsün veya kodes cezası alırsın.<br>
+            • <strong>🏦 Merkez Bankası:</strong> Havuzda biriken tüm altınları ilk basan oyuncu tek seferde silip süpürür!<br>
+            • <strong>⚔️ Düello:</strong> Lider veya rakip oyuncularla altın mücadelesi.<br>
+            • <strong>🛍️ Eşya Dükkanı:</strong> Çantana güçlü taktik eşyaları satın alabileceğin pazar yeri!
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-title">🎒 Taktik Eşyaları</div>
+          <div class="rules-card-body">
+            • <strong>🎲🎲 Çift Zar (7🪙):</strong> Bir sonraki turda 2 zar birden atarsın (2-12 adım).<br>
+            • <strong>🚀 Süper Roket (12🪙):</strong> Hedefine doğru direkt 7 adım uçar!<br>
+            • <strong>🛡️ Manyetik Kalkan (8🪙):</strong> Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.<br>
+            • <strong>🧲 Altın Mıknatısı (10🪙):</strong> Bütün rakiplerden 4'er altın çeker!<br>
+            • <strong>🍌 Muz Kabuğu (5🪙):</strong> Bulunduğun karoya tuzak kur; basan 3 adım geri kayar!<br>
+            • <strong>🪄 Takas Asası (15🪙):</strong> İstediğin bir rakiple haritadaki yerlerini takas et!
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-title">🎮 Mini Oyunlar</div>
+          <div class="rules-card-body">
+            Özel anlarda başlayan refleks ve beceri mini oyunlarında (Altın Yağmuru, Zıplayan Balon, Hızlı Çekiç, Hafıza Kartları, Bomba Paslaşma) en yüksek skoru yaparak ekstra altınları kap!
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-pill" id="btn-ok-how-to-play" style="width: 100%; margin-top: 6px;">Harika, Anladım!</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Oyun Ayarları</h3>
+        <button class="modal-close-btn" id="btn-close-settings">✕</button>
+      </div>
+
+      <div class="settings-list">
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title">🔊 Ses Efektleri</span>
+            <span class="settings-item-sub">Zar, adım, buton ve olay sesleri</span>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="setting-sfx" checked>
+            <span class="slider-round"></span>
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title">🎵 Arka Plan Müziği</span>
+            <span class="settings-item-sub">Web Audio sentezleyici parti müziği</span>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="setting-music">
+            <span class="slider-round"></span>
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title">🎲 3D Zar Animasyonları</span>
+            <span class="settings-item-sub">Kapatılırsa zar sonucu beklemeden gelir</span>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="setting-dice3d" checked>
+            <span class="slider-round"></span>
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title">⚡ Düşük Güç / Pil Tasarrufu</span>
+            <span class="settings-item-sub">Eski telefonlar için hafif grafik modu</span>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="setting-lowpower">
+            <span class="slider-round"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="border-top: 1px dashed #E2E8F0; padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn-pill" id="btn-reset-profile" style="background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 0 #FCA5A5; font-size: 13px;">
+          🔄 Oyuncu Profilini & Verilerini Sıfırla
+        </button>
+        <button class="btn-pill" id="btn-save-settings" style="width: 100%;">
+          Ayarları Kaydet
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Confetti Container -->
   <div id="confetti-container"></div>
 
@@ -597,6 +756,7 @@
 
   <!-- Scripts -->
   <script src="js/icons.js"></script>
+  <script src="js/qr-svg.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/progression.js"></script>
   <script src="js/board-map.js"></script>

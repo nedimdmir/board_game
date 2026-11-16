@@ -8,6 +8,7 @@ const boardCss = fs.readFileSync('public/css/board.css', 'utf8');
 const styleCss = fs.readFileSync('public/css/style.css', 'utf8');
 
 const iconsJs = fs.readFileSync('public/js/icons.js', 'utf8');
+const qrSvgJs = fs.readFileSync('public/js/qr-svg.js', 'utf8');
 const audioJs = fs.readFileSync('public/js/audio.js', 'utf8');
 const progressionJs = fs.readFileSync('public/js/progression.js', 'utf8');
 const boardMapJs = fs.readFileSync('public/js/board-map.js', 'utf8');
@@ -147,6 +148,16 @@ class LocalGameServer {
         room.sendEmote(sessionId, data.emoteId);
         break;
 
+      case 'kick_player': {
+        const pIdx = room.players.findIndex(p => p.id === data.playerId || p.sessionId === data.playerId);
+        if (pIdx > 0) {
+          const kicked = room.players.splice(pIdx, 1)[0];
+          room.addLog('👋 ' + kicked.name + ' odadan ayrıldı.');
+          room.broadcastState();
+        }
+        break;
+      }
+
       case 'send_quick_chat':
         room.sendQuickChat(sessionId, data.text);
         break;
@@ -182,25 +193,28 @@ singleHtml = singleHtml.replace(
 /* =================== 1. ICONS =================== */
 ${iconsJs}
 
-/* =================== 2. AUDIO SYNTHESIZER =================== */
+/* =================== 2. QR CODE SVG GENERATOR =================== */
+${qrSvgJs}
+
+/* =================== 3. AUDIO SYNTHESIZER =================== */
 ${audioJs}
 
-/* =================== 3. PROGRESSION =================== */
+/* =================== 4. PROGRESSION =================== */
 ${progressionJs}
 
-/* =================== 4. BOARD MAP RENDERER =================== */
+/* =================== 5. BOARD MAP RENDERER =================== */
 ${boardMapJs}
 
-/* =================== 5. MINI GAMES =================== */
+/* =================== 6. MINI GAMES =================== */
 ${minigamesJs}
 
-/* =================== 6. LOCAL GAME SERVER (STANDALONE ENGINE) =================== */
+/* =================== 7. LOCAL GAME SERVER (STANDALONE ENGINE) =================== */
 ${localEngineJs}
 
-/* =================== 7. GAME CLIENT =================== */
+/* =================== 8. GAME CLIENT =================== */
 ${gameClientJs}
 
-/* =================== 8. UI MANAGER =================== */
+/* =================== 9. UI MANAGER =================== */
 ${uiJs}
   </script>`
 );

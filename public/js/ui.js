@@ -12,19 +12,36 @@ class UIEngine {
   }
 
   init() {
+    GameClient.init();
+    this.initSettings();
     this.renderProfileCard();
     this.bindHomeEvents();
     this.bindGameEvents();
-    this.checkUrlForRoom();
+  }
+
+  initSettings() {
+    let settings = { sfx: true, music: false, dice3d: true, lowPower: false };
+    try {
+      const saved = localStorage.getItem('partycraft_settings');
+      if (saved) settings = Object.assign(settings, JSON.parse(saved));
+    } catch (e) {}
+
+    window.PARTY_SETTINGS = settings;
+    AudioPlayer.muted = !settings.sfx;
+
+    const sfxInput = document.getElementById('setting-sfx');
+    const musicInput = document.getElementById('setting-music');
+    const diceInput = document.getElementById('setting-dice3d');
+    const powerInput = document.getElementById('setting-lowpower');
+
+    if (sfxInput) sfxInput.checked = !!settings.sfx;
+    if (musicInput) musicInput.checked = !!settings.music;
+    if (diceInput) diceInput.checked = !!settings.dice3d;
+    if (powerInput) powerInput.checked = !!settings.lowPower;
   }
 
   checkUrlForRoom() {
-    const params = new URLSearchParams(window.location.search);
-    const roomParam = params.get('room');
-    if (roomParam) {
-      document.getElementById('input-room-code').value = roomParam.toUpperCase();
-      this.showToast(`"${roomParam}" kodlu odaya katılmak için "Katıl" butonuna bas!`, 'info');
-    }
+    // Handled in GameClient.init()
   }
 
   renderProfileCard() {
@@ -158,62 +175,212 @@ class UIEngine {
       });
     }
 
-    // Quick Play (Solo against 3 bots in Istanbul)
-    document.getElementById('btn-quick-play').addEventListener('click', async () => {
-      AudioPlayer.playClick();
-      await GameClient.connect();
-      const mapKeys = ['istanbul', 'tokyo', 'paris', 'newyork'];
-      const chosenMap = mapKeys[Math.floor(Math.random() * mapKeys.length)];
-      GameClient.createRoom(10, chosenMap);
-      setTimeout(() => {
-        GameClient.addBot();
-        GameClient.addBot();
-        GameClient.addBot();
-        setTimeout(() => GameClient.startGame(), 400);
-      }, 500);
-    });
+    // 1. Quick Play (Instant Solo against 3 smart bots in a random city)
+    const btnQuick = document.getElementById('btn-quick-play');
+    if (btnQuick) {
+      btnQuick.addEventListener('click', async () => {
+        AudioPlayer.playClick();
+        await GameClient.connect();
+        const mapKeys = ['istanbul', 'tokyo', 'paris', 'newyork'];
+        const chosenMap = mapKeys[Math.floor(Math.random() * mapKeys.length)];
+        GameClient.createRoom(10, chosenMap);
+        setTimeout(() => {
+          GameClient.addBot();
+          GameClient.addBot();
+          GameClient.addBot();
+          setTimeout(() => GameClient.startGame(), 400);
+        }, 500);
+      });
+    }
 
-    // Create Room Button
-    document.getElementById('btn-create-room').addEventListener('click', () => {
-      AudioPlayer.playClick();
-      document.getElementById('modal-create-room').classList.remove('hidden');
-    });
+    // 2. Play with Friends (1-click room creation with shareable link & QR code)
+    const btnFriends = document.getElementById('btn-play-friends');
+    if (btnFriends) {
+      btnFriends.addEventListener('click', async () => {
+        AudioPlayer.playClick();
+        await GameClient.connect();
+        GameClient.createRoom(10, 'istanbul');
+      });
+    }
 
-    // Confirm Create Room
-    document.getElementById('btn-confirm-create').addEventListener('click', async () => {
-      AudioPlayer.playClick();
-      const rounds = document.querySelector('input[name="round-select"]:checked').value;
-      const mapThemeElem = document.querySelector('input[name="map-theme-select"]:checked');
-      const mapTheme = mapThemeElem ? mapThemeElem.value : 'istanbul';
-      await GameClient.connect();
-      GameClient.createRoom(rounds, mapTheme);
-      document.getElementById('modal-create-room').classList.add('hidden');
-    });
+    // 3. Play with Bots (Opens room configuration modal to pick city & round count)
+    const btnBots = document.getElementById('btn-play-bots');
+    if (btnBots) {
+      btnBots.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        const modal = document.getElementById('modal-create-room');
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+
+    // Backward-compatibility for any legacy create room button
+    const btnLegacyCreate = document.getElementById('btn-create-room');
+    if (btnLegacyCreate) {
+      btnLegacyCreate.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        const modal = document.getElementById('modal-create-room');
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+
+    // Confirm Create Room in modal
+    const btnConfirmCreate = document.getElementById('btn-confirm-create');
+    if (btnConfirmCreate) {
+      btnConfirmCreate.addEventListener('click', async () => {
+        AudioPlayer.playClick();
+        const roundElem = document.querySelector('input[name="round-select"]:checked');
+        const rounds = roundElem ? roundElem.value : 10;
+        const mapThemeElem = document.querySelector('input[name="map-theme-select"]:checked');
+        const mapTheme = mapThemeElem ? mapThemeElem.value : 'istanbul';
+        await GameClient.connect();
+        GameClient.createRoom(rounds, mapTheme);
+        const modal = document.getElementById('modal-create-room');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    // 4. How to Play Rules Modal
+    const btnHowToPlay = document.getElementById('btn-how-to-play');
+    const modalHowToPlay = document.getElementById('modal-how-to-play');
+    const btnCloseHowToPlay = document.getElementById('btn-close-how-to-play');
+    const btnOkHowToPlay = document.getElementById('btn-ok-how-to-play');
+    if (btnHowToPlay && modalHowToPlay) {
+      btnHowToPlay.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalHowToPlay.classList.remove('hidden');
+      });
+    }
+    if (btnCloseHowToPlay && modalHowToPlay) {
+      btnCloseHowToPlay.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalHowToPlay.classList.add('hidden');
+      });
+    }
+    if (btnOkHowToPlay && modalHowToPlay) {
+      btnOkHowToPlay.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalHowToPlay.classList.add('hidden');
+      });
+    }
+
+    // 5. Settings Modal
+    const btnSettings = document.getElementById('btn-settings');
+    const modalSettings = document.getElementById('modal-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const btnSaveSettings = document.getElementById('btn-save-settings');
+    const btnResetProfile = document.getElementById('btn-reset-profile');
+
+    if (btnSettings && modalSettings) {
+      btnSettings.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        this.initSettings();
+        modalSettings.classList.remove('hidden');
+      });
+    }
+    if (btnCloseSettings && modalSettings) {
+      btnCloseSettings.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalSettings.classList.add('hidden');
+      });
+    }
+    if (btnSaveSettings && modalSettings) {
+      btnSaveSettings.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        const sfx = document.getElementById('setting-sfx')?.checked ?? true;
+        const music = document.getElementById('setting-music')?.checked ?? false;
+        const dice3d = document.getElementById('setting-dice3d')?.checked ?? true;
+        const lowPower = document.getElementById('setting-lowpower')?.checked ?? false;
+        const s = { sfx, music, dice3d, lowPower };
+        window.PARTY_SETTINGS = s;
+        try { localStorage.setItem('partycraft_settings', JSON.stringify(s)); } catch (e) {}
+        AudioPlayer.muted = !sfx;
+        if (music && !AudioPlayer.musicPlaying) {
+          AudioPlayer.toggleMusic();
+        } else if (!music && AudioPlayer.musicPlaying) {
+          AudioPlayer.toggleMusic();
+        }
+        modalSettings.classList.add('hidden');
+        this.showToast('✅ Ayarlar başarıyla kaydedildi!', 'success');
+      });
+    }
+    if (btnResetProfile) {
+      btnResetProfile.addEventListener('click', () => {
+        if (confirm('Tüm oyuncu seviyen ve biriken XP puanların sıfırlansın mı?')) {
+          PlayerProgression.reset();
+          this.renderCharacterStudio();
+          this.showToast('🔄 Profil verileri sıfırlandı.', 'info');
+        }
+      });
+    }
 
     // Join Room Button
-    document.getElementById('btn-join-room').addEventListener('click', async () => {
-      AudioPlayer.playClick();
-      const roomCode = document.getElementById('input-room-code').value.trim();
-      if (!roomCode) {
-        this.showToast('Lütfen 4 haneli oda kodunu gir!', 'error');
-        return;
-      }
-      await GameClient.connect();
-      GameClient.joinRoom(roomCode);
-    });
+    const btnJoin = document.getElementById('btn-join-room');
+    if (btnJoin) {
+      btnJoin.addEventListener('click', async () => {
+        AudioPlayer.playClick();
+        const roomCode = document.getElementById('input-room-code').value.trim().toUpperCase();
+        if (!roomCode) {
+          this.showToast('Lütfen oda kodunu gir!', 'error');
+          return;
+        }
+        await GameClient.connect();
+        GameClient.joinRoom(roomCode);
+      });
+    }
+
+    // QR Modal Controls
+    const btnCloseQr = document.getElementById('btn-close-qr');
+    const modalQr = document.getElementById('modal-qr');
+    if (btnCloseQr && modalQr) {
+      btnCloseQr.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalQr.classList.add('hidden');
+      });
+    }
+    const btnCopyLan = document.getElementById('btn-copy-lan-link');
+    if (btnCopyLan) {
+      btnCopyLan.addEventListener('click', () => {
+        const link = document.getElementById('lan-qr-link-text')?.innerText || '';
+        if (link) {
+          AudioPlayer.playClick();
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(() => {
+              this.showToast('📋 Bağlantı kopyalandı!', 'success');
+            }).catch(() => prompt('Bağlantıyı kopyala:', link));
+          } else {
+            prompt('Bağlantıyı kopyala:', link);
+          }
+        }
+      });
+    }
+
+    // HUD QR Trigger button
+    const btnHudQr = document.getElementById('btn-hud-qr');
+    if (btnHudQr) {
+      btnHudQr.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        if (modalQr) modalQr.classList.remove('hidden');
+      });
+    }
 
     // Wardrobe / Customization Modal
-    document.getElementById('btn-open-wardrobe').addEventListener('click', () => {
-      AudioPlayer.playClick();
-      this.openWardrobeModal();
-    });
+    const btnWardrobe = document.getElementById('btn-open-wardrobe');
+    if (btnWardrobe) {
+      btnWardrobe.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        this.openWardrobeModal();
+      });
+    }
 
     // Sound / Music Toggles on Home
-    document.getElementById('btn-home-music').addEventListener('click', (e) => {
-      const playing = AudioPlayer.toggleMusic();
-      e.currentTarget.classList.toggle('active', playing);
-      e.currentTarget.innerHTML = playing ? getIcon('volume2') : getIcon('volumeX');
-    });
+    const btnHomeMusic = document.getElementById('btn-home-music');
+    if (btnHomeMusic) {
+      btnHomeMusic.addEventListener('click', (e) => {
+        const playing = AudioPlayer.toggleMusic();
+        e.currentTarget.classList.toggle('active', playing);
+        e.currentTarget.innerHTML = playing ? getIcon('volume2') : getIcon('volumeX');
+      });
+    }
   }
 
   openWardrobeModal() {
@@ -303,27 +470,62 @@ class UIEngine {
     this.gameScreen.classList.add('hidden');
     this.lobbyScreen.classList.remove('hidden');
 
-    document.getElementById('lobby-room-code').innerText = roomId;
+    const codeElem = document.getElementById('lobby-room-code');
+    if (codeElem) codeElem.innerText = roomId;
 
-    // Load QR code preview for phones on Wi-Fi
-    const qrImg = document.getElementById('lobby-qr-img');
-    const joinUrl = `${window.location.origin}/?room=${roomId}`;
-    if (qrImg) {
-      qrImg.src = `/api/qr?url=${encodeURIComponent(joinUrl)}`;
+    const joinUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+    const shareUrlInput = document.getElementById('lobby-share-url');
+    if (shareUrlInput) {
+      shareUrlInput.value = joinUrl;
+    }
+
+    // Generate Crisp Inline SVG QR Code (Zero External Dependencies)
+    const qrSvgBox = document.getElementById('lobby-qr-svg');
+    if (qrSvgBox && typeof window.generateQRCodeSVG === 'function') {
+      qrSvgBox.innerHTML = window.generateQRCodeSVG(joinUrl, 140);
+    }
+
+    // Update LAN / Mobile Modal QR
+    const lanQrImg = document.getElementById('lan-qr-image');
+    if (lanQrImg && typeof window.generateQRCodeSVG === 'function') {
+      lanQrImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(window.generateQRCodeSVG(joinUrl, 200));
+    }
+    const lanLinkText = document.getElementById('lan-qr-link-text');
+    if (lanLinkText) lanLinkText.innerText = joinUrl;
+
+    // Show QR Modal Button
+    const btnShowQr = document.getElementById('btn-show-qr');
+    if (btnShowQr) {
+      btnShowQr.onclick = () => {
+        AudioPlayer.playClick();
+        const modalQr = document.getElementById('modal-qr');
+        if (modalQr) modalQr.classList.remove('hidden');
+      };
     }
 
     // Copy link button
-    document.getElementById('btn-copy-link').onclick = () => {
-      navigator.clipboard.writeText(joinUrl);
-      AudioPlayer.playClick();
-      this.showToast('📋 Oda linki panoya kopyalandı!', 'success');
-    };
+    const btnCopy = document.getElementById('btn-copy-link');
+    if (btnCopy) {
+      btnCopy.onclick = () => {
+        AudioPlayer.playClick();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(joinUrl).then(() => {
+            this.showToast('📋 Davet bağlantısı panoya kopyalandı!', 'success');
+          }).catch(() => prompt('Davet linkini kopyala:', joinUrl));
+        } else {
+          prompt('Davet linkini kopyala:', joinUrl);
+        }
+      };
+    }
 
     // Bot Add Button
-    document.getElementById('btn-lobby-add-bot').onclick = () => {
-      AudioPlayer.playClick();
-      GameClient.addBot();
-    };
+    const btnAddBot = document.getElementById('btn-lobby-add-bot');
+    if (btnAddBot) {
+      btnAddBot.onclick = () => {
+        AudioPlayer.playClick();
+        GameClient.addBot();
+      };
+    }
 
     // Switch Map buttons in lobby
     const mapSelects = document.querySelectorAll('.lobby-map-btn');
@@ -336,10 +538,13 @@ class UIEngine {
     });
 
     // Start Game Button
-    document.getElementById('btn-lobby-start').onclick = () => {
-      AudioPlayer.playClick();
-      GameClient.startGame();
-    };
+    const btnStart = document.getElementById('btn-lobby-start');
+    if (btnStart) {
+      btnStart.onclick = () => {
+        AudioPlayer.playClick();
+        GameClient.startGame();
+      };
+    }
   }
 
   updateGameState(state) {
@@ -399,6 +604,8 @@ class UIEngine {
     const countElem = document.getElementById('lobby-player-count');
     if (countElem) countElem.innerText = players.length;
 
+    const isHost = (GameClient.isHost || (players[0] && players[0].id === GameClient.playerId));
+
     players.forEach((p, idx) => {
       const avatarDef = AVATAR_DEFS[p.avatar] || AVATAR_DEFS.builder;
       const hatDef = HAT_DEFS[p.hat] || HAT_DEFS.none;
@@ -411,9 +618,23 @@ class UIEngine {
           <div class="lobby-player-name">${p.name} ${hatDef.id !== 'none' ? hatDef.icon : ''} ${p.isBot ? '🤖' : ''}</div>
           <div class="lobby-player-title">${p.title} • Lv.${p.level}</div>
         </div>
-        <div class="lobby-player-badge">${idx === 0 ? '👑 Oda Sahibi' : 'Hazır'}</div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div class="lobby-player-badge">${idx === 0 ? '👑 Oda Sahibi' : 'Hazır'}</div>
+          ${(isHost && idx !== 0) ? `<button class="btn-kick-player" data-player-id="${p.id}" title="Oyuncuyu Odadan Çıkar">✕</button>` : ''}
+        </div>
       `;
       list.appendChild(card);
+    });
+
+    list.querySelectorAll('.btn-kick-player').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const pid = btn.dataset.playerId;
+        if (pid) {
+          AudioPlayer.playClick();
+          GameClient.kickPlayer(pid);
+        }
+      };
     });
 
     const startBtn = document.getElementById('btn-lobby-start');
