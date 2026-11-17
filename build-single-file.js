@@ -8,6 +8,7 @@ const boardCss = fs.readFileSync('public/css/board.css', 'utf8');
 const styleCss = fs.readFileSync('public/css/style.css', 'utf8');
 
 const iconsJs = fs.readFileSync('public/js/icons.js', 'utf8');
+const i18nJs = fs.readFileSync('public/js/i18n.js', 'utf8');
 const qrSvgJs = fs.readFileSync('public/js/qr-svg.js', 'utf8');
 const audioJs = fs.readFileSync('public/js/audio.js', 'utf8');
 const progressionJs = fs.readFileSync('public/js/progression.js', 'utf8');
@@ -197,6 +198,9 @@ singleHtml = singleHtml.replace(
   `<script>
 /* =================== 1. ICONS =================== */
 ${iconsJs}
+
+/* =================== 1.5. I18N (MULTI-LANGUAGE) =================== */
+${i18nJs}
 
 /* =================== 2. QR CODE SVG GENERATOR =================== */
 ${qrSvgJs}

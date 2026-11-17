@@ -12,11 +12,24 @@ class UIEngine {
   }
 
   init() {
+    if (window.i18n) {
+      window.i18n.applyTranslations();
+    }
     GameClient.init();
     this.initSettings();
     this.renderProfileCard();
     this.bindHomeEvents();
     this.bindGameEvents();
+  }
+
+  onLanguageChanged(lang) {
+    this.renderCharacterStudio();
+    this.renderProfileCard();
+    if (GameClient.state) {
+      this.renderGameHeader(GameClient.state);
+      this.renderScoreboard(GameClient.state);
+    }
+    this.initSettings();
   }
 
   initSettings() {
@@ -38,6 +51,13 @@ class UIEngine {
     if (musicInput) musicInput.checked = !!settings.music;
     if (diceInput) diceInput.checked = !!settings.dice3d;
     if (powerInput) powerInput.checked = !!settings.lowPower;
+
+    if (window.i18n) {
+      const curLang = window.i18n.getLang();
+      document.querySelectorAll('.lang-btn, .lang-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === curLang);
+      });
+    }
   }
 
   checkUrlForRoom() {
@@ -76,7 +96,7 @@ class UIEngine {
     }
 
     const titleElem = document.getElementById('profile-title');
-    if (titleElem) titleElem.innerText = prof.title;
+    if (titleElem) titleElem.innerText = PlayerProgression.getDisplayTitle(prof.title);
 
     const levelElem = document.getElementById('profile-level');
     if (levelElem) levelElem.innerText = `Lv. ${prof.level}`;
@@ -312,6 +332,17 @@ class UIEngine {
         }
       });
     }
+
+    // Language selector buttons
+    document.querySelectorAll('.lang-btn, .lang-pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        const lang = btn.getAttribute('data-lang');
+        if (lang && window.setLanguage) {
+          window.setLanguage(lang);
+        }
+      });
+    });
 
     // Join Room Button
     const btnJoin = document.getElementById('btn-join-room');
@@ -653,16 +684,17 @@ class UIEngine {
   }
 
   renderGameHeader(state) {
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
     const current = state.currentRound || 1;
     const total = state.totalRounds || 10;
     const remaining = Math.max(0, total - current);
 
     const roundElem = document.getElementById('hud-round');
-    if (roundElem) roundElem.innerText = `Tur ${current} / ${total}`;
+    if (roundElem) roundElem.innerText = `${isEn ? 'Round' : 'Tur'} ${current} / ${total}`;
 
     const remElem = document.getElementById('hud-round-remaining');
     if (remElem) {
-      remElem.innerText = (remaining === 0 ? 'FİNAL TURU!' : `${remaining} Tur Kaldı`);
+      remElem.innerText = (remaining === 0 ? (isEn ? 'FINAL ROUND!' : 'FİNAL TURU!') : (isEn ? `${remaining} Rounds Left` : `${remaining} Tur Kaldı`));
       remElem.classList.toggle('final-pulse', remaining <= 1);
     }
 
@@ -692,7 +724,11 @@ class UIEngine {
 
     const activePlayer = state.players[state.turnIndex];
     if (activePlayer) {
-      document.getElementById('hud-turn-name').innerText = activePlayer.name;
+      const isMe = (GameClient.player && GameClient.player.sessionId === activePlayer.sessionId);
+      const turnLabel = isMe 
+        ? (isEn ? '✨ Your Turn!' : '✨ Sıra Sende!') 
+        : `${isEn ? 'Turn: ' : 'Sıra: '}${activePlayer.name}`;
+      document.getElementById('hud-turn-name').innerText = turnLabel;
       document.getElementById('hud-turn-avatar').style.borderColor = activePlayer.color;
     }
   }
@@ -927,14 +963,15 @@ class UIEngine {
     const modal = document.getElementById('modal-tile-inspector');
     modal.classList.remove('hidden');
 
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
     document.getElementById('ti-tile-title').innerText = `${index}. ${tile.title}`;
     document.getElementById('ti-tile-desc').innerText = tile.desc;
-    document.getElementById('ti-tile-steps').innerText = `${stepsAway} adım mesafede`;
+    document.getElementById('ti-tile-steps').innerText = isEn ? `${stepsAway} steps away` : `${stepsAway} adım mesafede`;
 
     const playersList = document.getElementById('ti-players-here');
     playersList.innerHTML = '';
     if (playersOnTile.length === 0) {
-      playersList.innerHTML = '<span style="color:#94A3B8; font-size:12px;">Şu an bu karoda kimse yok.</span>';
+      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${isEn ? 'No players on this tile.' : 'Şu an bu karoda kimse yok.'}</span>`;
     } else {
       playersOnTile.forEach(p => {
         const pBadge = document.createElement('span');
@@ -1251,9 +1288,12 @@ class UIEngine {
     if (!modal) return;
     modal.classList.remove('hidden');
 
-    document.getElementById('mystery-player-text').innerText = `${data.playerName} Şans Karosunda!`;
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const atText = isEn ? 'is on Fortune Tile!' : 'Şans Karosunda!';
+    const spinText = isEn ? 'Spinning the wheel...' : 'Çark dönüyor...';
+    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atText}`;
     const resultBox = document.getElementById('mystery-event-result');
-    resultBox.innerText = 'Çark dönüyor...';
+    resultBox.innerText = spinText;
 
     const canvas = document.getElementById('roulette-canvas');
     const pointer = document.getElementById('roulette-pointer');
@@ -1267,13 +1307,13 @@ class UIEngine {
 
     const segments = [
       { text: '+15 🪙', color: '#F59E0B', textColor: '#FFFFFF' },
-      { text: '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
-      { text: '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
-      { text: '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
+      { text: isEn ? '🎲 2x Dice' : '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
+      { text: isEn ? '🛡️ Shield' : '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
+      { text: isEn ? '🚀 Rocket' : '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
       { text: '+10 🪙', color: '#F97316', textColor: '#FFFFFF' },
-      { text: '🌟 Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
-      { text: '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
-      { text: '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
+      { text: isEn ? '⭐ Star' : '⭐ Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
+      { text: isEn ? '🎁 Chest' : '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
+      { text: isEn ? '👑 Crown' : '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
     ];
 
     const numSegs = segments.length;
@@ -1348,8 +1388,8 @@ class UIEngine {
       if (Math.abs(currentAngle - lastTickAngle) >= arc) {
         lastTickAngle = currentAngle;
         if (pointer) {
-          pointer.style.transform = 'translate(-50%, -2px) rotate(-15deg)';
-          setTimeout(() => { if (pointer) pointer.style.transform = 'translate(-50%, 0) rotate(0deg)'; }, 40);
+          pointer.style.transform = 'translateX(-50%) rotate(-18deg)';
+          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 45);
         }
         AudioPlayer.playWheelTick();
       }
@@ -1359,7 +1399,8 @@ class UIEngine {
       } else {
         // Spin finished
         AudioPlayer.playStarFanfare();
-        resultBox.innerText = `✨ ${data.eventName || 'Büyük Ödül Kazandın!'}!`;
+        const wonText = isEn ? 'Big Prize Won!' : 'Büyük Ödül Kazandın!';
+        resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
         setTimeout(() => {
           modal.classList.add('hidden');

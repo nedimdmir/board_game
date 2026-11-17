@@ -22,17 +22,23 @@
   <div id="screen-home" class="screen">
     <div class="home-container">
       
+      <!-- Top Language Selector Bar -->
+      <div class="lang-selector-bar">
+        <button type="button" class="lang-btn active" data-lang="tr">🇹🇷 Türkçe</button>
+        <button type="button" class="lang-btn" data-lang="en">🇬🇧 English</button>
+      </div>
+
       <!-- Hero Header -->
       <header class="home-hero">
-        <div class="hero-badge">🎲 Çok Oyunculu Dünya Turu Masa Oyunu</div>
-        <h1 class="hero-title">Parti <span>Dünyası</span></h1>
-        <p class="hero-subtitle">İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!</p>
+        <div class="hero-badge" data-i18n="hero_badge">🎲 Çok Oyunculu Dünya Turu Masa Oyunu</div>
+        <h1 class="hero-title" data-i18n="hero_title">Parti <span>Dünyası</span></h1>
+        <p class="hero-subtitle" data-i18n="hero_subtitle">İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!</p>
       </header>
 
       <!-- Interactive Character Studio Card -->
       <div class="char-studio-card">
         <div class="studio-header">
-          <span class="studio-badge">✨ KARAKTERİNİ TASARLA</span>
+          <span class="studio-badge" data-i18n="studio_badge">✨ KARAKTERİNİ TASARLA</span>
           <span class="profile-level-badge" id="profile-level">Lv. 1</span>
         </div>
 
@@ -53,13 +59,13 @@
           <div class="studio-controls-col">
             <!-- Name Input Field -->
             <div class="studio-input-group">
-              <label class="studio-label">Karakter Adın:</label>
-              <input type="text" id="home-name-input" class="studio-text-input" placeholder="Adını yaz..." maxlength="14">
+              <label class="studio-label" data-i18n="studio_name_label">Karakter Adın:</label>
+              <input type="text" id="home-name-input" class="studio-text-input" placeholder="Adını yaz..." data-i18n-placeholder="studio_name_placeholder" maxlength="14">
             </div>
 
             <!-- Archetype Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Karakter Modeli:</label>
+              <label class="studio-label" data-i18n="studio_model_label">Karakter Modeli:</label>
               <div class="studio-chips-carousel" id="home-avatar-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -67,7 +73,7 @@
 
             <!-- Hat / Accessory Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Şapka & Başlık:</label>
+              <label class="studio-label" data-i18n="studio_hat_label">Şapka & Başlık:</label>
               <div class="studio-chips-carousel" id="home-hat-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -75,7 +81,7 @@
 
             <!-- Color Palette Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Gövde & Çerçeve Rengi:</label>
+              <label class="studio-label" data-i18n="studio_color_label">Gövde & Çerçeve Rengi:</label>
               <div class="studio-colors-row" id="home-color-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -86,21 +92,21 @@
 
       <!-- Server Status Badge -->
       <div id="server-status-pill" class="server-status-pill">
-        <span class="status-dot">●</span> <span id="server-status-text">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
+        <span class="status-dot">●</span> <span id="server-status-text" data-i18n="server_status_checking">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
       </div>
 
       <!-- Main Play Action Cards (5 Choices) -->
       <div class="home-actions-grid">
         <div class="action-card-btn primary" id="btn-quick-play">
           <div class="action-icon">⚡</div>
-          <div class="action-title">Hızlı Oyna</div>
-          <div class="action-desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
+          <div class="action-title" data-i18n="btn_quick_play">Hızlı Oyna</div>
+          <div class="action-desc" data-i18n="btn_quick_play_desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
         </div>
 
         <div class="action-card-btn emerald" id="btn-play-friends">
           <div class="action-icon">🌐</div>
-          <div class="action-title">Arkadaşlarınla Oyna</div>
-          <div class="action-desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
+          <div class="action-title" data-i18n="btn_play_friends">Arkadaşlarınla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_friends_desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
         </div>
       </div>
 
@@ -108,27 +114,27 @@
       <div class="home-secondary-grid">
         <div class="action-card-btn" id="btn-play-bots">
           <div class="action-icon">🤖</div>
-          <div class="action-title">Botlarla Oyna</div>
-          <div class="action-desc">Şehir & tur seç, çevrimdışı bot partisi kur.</div>
+          <div class="action-title" data-i18n="btn_play_bots">Botlarla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_bots_desc">1 ila 3 bot seç ve antrenman yap!</div>
         </div>
 
         <div class="action-card-btn" id="btn-how-to-play">
           <div class="action-icon">📖</div>
-          <div class="action-title">Nasıl Oynanır?</div>
-          <div class="action-desc">Oyun kuralları, karolar ve taktikler.</div>
+          <div class="action-title" data-i18n="btn_how_to_play">Nasıl Oynanır</div>
+          <div class="action-desc" data-i18n="btn_how_to_play_desc">Oyun kuralları, karolar ve taktikler</div>
         </div>
 
         <div class="action-card-btn" id="btn-settings">
           <div class="action-icon">⚙️</div>
-          <div class="action-title">Ayarlar</div>
-          <div class="action-desc">Ses, müzik, zar ve performans ayarları.</div>
+          <div class="action-title" data-i18n="btn_settings">Ayarlar</div>
+          <div class="action-desc" data-i18n="btn_settings_desc">Ses, müzik, dil ve grafik ayarları</div>
         </div>
       </div>
 
       <!-- Join Room Section -->
       <div class="join-room-card">
-        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (örn: ABCD42)" maxlength="6">
-        <button class="btn-pill" id="btn-join-room">Odaya Katıl</button>
+        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (ÖRN: ABCD)" data-i18n-placeholder="room_code_placeholder" maxlength="8">
+        <button class="btn-pill" id="btn-join-room" data-i18n="btn_join_room">Odaya Katıl</button>
       </div>
 
       <!-- Auxiliary Bar (Wardrobe / Music) -->
@@ -564,14 +570,28 @@
   <!-- Mystery Roulette Modal -->
   <div id="modal-mystery" class="modal-overlay hidden">
     <div class="modal-card mystery-roulette-container">
-      <h3 style="font-weight: 900; font-size: 20px;">🎁 Şans Çarkı!</h3>
+      <h3 style="font-weight: 900; font-size: 20px;" data-i18n="roulette_title">🎡 Şans Çarkı!</h3>
       <p id="mystery-player-text" style="color:#64748B; font-size:13px;">...</p>
       <div class="roulette-wheel-wrapper">
-        <div class="roulette-arrow" id="roulette-pointer">🔻</div>
+        <div class="roulette-pointer-holder" id="roulette-pointer">
+          <svg width="28" height="36" viewBox="0 0 28 36" fill="none" class="roulette-pointer-svg">
+            <defs>
+              <filter id="pointer-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.35"/>
+              </filter>
+            </defs>
+            <g filter="url(#pointer-shadow)">
+              <circle cx="14" cy="9" r="7" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+              <circle cx="14" cy="9" r="3.5" fill="#FEF3C7"/>
+              <path d="M7 11 L21 11 L14 32 Z" fill="#DC2626" stroke="#991B1B" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M12 12 L14 28 L14 12 Z" fill="#FCA5A5" opacity="0.6"/>
+            </g>
+          </svg>
+        </div>
         <canvas id="roulette-canvas" width="260" height="260" class="roulette-canvas-disc"></canvas>
-        <div class="roulette-center-stud">⭐</div>
+        <div class="roulette-center-stud">🎲</div>
       </div>
-      <div class="mystery-result-box" id="mystery-event-result">Çark dönüyor...</div>
+      <div class="mystery-result-box" id="mystery-event-result" data-i18n="roulette_spinning">Çark dönüyor...</div>
     </div>
   </div>
 
@@ -693,15 +713,27 @@
   <div id="modal-settings" class="modal-overlay hidden">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 class="modal-title">⚙️ Oyun Ayarları</h3>
+        <h3 class="modal-title" data-i18n="settings_title">⚙️ Oyun Ayarları</h3>
         <button class="modal-close-btn" id="btn-close-settings">✕</button>
       </div>
 
       <div class="settings-list">
+        <!-- Language Option -->
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🔊 Ses Efektleri</span>
-            <span class="settings-item-sub">Zar, adım, buton ve olay sesleri</span>
+            <span class="settings-item-title" data-i18n="settings_lang_title">🌐 Dil / Language</span>
+            <span class="settings-item-sub" data-i18n="settings_lang_sub">Arayüz ve oyun metinleri dili</span>
+          </div>
+          <div class="settings-lang-toggle">
+            <button type="button" class="lang-pill-btn active" data-lang="tr">🇹🇷 TR</button>
+            <button type="button" class="lang-pill-btn" data-lang="en">🇬🇧 EN</button>
+          </div>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title" data-i18n="settings_sfx_title">🔊 Ses Efektleri</span>
+            <span class="settings-item-sub" data-i18n="settings_sfx_sub">Zar, adım, buton ve olay sesleri</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-sfx" checked>
@@ -711,8 +743,8 @@
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🎵 Arka Plan Müziği</span>
-            <span class="settings-item-sub">Web Audio sentezleyici parti müziği</span>
+            <span class="settings-item-title" data-i18n="settings_music_title">🎵 Arka Plan Müziği</span>
+            <span class="settings-item-sub" data-i18n="settings_music_sub">Web Audio sentezleyici parti müziği</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-music">
@@ -722,8 +754,8 @@
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🎲 3D Zar Animasyonları</span>
-            <span class="settings-item-sub">Kapatılırsa zar sonucu beklemeden gelir</span>
+            <span class="settings-item-title" data-i18n="settings_dice_title">🎲 3D Zar Animasyonları</span>
+            <span class="settings-item-sub" data-i18n="settings_dice_sub">Kapatılırsa zar sonucu beklemeden gelir</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-dice3d" checked>
@@ -733,8 +765,8 @@
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">⚡ Düşük Güç / Pil Tasarrufu</span>
-            <span class="settings-item-sub">Eski telefonlar için hafif grafik modu</span>
+            <span class="settings-item-title" data-i18n="settings_lowpower_title">⚡ Düşük Güç / Pil Tasarrufu</span>
+            <span class="settings-item-sub" data-i18n="settings_lowpower_sub">Eski telefonlar için hafif grafik modu</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-lowpower">
@@ -744,10 +776,12 @@
       </div>
 
       <div style="border-top: 1px dashed #E2E8F0; padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-        <button class="btn-pill" id="btn-reset-profile" style="background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 0 #FCA5A5; font-size: 13px;">
+        <button class="btn-pill" id="btn-reset-profile" data-i18n="btn_reset_profile" style="background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 0 #FCA5A5; font-size: 13px;">
           🔄 Oyuncu Profilini & Verilerini Sıfırla
         </button>
-        <button class="btn-pill" id="btn-save-settings" style="width: 100%;">
+        <button class="btn-pill" id="btn-save-settings" data-i18n="btn_save_settings" style="width: 100%;">
+          Ayarları Kaydet
+        </button>
           Ayarları Kaydet
         </button>
       </div>
@@ -758,15 +792,15 @@
   <div id="modal-confirm-leave" class="modal-overlay hidden">
     <div class="modal-card" style="max-width: 400px; text-align: center;">
       <div style="font-size: 48px; margin-bottom: 8px;">🚪</div>
-      <h3 class="modal-title" style="margin-bottom: 8px;">Oyundan Ayrılmak İstiyor Musun?</h3>
-      <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
-        Partiden ayrılırsan ilerlemen ve bu turdaki altınların kaydedilmeyebilir. Ana menüye dönmek istediğine emin misin?
+      <h3 class="modal-title" style="margin-bottom: 8px;" data-i18n="leave_modal_title">Oyundan Ayrıl</h3>
+      <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin-bottom: 20px;" data-i18n="leave_modal_desc">
+        Mevcut oyundan ayrılmak ve ana menüye dönmek istediğinize emin misiniz? Çok oyunculu odada yerinizi bir bot devralacaktır.
       </p>
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-pill" id="btn-cancel-leave" style="background: #E2E8F0; color: #475569; box-shadow: 0 4px 0 #CBD5E1;">
-          Oyuna Devam Et
+        <button class="btn-pill" id="btn-cancel-leave" data-i18n="btn_leave_cancel" style="background: #E2E8F0; color: #475569; box-shadow: 0 4px 0 #CBD5E1;">
+          İptal / Oyuna Dön
         </button>
-        <button class="btn-pill" id="btn-confirm-leave" style="background: #EF4444; color: white; box-shadow: 0 4px 0 #DC2626;">
+        <button class="btn-pill" id="btn-confirm-leave" data-i18n="btn_leave_confirm" style="background: #EF4444; color: white; box-shadow: 0 4px 0 #DC2626;">
           Evet, Ayrıl
         </button>
       </div>
@@ -781,6 +815,7 @@
 
   <!-- Scripts -->
   <script src="js/icons.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/qr-svg.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/progression.js"></script>

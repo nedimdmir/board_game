@@ -308,12 +308,12 @@ const DICE_SKINS = {
 };
 
 const TITLES = [
-  { id: 't1', title: 'Acemi Gezgin', level: 1 },
-  { id: 't2', title: 'Şanslı Tilki', level: 3 },
-  { id: 't3', title: 'Zar Cambazı', level: 6 },
-  { id: 't4', title: 'Tuzak Bükücü', level: 10 },
-  { id: 't5', title: 'Yıldız Avcısı', level: 15 },
-  { id: 't6', title: 'Parti Efsanesi', level: 22 }
+  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', level: 1 },
+  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', level: 3 },
+  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', level: 6 },
+  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', level: 10 },
+  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', level: 15 },
+  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', level: 22 }
 ];
 
 const EMOTE_DEFS = {
@@ -467,6 +467,16 @@ class ProgressionManager {
 
   getUnlockedTitles() {
     return TITLES.filter(t => this.profile.level >= t.level);
+  }
+
+  getDisplayTitle(titleStr) {
+    const tStr = titleStr || this.profile.title || 'Acemi Gezgin';
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr);
+    if (match) {
+      return isEn ? match.title_en : match.title;
+    }
+    return tStr;
   }
 
   getUnlockedEmotes() {

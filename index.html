@@ -75,80 +75,7 @@
   text-align: center;
 }
 
-/* ----------------------------------------------------
-   MYSTERY ROULETTE WHEEL
-   ---------------------------------------------------- */
-.mystery-roulette-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.roulette-wheel-wrapper {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 6px solid #8B5CF6;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.35);
-}
-
-.roulette-disc {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: conic-gradient(
-    #EF4444 0deg 72deg,
-    #F59E0B 72deg 144deg,
-    #10B981 144deg 216deg,
-    #3B82F6 216deg 288deg,
-    #EC4899 288deg 360deg
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 1.8s cubic-bezier(0.15, 0.9, 0.3, 1.0);
-}
-
-.roulette-center-stud {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: white;
-  border: 3px solid #1E293B;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  z-index: 2;
-}
-
-.roulette-arrow {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 16px solid #1E293B;
-  z-index: 3;
-}
-
-.mystery-result-box {
-  font-size: 18px;
-  font-weight: 800;
-  color: #7C3AED;
-  text-align: center;
-  min-height: 28px;
-}
+/* Mystery Roulette styles consolidated in style.css */
 
 /* ----------------------------------------------------
    MINI-GAMES STYLING
@@ -497,6 +424,7 @@ body {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (max-width: 640px) {
@@ -2685,34 +2613,56 @@ input:checked + .slider-round:before {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  max-width: 380px;
+  max-width: 400px;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
+  padding: 24px 20px;
 }
 
 .roulette-wheel-wrapper {
   position: relative;
   width: 260px;
   height: 260px;
-  margin: 10px auto;
+  margin: 16px auto 10px auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+.roulette-pointer-holder {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  transform-origin: 14px 9px;
+  width: 28px;
+  height: 36px;
+  z-index: 15;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  transition: transform 0.05s ease;
+}
+
+.roulette-pointer-svg {
+  display: block;
 }
 
 .roulette-arrow {
   position: absolute;
-  top: -12px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 30px;
+  font-size: 26px;
   z-index: 10;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
-  transition: transform 0.05s ease;
+  pointer-events: none;
 }
 
 .roulette-canvas-disc {
   border-radius: 50%;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), inset 0 0 0 4px #FFFFFF;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), inset 0 0 0 5px #FFFFFF, 0 0 0 2px #CBD5E1;
+  display: block;
 }
 
 .roulette-center-stud {
@@ -2720,7 +2670,16 @@ input:checked + .slider-round:before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFFFFF, #E2E8F0);
+  border: 3px solid #F59E0B;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
   pointer-events: none;
 }
 
@@ -2731,6 +2690,56 @@ input:checked + .slider-round:before {
   font-weight: 800;
   padding: 10px 20px;
   border-radius: 14px;
+  border: 2px solid #FCD34D;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   LANGUAGE SELECTOR
+   ========================================================================== */
+.lang-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.lang-btn, .lang-pill-btn {
+  background: #F1F5F9;
+  border: 1.5px solid #CBD5E1;
+  color: #475569;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.lang-btn:hover, .lang-pill-btn:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+  transform: translateY(-1px);
+}
+
+.lang-btn.active, .lang-pill-btn.active {
+  background: #3B82F6;
+  border-color: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35);
+}
+
+.settings-lang-toggle {
+  display: flex;
+  gap: 8px;
+}
   border: 2px solid #FCD34D;
   width: 100%;
   box-sizing: border-box;
@@ -2884,17 +2893,23 @@ input:checked + .slider-round:before {
   <div id="screen-home" class="screen">
     <div class="home-container">
       
+      <!-- Top Language Selector Bar -->
+      <div class="lang-selector-bar">
+        <button type="button" class="lang-btn active" data-lang="tr">🇹🇷 Türkçe</button>
+        <button type="button" class="lang-btn" data-lang="en">🇬🇧 English</button>
+      </div>
+
       <!-- Hero Header -->
       <header class="home-hero">
-        <div class="hero-badge">🎲 Çok Oyunculu Dünya Turu Masa Oyunu</div>
-        <h1 class="hero-title">Parti <span>Dünyası</span></h1>
-        <p class="hero-subtitle">İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!</p>
+        <div class="hero-badge" data-i18n="hero_badge">🎲 Çok Oyunculu Dünya Turu Masa Oyunu</div>
+        <h1 class="hero-title" data-i18n="hero_title">Parti <span>Dünyası</span></h1>
+        <p class="hero-subtitle" data-i18n="hero_subtitle">İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!</p>
       </header>
 
       <!-- Interactive Character Studio Card -->
       <div class="char-studio-card">
         <div class="studio-header">
-          <span class="studio-badge">✨ KARAKTERİNİ TASARLA</span>
+          <span class="studio-badge" data-i18n="studio_badge">✨ KARAKTERİNİ TASARLA</span>
           <span class="profile-level-badge" id="profile-level">Lv. 1</span>
         </div>
 
@@ -2915,13 +2930,13 @@ input:checked + .slider-round:before {
           <div class="studio-controls-col">
             <!-- Name Input Field -->
             <div class="studio-input-group">
-              <label class="studio-label">Karakter Adın:</label>
-              <input type="text" id="home-name-input" class="studio-text-input" placeholder="Adını yaz..." maxlength="14">
+              <label class="studio-label" data-i18n="studio_name_label">Karakter Adın:</label>
+              <input type="text" id="home-name-input" class="studio-text-input" placeholder="Adını yaz..." data-i18n-placeholder="studio_name_placeholder" maxlength="14">
             </div>
 
             <!-- Archetype Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Karakter Modeli:</label>
+              <label class="studio-label" data-i18n="studio_model_label">Karakter Modeli:</label>
               <div class="studio-chips-carousel" id="home-avatar-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -2929,7 +2944,7 @@ input:checked + .slider-round:before {
 
             <!-- Hat / Accessory Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Şapka & Başlık:</label>
+              <label class="studio-label" data-i18n="studio_hat_label">Şapka & Başlık:</label>
               <div class="studio-chips-carousel" id="home-hat-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -2937,7 +2952,7 @@ input:checked + .slider-round:before {
 
             <!-- Color Palette Selector -->
             <div class="studio-input-group">
-              <label class="studio-label">Gövde & Çerçeve Rengi:</label>
+              <label class="studio-label" data-i18n="studio_color_label">Gövde & Çerçeve Rengi:</label>
               <div class="studio-colors-row" id="home-color-chips">
                 <!-- Injected dynamically -->
               </div>
@@ -2948,21 +2963,21 @@ input:checked + .slider-round:before {
 
       <!-- Server Status Badge -->
       <div id="server-status-pill" class="server-status-pill">
-        <span class="status-dot">●</span> <span id="server-status-text">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
+        <span class="status-dot">●</span> <span id="server-status-text" data-i18n="server_status_checking">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
       </div>
 
       <!-- Main Play Action Cards (5 Choices) -->
       <div class="home-actions-grid">
         <div class="action-card-btn primary" id="btn-quick-play">
           <div class="action-icon">⚡</div>
-          <div class="action-title">Hızlı Oyna</div>
-          <div class="action-desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
+          <div class="action-title" data-i18n="btn_quick_play">Hızlı Oyna</div>
+          <div class="action-desc" data-i18n="btn_quick_play_desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
         </div>
 
         <div class="action-card-btn emerald" id="btn-play-friends">
           <div class="action-icon">🌐</div>
-          <div class="action-title">Arkadaşlarınla Oyna</div>
-          <div class="action-desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
+          <div class="action-title" data-i18n="btn_play_friends">Arkadaşlarınla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_friends_desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
         </div>
       </div>
 
@@ -2970,27 +2985,27 @@ input:checked + .slider-round:before {
       <div class="home-secondary-grid">
         <div class="action-card-btn" id="btn-play-bots">
           <div class="action-icon">🤖</div>
-          <div class="action-title">Botlarla Oyna</div>
-          <div class="action-desc">Şehir & tur seç, çevrimdışı bot partisi kur.</div>
+          <div class="action-title" data-i18n="btn_play_bots">Botlarla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_bots_desc">1 ila 3 bot seç ve antrenman yap!</div>
         </div>
 
         <div class="action-card-btn" id="btn-how-to-play">
           <div class="action-icon">📖</div>
-          <div class="action-title">Nasıl Oynanır?</div>
-          <div class="action-desc">Oyun kuralları, karolar ve taktikler.</div>
+          <div class="action-title" data-i18n="btn_how_to_play">Nasıl Oynanır</div>
+          <div class="action-desc" data-i18n="btn_how_to_play_desc">Oyun kuralları, karolar ve taktikler</div>
         </div>
 
         <div class="action-card-btn" id="btn-settings">
           <div class="action-icon">⚙️</div>
-          <div class="action-title">Ayarlar</div>
-          <div class="action-desc">Ses, müzik, zar ve performans ayarları.</div>
+          <div class="action-title" data-i18n="btn_settings">Ayarlar</div>
+          <div class="action-desc" data-i18n="btn_settings_desc">Ses, müzik, dil ve grafik ayarları</div>
         </div>
       </div>
 
       <!-- Join Room Section -->
       <div class="join-room-card">
-        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (örn: ABCD42)" maxlength="6">
-        <button class="btn-pill" id="btn-join-room">Odaya Katıl</button>
+        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (ÖRN: ABCD)" data-i18n-placeholder="room_code_placeholder" maxlength="8">
+        <button class="btn-pill" id="btn-join-room" data-i18n="btn_join_room">Odaya Katıl</button>
       </div>
 
       <!-- Auxiliary Bar (Wardrobe / Music) -->
@@ -3426,14 +3441,28 @@ input:checked + .slider-round:before {
   <!-- Mystery Roulette Modal -->
   <div id="modal-mystery" class="modal-overlay hidden">
     <div class="modal-card mystery-roulette-container">
-      <h3 style="font-weight: 900; font-size: 20px;">🎁 Şans Çarkı!</h3>
+      <h3 style="font-weight: 900; font-size: 20px;" data-i18n="roulette_title">🎡 Şans Çarkı!</h3>
       <p id="mystery-player-text" style="color:#64748B; font-size:13px;">...</p>
       <div class="roulette-wheel-wrapper">
-        <div class="roulette-arrow" id="roulette-pointer">🔻</div>
+        <div class="roulette-pointer-holder" id="roulette-pointer">
+          <svg width="28" height="36" viewBox="0 0 28 36" fill="none" class="roulette-pointer-svg">
+            <defs>
+              <filter id="pointer-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.35"/>
+              </filter>
+            </defs>
+            <g filter="url(#pointer-shadow)">
+              <circle cx="14" cy="9" r="7" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+              <circle cx="14" cy="9" r="3.5" fill="#FEF3C7"/>
+              <path d="M7 11 L21 11 L14 32 Z" fill="#DC2626" stroke="#991B1B" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M12 12 L14 28 L14 12 Z" fill="#FCA5A5" opacity="0.6"/>
+            </g>
+          </svg>
+        </div>
         <canvas id="roulette-canvas" width="260" height="260" class="roulette-canvas-disc"></canvas>
-        <div class="roulette-center-stud">⭐</div>
+        <div class="roulette-center-stud">🎲</div>
       </div>
-      <div class="mystery-result-box" id="mystery-event-result">Çark dönüyor...</div>
+      <div class="mystery-result-box" id="mystery-event-result" data-i18n="roulette_spinning">Çark dönüyor...</div>
     </div>
   </div>
 
@@ -3555,15 +3584,27 @@ input:checked + .slider-round:before {
   <div id="modal-settings" class="modal-overlay hidden">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 class="modal-title">⚙️ Oyun Ayarları</h3>
+        <h3 class="modal-title" data-i18n="settings_title">⚙️ Oyun Ayarları</h3>
         <button class="modal-close-btn" id="btn-close-settings">✕</button>
       </div>
 
       <div class="settings-list">
+        <!-- Language Option -->
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🔊 Ses Efektleri</span>
-            <span class="settings-item-sub">Zar, adım, buton ve olay sesleri</span>
+            <span class="settings-item-title" data-i18n="settings_lang_title">🌐 Dil / Language</span>
+            <span class="settings-item-sub" data-i18n="settings_lang_sub">Arayüz ve oyun metinleri dili</span>
+          </div>
+          <div class="settings-lang-toggle">
+            <button type="button" class="lang-pill-btn active" data-lang="tr">🇹🇷 TR</button>
+            <button type="button" class="lang-pill-btn" data-lang="en">🇬🇧 EN</button>
+          </div>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-label">
+            <span class="settings-item-title" data-i18n="settings_sfx_title">🔊 Ses Efektleri</span>
+            <span class="settings-item-sub" data-i18n="settings_sfx_sub">Zar, adım, buton ve olay sesleri</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-sfx" checked>
@@ -3573,8 +3614,8 @@ input:checked + .slider-round:before {
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🎵 Arka Plan Müziği</span>
-            <span class="settings-item-sub">Web Audio sentezleyici parti müziği</span>
+            <span class="settings-item-title" data-i18n="settings_music_title">🎵 Arka Plan Müziği</span>
+            <span class="settings-item-sub" data-i18n="settings_music_sub">Web Audio sentezleyici parti müziği</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-music">
@@ -3584,8 +3625,8 @@ input:checked + .slider-round:before {
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">🎲 3D Zar Animasyonları</span>
-            <span class="settings-item-sub">Kapatılırsa zar sonucu beklemeden gelir</span>
+            <span class="settings-item-title" data-i18n="settings_dice_title">🎲 3D Zar Animasyonları</span>
+            <span class="settings-item-sub" data-i18n="settings_dice_sub">Kapatılırsa zar sonucu beklemeden gelir</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-dice3d" checked>
@@ -3595,8 +3636,8 @@ input:checked + .slider-round:before {
 
         <div class="settings-item">
           <div class="settings-item-label">
-            <span class="settings-item-title">⚡ Düşük Güç / Pil Tasarrufu</span>
-            <span class="settings-item-sub">Eski telefonlar için hafif grafik modu</span>
+            <span class="settings-item-title" data-i18n="settings_lowpower_title">⚡ Düşük Güç / Pil Tasarrufu</span>
+            <span class="settings-item-sub" data-i18n="settings_lowpower_sub">Eski telefonlar için hafif grafik modu</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="setting-lowpower">
@@ -3606,10 +3647,12 @@ input:checked + .slider-round:before {
       </div>
 
       <div style="border-top: 1px dashed #E2E8F0; padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-        <button class="btn-pill" id="btn-reset-profile" style="background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 0 #FCA5A5; font-size: 13px;">
+        <button class="btn-pill" id="btn-reset-profile" data-i18n="btn_reset_profile" style="background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 0 #FCA5A5; font-size: 13px;">
           🔄 Oyuncu Profilini & Verilerini Sıfırla
         </button>
-        <button class="btn-pill" id="btn-save-settings" style="width: 100%;">
+        <button class="btn-pill" id="btn-save-settings" data-i18n="btn_save_settings" style="width: 100%;">
+          Ayarları Kaydet
+        </button>
           Ayarları Kaydet
         </button>
       </div>
@@ -3620,15 +3663,15 @@ input:checked + .slider-round:before {
   <div id="modal-confirm-leave" class="modal-overlay hidden">
     <div class="modal-card" style="max-width: 400px; text-align: center;">
       <div style="font-size: 48px; margin-bottom: 8px;">🚪</div>
-      <h3 class="modal-title" style="margin-bottom: 8px;">Oyundan Ayrılmak İstiyor Musun?</h3>
-      <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
-        Partiden ayrılırsan ilerlemen ve bu turdaki altınların kaydedilmeyebilir. Ana menüye dönmek istediğine emin misin?
+      <h3 class="modal-title" style="margin-bottom: 8px;" data-i18n="leave_modal_title">Oyundan Ayrıl</h3>
+      <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin-bottom: 20px;" data-i18n="leave_modal_desc">
+        Mevcut oyundan ayrılmak ve ana menüye dönmek istediğinize emin misiniz? Çok oyunculu odada yerinizi bir bot devralacaktır.
       </p>
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-pill" id="btn-cancel-leave" style="background: #E2E8F0; color: #475569; box-shadow: 0 4px 0 #CBD5E1;">
-          Oyuna Devam Et
+        <button class="btn-pill" id="btn-cancel-leave" data-i18n="btn_leave_cancel" style="background: #E2E8F0; color: #475569; box-shadow: 0 4px 0 #CBD5E1;">
+          İptal / Oyuna Dön
         </button>
-        <button class="btn-pill" id="btn-confirm-leave" style="background: #EF4444; color: white; box-shadow: 0 4px 0 #DC2626;">
+        <button class="btn-pill" id="btn-confirm-leave" data-i18n="btn_leave_confirm" style="background: #EF4444; color: white; box-shadow: 0 4px 0 #DC2626;">
           Evet, Ayrıl
         </button>
       </div>
@@ -3796,6 +3839,311 @@ const LucideIcons = {
 function getIcon(name, fallback = '') {
   return LucideIcons[name] || fallback;
 }
+
+
+/* =================== 1.5. I18N (MULTI-LANGUAGE) =================== */
+// ============================================================================
+// PartyCraft: Wonder Board - Internationalization (i18n) Engine
+// Supports Turkish (tr) and English (en) with live dynamic switching & persistence
+// ============================================================================
+
+const I18N_DATA = {
+  tr: {
+    hero_badge: '🎲 Çok Oyunculu Dünya Turu Masa Oyunu',
+    hero_title: 'Parti <span>Dünyası</span>',
+    hero_subtitle: 'İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!',
+    studio_badge: '✨ KARAKTERİNİ TASARLA',
+    studio_name_label: 'Karakter Adın:',
+    studio_name_placeholder: 'Adını yaz...',
+    studio_model_label: 'Karakter Modeli:',
+    studio_hat_label: 'Şapka & Başlık:',
+    studio_color_label: 'Gövde & Çerçeve Rengi:',
+    btn_quick_play: 'Hızlı Oyna',
+    btn_quick_play_desc: 'Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!',
+    btn_play_friends: 'Arkadaşlarınla Oyna',
+    btn_play_friends_desc: 'Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!',
+    btn_play_bots: 'Botlarla Oyna',
+    btn_play_bots_desc: '1 ila 3 bot seç ve antrenman yap!',
+    btn_how_to_play: 'Nasıl Oynanır',
+    btn_how_to_play_desc: 'Oyun kuralları, karolar ve taktikler',
+    btn_settings: 'Ayarlar',
+    btn_settings_desc: 'Ses, müzik, dil ve grafik ayarları',
+    room_code_placeholder: 'ODA KODU (ÖRN: ABCD)',
+    btn_join_room: 'Odaya Katıl',
+    server_status_checking: 'Sunucu Durumu: Bağlantı kontrol ediliyor...',
+    server_status_php: 'Sunucu Durumu: PHP & Çok Oyunculu Çevrimiçi Hazır',
+    server_status_node: 'Sunucu Durumu: Node.js WebSocket Çevrimiçi Hazır',
+    server_status_offline: 'Sunucu Durumu: Çevrimdışı Mod (Botlar & Yerel Oyun Hazır)',
+
+    // Lobby
+    lobby_room_title: 'Oda Kodu:',
+    lobby_players_title: 'Oyuncular',
+    lobby_share_title: 'Arkadaşını Çağır (Davet Bağlantısı):',
+    btn_copy_link: '📋 Kopyala',
+    btn_copied: '✅ Kopyalandı!',
+    btn_show_qr: '📱 QR Kodu Göster',
+    btn_add_bot: '🤖 Bot Ekle',
+    btn_leave_room: '🚪 Odadan Ayrıl',
+    lobby_city_title: 'Oyun Şehri / Haritası:',
+    lobby_rounds_title: 'Tur Sayısı:',
+    btn_start_game: '🎉 Partiyi Başlat!',
+    lobby_waiting_host: 'Oda sahibinin oyunu başlatması bekleniyor...',
+
+    // HUD & In-game
+    hud_your_turn: 'Sıra Sende! Zarı at ve ilerle',
+    hud_turn_prefix: 'Sıra: ',
+    hud_turn_waiting: 'Oyuncu Sırası',
+    hud_round_prefix: 'Tur: ',
+    btn_roll_dice: '🎲 ZAR AT',
+    btn_bag: '🎒 Çantam',
+    btn_trade: '🤝 Takas',
+    btn_chat: '💬 Sohbet',
+    btn_hud_leave: 'Odadan Ayrıl',
+
+    // Modals
+    roulette_title: '🎡 Şans Çarkı!',
+    roulette_spinning: 'Çark dönüyor...',
+    roulette_player_at: 'Şans Karosunda!',
+    roulette_won: 'Tebrikler, Büyük Ödül Kazandın!',
+
+    leave_modal_title: 'Oyundan Ayrıl',
+    leave_modal_desc: 'Mevcut oyundan ayrılmak ve ana menüye dönmek istediğinize emin misiniz? Çok oyunculu odada yerinizi bir bot devralacaktır.',
+    btn_leave_confirm: '🚪 Evet, Odadan Ayrıl',
+    btn_leave_cancel: 'İptal / Oyuna Dön',
+
+    settings_title: '⚙️ Oyun Ayarları',
+    settings_lang_title: '🌐 Dil / Language',
+    settings_lang_sub: 'Arayüz ve oyun metinleri dili',
+    settings_sfx_title: '🔊 Ses Efektleri',
+    settings_sfx_sub: 'Zar, adım, altın ve zafer sesleri',
+    settings_music_title: '🎵 Arka Plan Müziği',
+    settings_music_sub: 'Web Audio sentezleyici parti müziği',
+    settings_dice_title: '🎲 3D Zar Animasyonları',
+    settings_dice_sub: 'Kapatılırsa zar sonucu beklemeden gelir',
+    settings_lowpower_title: '⚡ Düşük Güç / Pil Tasarrufu',
+    settings_lowpower_sub: 'Eski cihazlar için hafif grafik modu',
+    btn_reset_profile: '🔄 Oyuncu Profilini & Verilerini Sıfırla',
+    btn_save_settings: 'Ayarları Kaydet',
+
+    rules_title: '📖 Parti Dünyası — Nasıl Oynanır?',
+    rules_goal_title: '🎯 Oyunun Amacı',
+    rules_goal_body: 'Belirlenen tur sayısı bitmeden önce en çok <strong>Yıldız (⭐)</strong> ve <strong>Altın (🪙)</strong> toplayan oyuncu partinin şampiyonu olur! 1 Yıldız, 20 altın değerindedir ve liderlikte en büyük önceliğe sahiptir.',
+    rules_turn_title: '🎲 Sıra ve Hareket',
+    rules_turn_body: 'Sıra sana geldiğinde <strong>Zar At</strong> butonuna bas veya klavyeden <strong>SPACE</strong> tuşunu kullan. Zardaki sayı kadar saat yönünde ilerlersin. Başlangıç karosundan her geçişte <strong>+10 Altın</strong> ödülü kazanırsın!',
+    rules_tiles_title: '🗺️ Özel Karolar ve Etkileri',
+    rules_items_title: '🎒 Taktik Eşyaları',
+    rules_close_btn: 'Harika, Oyuna Dön!',
+
+    // Tiles
+    tile_start: 'Başlangıç (+10 🪙)',
+    tile_coin: 'Altın Karosu',
+    tile_star: 'Yıldız Kaidesi',
+    tile_mystery: 'Şans Çarkı',
+    tile_trap: 'Tuzak Karosu',
+    tile_shop: 'Eşya Dükkanı',
+    tile_bank: 'Merkez Bankası',
+    tile_jail: 'Karakol / Kodes',
+    tile_duel: 'Düello Alanı',
+
+    // Titles
+    title_novice: 'Acemi Gezgin',
+    title_dice: 'Zar Cambazı',
+    title_star: 'Yıldız Avcısı',
+    title_board: 'Karelerin Efendisi',
+    title_party: 'Parti Efsanesi'
+  },
+  en: {
+    hero_badge: '🎲 Multiplayer World Tour Board Game',
+    hero_title: 'Party<span>Craft</span>',
+    hero_subtitle: 'Roll dice, race, and celebrate across the iconic streets of Istanbul, Tokyo, Paris & New York!',
+    studio_badge: '✨ DESIGN YOUR CHARACTER',
+    studio_name_label: 'Character Name:',
+    studio_name_placeholder: 'Enter your name...',
+    studio_model_label: 'Character Model:',
+    studio_hat_label: 'Hat & Headwear:',
+    studio_color_label: 'Body & Ring Color:',
+    btn_quick_play: 'Quick Play',
+    btn_quick_play_desc: 'Instantly jump into Istanbul with 3 smart AI bots, zero waiting!',
+    btn_play_friends: 'Play with Friends',
+    btn_play_friends_desc: 'Host a room in 1 click, invite friends via direct link or QR code!',
+    btn_play_bots: 'Play with Bots',
+    btn_play_bots_desc: 'Choose 1 to 3 bots and practice offline!',
+    btn_how_to_play: 'How to Play',
+    btn_how_to_play_desc: 'Board rules, special tiles and pro tips',
+    btn_settings: 'Settings',
+    btn_settings_desc: 'Audio, music, language and graphics',
+    room_code_placeholder: 'ROOM CODE (E.G. ABCD)',
+    btn_join_room: 'Join Room',
+    server_status_checking: 'Server Status: Checking connection...',
+    server_status_php: 'Server Status: PHP Multiplayer Online Ready',
+    server_status_node: 'Server Status: Node.js WebSocket Online Ready',
+    server_status_offline: 'Server Status: Offline Mode (Local & Bots Ready)',
+
+    // Lobby
+    lobby_room_title: 'Room Code:',
+    lobby_players_title: 'Players',
+    lobby_share_title: 'Invite Friends (Direct Link):',
+    btn_copy_link: '📋 Copy Link',
+    btn_copied: '✅ Copied!',
+    btn_show_qr: '📱 Show QR Code',
+    btn_add_bot: '🤖 Add Bot',
+    btn_leave_room: '🚪 Leave Room',
+    lobby_city_title: 'City / Map Theme:',
+    lobby_rounds_title: 'Rounds Count:',
+    btn_start_game: '🎉 Start Party!',
+    lobby_waiting_host: 'Waiting for room host to start...',
+
+    // HUD & In-game
+    hud_your_turn: 'Your Turn! Roll the dice & advance',
+    hud_turn_prefix: 'Turn: ',
+    hud_turn_waiting: 'Player Turn',
+    hud_round_prefix: 'Round: ',
+    btn_roll_dice: '🎲 ROLL DICE',
+    btn_bag: '🎒 Inventory',
+    btn_trade: '🤝 Trade',
+    btn_chat: '💬 Chat',
+    btn_hud_leave: 'Leave Match',
+
+    // Modals
+    roulette_title: '🎡 Fortune Wheel!',
+    roulette_spinning: 'Spinning the wheel...',
+    roulette_player_at: 'is on Fortune Tile!',
+    roulette_won: 'Congratulations, Big Prize Won!',
+
+    leave_modal_title: 'Leave Match',
+    leave_modal_desc: 'Are you sure you want to exit the current match and return to the main menu? In multiplayer games, an AI bot will take over your spot.',
+    btn_leave_confirm: '🚪 Yes, Leave Room',
+    btn_leave_cancel: 'Cancel / Keep Playing',
+
+    settings_title: '⚙️ Game Settings',
+    settings_lang_title: '🌐 Language / Dil',
+    settings_lang_sub: 'Interface and gameplay language',
+    settings_sfx_title: '🔊 Sound Effects',
+    settings_sfx_sub: 'Dice, footstep, coin and fanfare sounds',
+    settings_music_title: '🎵 Background Music',
+    settings_music_sub: 'Synthesized Web Audio party soundtrack',
+    settings_dice_title: '🎲 3D Dice Animations',
+    settings_dice_sub: 'Turn off for instant dice results',
+    settings_lowpower_title: '⚡ Power Saver / Lite Mode',
+    settings_lowpower_sub: 'Lightweight graphics for older mobile devices',
+    btn_reset_profile: '🔄 Reset Player Profile & Data',
+    btn_save_settings: 'Save Settings',
+
+    rules_title: '📖 PartyCraft — How to Play',
+    rules_goal_title: '🎯 Objective',
+    rules_goal_body: 'Collect the most <strong>Stars (⭐)</strong> and <strong>Coins (🪙)</strong> before all rounds finish! 1 Star equals 20 Coins and holds highest priority on the leaderboard.',
+    rules_turn_title: '🎲 Movement & Turns',
+    rules_turn_body: 'On your turn, press <strong>ROLL DICE</strong> or tap <strong>SPACE</strong>. Move clockwise along the scenic board circuit. Every time you pass Start, you earn <strong>+10 Coins</strong>!',
+    rules_tiles_title: '🗺️ Special Tiles & Hazards',
+    rules_items_title: '🎒 Tactical Items',
+    rules_close_btn: 'Got it, Back to Game!',
+
+    // Tiles
+    tile_start: 'Start (+10 🪙)',
+    tile_coin: 'Coin Tile',
+    tile_star: 'Star Pedestal',
+    tile_mystery: 'Fortune Wheel',
+    tile_trap: 'Trap Tile',
+    tile_shop: 'Item Shop',
+    tile_bank: 'Central Bank',
+    tile_jail: 'Police / Jail',
+    tile_duel: 'Duel Arena',
+
+    // Titles
+    title_novice: 'Novice Explorer',
+    title_dice: 'Dice Acrobat',
+    title_star: 'Star Hunter',
+    title_board: 'Master of Tiles',
+    title_party: 'Party Legend'
+  }
+};
+
+class I18nManager {
+  constructor() {
+    this.currentLang = 'tr';
+    try {
+      const saved = localStorage.getItem('partycraft_lang');
+      if (saved && (saved === 'tr' || saved === 'en')) {
+        this.currentLang = saved;
+      }
+    } catch (e) {}
+  }
+
+  getLang() {
+    return this.currentLang;
+  }
+
+  t(key, fallback = '') {
+    const dict = I18N_DATA[this.currentLang] || I18N_DATA.tr;
+    if (dict[key] !== undefined) {
+      return dict[key];
+    }
+    const defaultDict = I18N_DATA.tr;
+    return defaultDict[key] !== undefined ? defaultDict[key] : (fallback || key);
+  }
+
+  setLang(lang) {
+    if (lang !== 'tr' && lang !== 'en') return;
+    this.currentLang = lang;
+    try {
+      localStorage.setItem('partycraft_lang', lang);
+    } catch (e) {}
+
+    this.applyTranslations();
+
+    // Notify UI and board if active
+    if (window.UIEngine) {
+      if (typeof window.UIEngine.onLanguageChanged === 'function') {
+        window.UIEngine.onLanguageChanged(lang);
+      }
+    }
+    if (window.BoardMap && typeof window.BoardMap.renderBoard === 'function') {
+      window.BoardMap.renderBoard();
+    }
+  }
+
+  applyTranslations() {
+    // 1. Text content elements
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = this.t(key);
+      if (val) {
+        if (val.includes('<') && val.includes('>')) {
+          el.innerHTML = val;
+        } else {
+          el.textContent = val;
+        }
+      }
+    });
+
+    // 2. Placeholders
+    const inputs = document.querySelectorAll('[data-i18n-placeholder]');
+    inputs.forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      const val = this.t(key);
+      if (val) {
+        el.setAttribute('placeholder', val);
+      }
+    });
+
+    // 3. Update active state of language toggle buttons
+    const langBtns = document.querySelectorAll('.lang-btn, .lang-pill-btn');
+    langBtns.forEach(btn => {
+      const btnLang = btn.getAttribute('data-lang');
+      if (btnLang === this.currentLang) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+}
+
+// Global instance
+window.i18n = new I18nManager();
+window.t = (key, fallback) => window.i18n.t(key, fallback);
+window.setLanguage = (lang) => window.i18n.setLang(lang);
 
 
 /* =================== 2. QR CODE SVG GENERATOR =================== */
@@ -4748,12 +5096,12 @@ const DICE_SKINS = {
 };
 
 const TITLES = [
-  { id: 't1', title: 'Acemi Gezgin', level: 1 },
-  { id: 't2', title: 'Şanslı Tilki', level: 3 },
-  { id: 't3', title: 'Zar Cambazı', level: 6 },
-  { id: 't4', title: 'Tuzak Bükücü', level: 10 },
-  { id: 't5', title: 'Yıldız Avcısı', level: 15 },
-  { id: 't6', title: 'Parti Efsanesi', level: 22 }
+  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', level: 1 },
+  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', level: 3 },
+  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', level: 6 },
+  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', level: 10 },
+  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', level: 15 },
+  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', level: 22 }
 ];
 
 const EMOTE_DEFS = {
@@ -4907,6 +5255,16 @@ class ProgressionManager {
 
   getUnlockedTitles() {
     return TITLES.filter(t => this.profile.level >= t.level);
+  }
+
+  getDisplayTitle(titleStr) {
+    const tStr = titleStr || this.profile.title || 'Acemi Gezgin';
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr);
+    if (match) {
+      return isEn ? match.title_en : match.title;
+    }
+    return tStr;
   }
 
   getUnlockedEmotes() {
@@ -9762,11 +10120,24 @@ class UIEngine {
   }
 
   init() {
+    if (window.i18n) {
+      window.i18n.applyTranslations();
+    }
     GameClient.init();
     this.initSettings();
     this.renderProfileCard();
     this.bindHomeEvents();
     this.bindGameEvents();
+  }
+
+  onLanguageChanged(lang) {
+    this.renderCharacterStudio();
+    this.renderProfileCard();
+    if (GameClient.state) {
+      this.renderGameHeader(GameClient.state);
+      this.renderScoreboard(GameClient.state);
+    }
+    this.initSettings();
   }
 
   initSettings() {
@@ -9788,6 +10159,13 @@ class UIEngine {
     if (musicInput) musicInput.checked = !!settings.music;
     if (diceInput) diceInput.checked = !!settings.dice3d;
     if (powerInput) powerInput.checked = !!settings.lowPower;
+
+    if (window.i18n) {
+      const curLang = window.i18n.getLang();
+      document.querySelectorAll('.lang-btn, .lang-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === curLang);
+      });
+    }
   }
 
   checkUrlForRoom() {
@@ -9826,7 +10204,7 @@ class UIEngine {
     }
 
     const titleElem = document.getElementById('profile-title');
-    if (titleElem) titleElem.innerText = prof.title;
+    if (titleElem) titleElem.innerText = PlayerProgression.getDisplayTitle(prof.title);
 
     const levelElem = document.getElementById('profile-level');
     if (levelElem) levelElem.innerText = `Lv. ${prof.level}`;
@@ -10062,6 +10440,17 @@ class UIEngine {
         }
       });
     }
+
+    // Language selector buttons
+    document.querySelectorAll('.lang-btn, .lang-pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        const lang = btn.getAttribute('data-lang');
+        if (lang && window.setLanguage) {
+          window.setLanguage(lang);
+        }
+      });
+    });
 
     // Join Room Button
     const btnJoin = document.getElementById('btn-join-room');
@@ -10403,16 +10792,17 @@ class UIEngine {
   }
 
   renderGameHeader(state) {
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
     const current = state.currentRound || 1;
     const total = state.totalRounds || 10;
     const remaining = Math.max(0, total - current);
 
     const roundElem = document.getElementById('hud-round');
-    if (roundElem) roundElem.innerText = `Tur ${current} / ${total}`;
+    if (roundElem) roundElem.innerText = `${isEn ? 'Round' : 'Tur'} ${current} / ${total}`;
 
     const remElem = document.getElementById('hud-round-remaining');
     if (remElem) {
-      remElem.innerText = (remaining === 0 ? 'FİNAL TURU!' : `${remaining} Tur Kaldı`);
+      remElem.innerText = (remaining === 0 ? (isEn ? 'FINAL ROUND!' : 'FİNAL TURU!') : (isEn ? `${remaining} Rounds Left` : `${remaining} Tur Kaldı`));
       remElem.classList.toggle('final-pulse', remaining <= 1);
     }
 
@@ -10442,7 +10832,11 @@ class UIEngine {
 
     const activePlayer = state.players[state.turnIndex];
     if (activePlayer) {
-      document.getElementById('hud-turn-name').innerText = activePlayer.name;
+      const isMe = (GameClient.player && GameClient.player.sessionId === activePlayer.sessionId);
+      const turnLabel = isMe 
+        ? (isEn ? '✨ Your Turn!' : '✨ Sıra Sende!') 
+        : `${isEn ? 'Turn: ' : 'Sıra: '}${activePlayer.name}`;
+      document.getElementById('hud-turn-name').innerText = turnLabel;
       document.getElementById('hud-turn-avatar').style.borderColor = activePlayer.color;
     }
   }
@@ -10677,14 +11071,15 @@ class UIEngine {
     const modal = document.getElementById('modal-tile-inspector');
     modal.classList.remove('hidden');
 
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
     document.getElementById('ti-tile-title').innerText = `${index}. ${tile.title}`;
     document.getElementById('ti-tile-desc').innerText = tile.desc;
-    document.getElementById('ti-tile-steps').innerText = `${stepsAway} adım mesafede`;
+    document.getElementById('ti-tile-steps').innerText = isEn ? `${stepsAway} steps away` : `${stepsAway} adım mesafede`;
 
     const playersList = document.getElementById('ti-players-here');
     playersList.innerHTML = '';
     if (playersOnTile.length === 0) {
-      playersList.innerHTML = '<span style="color:#94A3B8; font-size:12px;">Şu an bu karoda kimse yok.</span>';
+      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${isEn ? 'No players on this tile.' : 'Şu an bu karoda kimse yok.'}</span>`;
     } else {
       playersOnTile.forEach(p => {
         const pBadge = document.createElement('span');
@@ -11001,9 +11396,12 @@ class UIEngine {
     if (!modal) return;
     modal.classList.remove('hidden');
 
-    document.getElementById('mystery-player-text').innerText = `${data.playerName} Şans Karosunda!`;
+    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const atText = isEn ? 'is on Fortune Tile!' : 'Şans Karosunda!';
+    const spinText = isEn ? 'Spinning the wheel...' : 'Çark dönüyor...';
+    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atText}`;
     const resultBox = document.getElementById('mystery-event-result');
-    resultBox.innerText = 'Çark dönüyor...';
+    resultBox.innerText = spinText;
 
     const canvas = document.getElementById('roulette-canvas');
     const pointer = document.getElementById('roulette-pointer');
@@ -11017,13 +11415,13 @@ class UIEngine {
 
     const segments = [
       { text: '+15 🪙', color: '#F59E0B', textColor: '#FFFFFF' },
-      { text: '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
-      { text: '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
-      { text: '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
+      { text: isEn ? '🎲 2x Dice' : '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
+      { text: isEn ? '🛡️ Shield' : '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
+      { text: isEn ? '🚀 Rocket' : '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
       { text: '+10 🪙', color: '#F97316', textColor: '#FFFFFF' },
-      { text: '🌟 Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
-      { text: '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
-      { text: '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
+      { text: isEn ? '⭐ Star' : '⭐ Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
+      { text: isEn ? '🎁 Chest' : '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
+      { text: isEn ? '👑 Crown' : '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
     ];
 
     const numSegs = segments.length;
@@ -11098,8 +11496,8 @@ class UIEngine {
       if (Math.abs(currentAngle - lastTickAngle) >= arc) {
         lastTickAngle = currentAngle;
         if (pointer) {
-          pointer.style.transform = 'translate(-50%, -2px) rotate(-15deg)';
-          setTimeout(() => { if (pointer) pointer.style.transform = 'translate(-50%, 0) rotate(0deg)'; }, 40);
+          pointer.style.transform = 'translateX(-50%) rotate(-18deg)';
+          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 45);
         }
         AudioPlayer.playWheelTick();
       }
@@ -11109,7 +11507,8 @@ class UIEngine {
       } else {
         // Spin finished
         AudioPlayer.playStarFanfare();
-        resultBox.innerText = `✨ ${data.eventName || 'Büyük Ödül Kazandın!'}!`;
+        const wonText = isEn ? 'Big Prize Won!' : 'Büyük Ödül Kazandın!';
+        resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
         setTimeout(() => {
           modal.classList.add('hidden');
