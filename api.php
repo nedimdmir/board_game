@@ -915,6 +915,50 @@ if ($action === 'send_emote' || $action === 'send_quick_chat') {
     sendJson(['type' => 'success']);
 }
 
+// 10b. Leave Room (Any Player Anytime)
+if ($action === 'leave_room') {
+    $roomId = !empty($data['roomId']) ? trim($data['roomId']) : '';
+    $sessionId = !empty($data['sessionId']) ? $data['sessionId'] : '';
+
+    $fp = null;
+    $room = loadRoom($roomId, $fp, LOCK_EX);
+    if ($room) {
+        $leftName = '';
+        if ($room['state'] === 'lobby') {
+            $newPlayers = [];
+            foreach ($room['players'] as $p) {
+                if ($p['sessionId'] === $sessionId || $p['id'] === $sessionId) {
+                    $leftName = $p['name'];
+                } else {
+                    $newPlayers[] = $p;
+                }
+            }
+            $room['players'] = $newPlayers;
+            if (!empty($newPlayers) && $room['hostSessionId'] === $sessionId) {
+                $room['hostSessionId'] = $newPlayers[0]['sessionId'];
+            }
+        } else {
+            // In active game: convert to smart bot so match continues smoothly
+            foreach ($room['players'] as &$p) {
+                if ($p['sessionId'] === $sessionId || $p['id'] === $sessionId) {
+                    $leftName = $p['name'];
+                    $p['isBot'] = true;
+                    $p['name'] .= ' (Bot)';
+                }
+            }
+        }
+        if ($leftName) {
+            addRoomLog($room, '🚪 ' . $leftName . ' partiden ayrıldı.');
+        }
+        saveRoom($roomId, $room, $fp);
+    }
+    if ($fp) {
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
+    sendJson(['type' => 'success', 'message' => 'left']);
+}
+
 // 10. Kick Player (Host Only)
 if ($action === 'kick_player') {
     $roomId = !empty($data['roomId']) ? trim($data['roomId']) : '';

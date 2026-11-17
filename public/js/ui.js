@@ -537,6 +537,15 @@ class UIEngine {
       };
     });
 
+    // Leave Lobby Button
+    const btnLobbyLeave = document.getElementById('btn-lobby-leave');
+    if (btnLobbyLeave) {
+      btnLobbyLeave.onclick = () => {
+        AudioPlayer.playClick();
+        GameClient.leaveRoom();
+      };
+    }
+
     // Start Game Button
     const btnStart = document.getElementById('btn-lobby-start');
     if (btnStart) {
@@ -847,6 +856,32 @@ class UIEngine {
       e.currentTarget.innerHTML = playing ? getIcon('volume2') : getIcon('volumeX');
     });
 
+    // Leave Game Modal Controls (In-Game HUD Leave Button)
+    const btnHudLeave = document.getElementById('btn-hud-leave');
+    const modalLeave = document.getElementById('modal-confirm-leave');
+    const btnCancelLeave = document.getElementById('btn-cancel-leave');
+    const btnConfirmLeave = document.getElementById('btn-confirm-leave');
+
+    if (btnHudLeave && modalLeave) {
+      btnHudLeave.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalLeave.classList.remove('hidden');
+      });
+    }
+    if (btnCancelLeave && modalLeave) {
+      btnCancelLeave.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalLeave.classList.add('hidden');
+      });
+    }
+    if (btnConfirmLeave && modalLeave) {
+      btnConfirmLeave.addEventListener('click', () => {
+        AudioPlayer.playClick();
+        modalLeave.classList.add('hidden');
+        GameClient.leaveRoom();
+      });
+    }
+
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
@@ -860,8 +895,32 @@ class UIEngine {
         document.getElementById('btn-open-emotes').click();
       } else if (e.key === 'i' || e.key === 'I') {
         document.getElementById('btn-open-inventory').click();
+      } else if (e.key === 'Escape') {
+        // ESC key can close modals or open leave confirm
+        const openModal = document.querySelector('.modal-overlay:not(.hidden)');
+        if (openModal) {
+          openModal.classList.add('hidden');
+        } else if (!this.gameScreen.classList.contains('hidden')) {
+          const m = document.getElementById('modal-confirm-leave');
+          if (m) m.classList.remove('hidden');
+        }
       }
     });
+  }
+
+  returnToHomeScreen() {
+    this.gameScreen.classList.add('hidden');
+    this.lobbyScreen.classList.add('hidden');
+    this.homeScreen.classList.remove('hidden');
+
+    const modalLeave = document.getElementById('modal-confirm-leave');
+    if (modalLeave) modalLeave.classList.add('hidden');
+
+    // Close any other open modals
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+
+    this.renderCharacterStudio();
+    this.showToast('🚪 Oyundan ayrıldın. Ana menüye dönüldü.', 'info');
   }
 
   showTileInspector(tile, index, playersOnTile, stepsAway) {

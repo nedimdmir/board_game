@@ -188,23 +188,41 @@ class BoardRenderer {
   }
 
   calculateTilePositions() {
-    // Elegant, clean outer perimeter racetrack (Monopoly / Mario Party style)
-    // Clockwise loop with wide open interior for iconic city architecture
+    // Dynamic, organic, fluid racetrack (Mario Party / Dokapon style)
+    // Curving gracefully across scenic bays, bridges, coastal promenades and skyline heights
     return [
-      // Bottom Row (0 to 9, Left to Right, y = 620)
-      { x: 110, y: 620 }, { x: 206, y: 620 }, { x: 301, y: 620 }, { x: 397, y: 620 },
-      { x: 492, y: 620 }, { x: 588, y: 620 }, { x: 683, y: 620 }, { x: 779, y: 620 },
-      { x: 874, y: 620 }, { x: 970, y: 620 },
-      // Right Column (10 to 16, Bottom to Top, x = 970)
-      { x: 970, y: 547 }, { x: 970, y: 474 }, { x: 970, y: 401 }, { x: 970, y: 329 },
-      { x: 970, y: 256 }, { x: 970, y: 183 }, { x: 970, y: 110 },
-      // Top Row (17 to 25, Right to Left, y = 110)
-      { x: 874, y: 110 }, { x: 779, y: 110 }, { x: 683, y: 110 }, { x: 588, y: 110 },
-      { x: 492, y: 110 }, { x: 397, y: 110 }, { x: 301, y: 110 }, { x: 206, y: 110 },
-      { x: 110, y: 110 },
-      // Left Column (26 to 31, Top to Bottom, x = 110)
-      { x: 110, y: 183 }, { x: 110, y: 256 }, { x: 110, y: 329 }, { x: 110, y: 401 },
-      { x: 110, y: 474 }, { x: 110, y: 547 }
+      { x: 206, y: 492 }, // 0: Start Meydanı (Liman Başlangıç)
+      { x: 267, y: 530 }, // 1: Sahil Kordonu
+      { x: 329, y: 564 }, // 2: Balıkçı İskelesi
+      { x: 395, y: 592 }, // 3: Çeşme Meydanı
+      { x: 463, y: 613 }, // 4: Boğaz Yolu
+      { x: 533, y: 626 }, // 5: Marina Kordonu
+      { x: 604, y: 629 }, // 6: Kıyı Parkı
+      { x: 675, y: 623 }, // 7: Star Pedestal
+      { x: 745, y: 608 }, // 8: Doğu Sahili
+      { x: 813, y: 586 }, // 9: Hisar Yokuşu
+      { x: 877, y: 555 }, // 10: Düello Meydanı
+      { x: 937, y: 517 }, // 11: Köprü Yaklaşımı
+      { x: 990, y: 469 }, // 12: Şans Kemeri
+      { x: 1028, y: 409 }, // 13: Seyir Tepesi
+      { x: 1034, y: 339 }, // 14: Kule Yolu
+      { x: 1000, y: 277 }, // 15: Star Pedestal
+      { x: 944, y: 235 }, // 16: Hava Geçidi
+      { x: 878, y: 207 }, // 17: Kodes & Hisar
+      { x: 809, y: 191 }, // 18: Sihirli Çark
+      { x: 738, y: 182 }, // 19: Panorama Terası
+      { x: 667, y: 180 }, // 20: Çamlıca Zirvesi
+      { x: 595, y: 179 }, // 21: Donma Vadisi
+      { x: 524, y: 177 }, // 22: Saray Sırtı
+      { x: 453, y: 174 }, // 23: Star Pedestal
+      { x: 381, y: 174 }, // 24: Ters Rüzgar Tepesi
+      { x: 310, y: 179 }, // 25: Sandık Bahçesi
+      { x: 241, y: 194 }, // 26: Kapalıçarşı Kemeri
+      { x: 174, y: 220 }, // 27: Hazine Meydanı
+      { x: 118, y: 263 }, // 28: Dikenli Vadi
+      { x: 88, y: 326 },  // 29: Büyük Arena
+      { x: 104, y: 394 }, // 30: Gülhane Yolu
+      { x: 149, y: 449 }  // 31: Star Kaidesi
     ];
   }
 
@@ -449,13 +467,13 @@ class BoardRenderer {
     const theme = MAP_THEMES[this.activeTheme] || MAP_THEMES.istanbul;
     ctx.save();
 
-    // Base Island Ground Plate
-    ctx.beginPath();
-    ctx.ellipse(550, 390, 510, 340, 0, 0, Math.PI * 2);
-    ctx.fillStyle = theme.islandBase;
-    ctx.fill();
+    // 1. Full-Canvas Thematic Sky & Atmosphere (Twinkling stars, sunset glow, clouds)
+    this.drawSkyAndAtmosphere(ctx, theme);
 
-    // Map Specific City Architectures & Landmarks
+    // 2. Full-Canvas Terrain & Water Bodies (Replaces the empty void with living diorama)
+    this.drawWaterAndTerrain(ctx, theme);
+
+    // 3. Iconic City Architecture & Living Scenery
     const themeKey = theme.aliasOf || this.activeTheme;
     if (themeKey === 'tokyo') {
       this.drawTokyoEnvironment(ctx);
@@ -466,6 +484,155 @@ class BoardRenderer {
     } else {
       this.drawIstanbulEnvironment(ctx);
     }
+
+    // 4. Ambient Street Lamps, Animated Vehicles & Foliage (Eliminates any bare canvas)
+    this.drawAmbientWorldDetails(ctx, theme);
+
+    ctx.restore();
+  }
+
+  /* ----------------------------------------------------
+     ATMOSPHERIC SKY & HORIZON (Full 1100x760 Canvas)
+     ---------------------------------------------------- */
+  drawSkyAndAtmosphere(ctx, theme) {
+    const themeKey = theme.aliasOf || this.activeTheme;
+
+    // Atmospheric Gradient Backdrop
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 760);
+    if (themeKey === 'tokyo') {
+      skyGrad.addColorStop(0, '#060714');
+      skyGrad.addColorStop(0.35, '#0F1035');
+      skyGrad.addColorStop(0.7, '#1E1B4B');
+      skyGrad.addColorStop(1, '#090A1A');
+    } else if (themeKey === 'paris') {
+      skyGrad.addColorStop(0, '#1E1B4B');
+      skyGrad.addColorStop(0.4, '#4C1D95');
+      skyGrad.addColorStop(0.75, '#831843');
+      skyGrad.addColorStop(1, '#3B0764');
+    } else if (themeKey === 'newyork') {
+      skyGrad.addColorStop(0, '#030712');
+      skyGrad.addColorStop(0.4, '#0F172A');
+      skyGrad.addColorStop(0.75, '#1E293B');
+      skyGrad.addColorStop(1, '#111827');
+    } else {
+      // Istanbul Twilight
+      skyGrad.addColorStop(0, '#0A192F');
+      skyGrad.addColorStop(0.35, '#0F2B48');
+      skyGrad.addColorStop(0.65, '#1E3A8A');
+      skyGrad.addColorStop(0.85, '#D97706');
+      skyGrad.addColorStop(1, '#78350F');
+    }
+
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, 1100, 760);
+
+    // Twinkling Stars in upper sky
+    ctx.save();
+    const starCoords = [
+      { x: 90, y: 35, s: 1.6 }, { x: 210, y: 55, s: 1.2 }, { x: 330, y: 30, s: 2.0 },
+      { x: 470, y: 50, s: 1.4 }, { x: 590, y: 25, s: 1.8 }, { x: 710, y: 45, s: 1.3 },
+      { x: 840, y: 30, s: 2.2 }, { x: 970, y: 60, s: 1.5 }, { x: 1040, y: 40, s: 1.7 },
+      { x: 150, y: 95, s: 1.3 }, { x: 380, y: 110, s: 1.1 }, { x: 670, y: 90, s: 1.6 },
+      { x: 890, y: 105, s: 1.4 }
+    ];
+    starCoords.forEach((st, i) => {
+      const alpha = 0.35 + 0.65 * Math.abs(Math.sin(this.starPulse * 2.2 + i * 1.5));
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.s, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Glowing Celestial Body
+    if (themeKey === 'tokyo') {
+      ctx.save();
+      ctx.fillStyle = '#F43F5E';
+      ctx.shadowColor = '#F43F5E';
+      ctx.shadowBlur = 25;
+      ctx.beginPath();
+      ctx.arc(930, 85, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+      ctx.beginPath();
+      ctx.arc(930, 85, 38, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(140, 75);
+      ctx.fillStyle = '#FEF08A';
+      ctx.shadowColor = '#FDE047';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(6, -4, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Drifting Stylized Sunset Clouds
+    ctx.fillStyle = (themeKey === 'paris') ? 'rgba(252, 231, 243, 0.25)' : 'rgba(255, 255, 255, 0.14)';
+    const cloudOffsets = [0, 380, 760, 1140];
+    cloudOffsets.forEach((co, idx) => {
+      const cx = ((this.starPulse * 14 + co) % 1320) - 120;
+      const cy = 45 + (idx % 2) * 35;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+      ctx.arc(cx + 20, cy - 8, 26, 0, Math.PI * 2);
+      ctx.arc(cx + 44, cy, 18, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  /* ----------------------------------------------------
+     BASE WATERWAYS & ISLAND TERRAIN CONTOURS
+     ---------------------------------------------------- */
+  drawWaterAndTerrain(ctx, theme) {
+    const themeKey = theme.aliasOf || this.activeTheme;
+
+    // 1. Water Channel / Ocean Base across the canvas
+    const waterGrad = ctx.createLinearGradient(0, 150, 1100, 760);
+    if (themeKey === 'tokyo') {
+      waterGrad.addColorStop(0, '#090A1A');
+      waterGrad.addColorStop(0.5, '#0F172A');
+      waterGrad.addColorStop(1, '#0284C733');
+    } else if (themeKey === 'paris') {
+      waterGrad.addColorStop(0, '#1E1B4B');
+      waterGrad.addColorStop(0.5, '#0284C7');
+      waterGrad.addColorStop(1, '#0369A1');
+    } else if (themeKey === 'newyork') {
+      waterGrad.addColorStop(0, '#0B132B');
+      waterGrad.addColorStop(0.5, '#0369A1');
+      waterGrad.addColorStop(1, '#075985');
+    } else {
+      waterGrad.addColorStop(0, '#0369A1');
+      waterGrad.addColorStop(0.5, '#0284C7');
+      waterGrad.addColorStop(1, '#075985');
+    }
+
+    // 2. Full-Canvas Outer Coastline Shelf
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(550, 395, 535, 320, 0, 0, Math.PI * 2);
+    ctx.fillStyle = (themeKey === 'tokyo') ? '#1E1B4B' : (themeKey === 'newyork' ? '#1E293B' : '#FDE68A');
+    ctx.fill();
+
+    // 3. Main Island Body (City Plaza & Hills)
+    ctx.beginPath();
+    ctx.ellipse(550, 390, 510, 305, 0, 0, Math.PI * 2);
+    ctx.fillStyle = theme.islandBase;
+    ctx.fill();
+
+    // 4. Subtle Garden / Cobblestone District Insets
+    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(6, 182, 212, 0.16)' : 'rgba(0, 0, 0, 0.04)';
+    ctx.lineWidth = 16;
+    ctx.beginPath();
+    ctx.ellipse(550, 390, 440, 245, 0, 0, Math.PI * 2);
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -640,7 +807,54 @@ class BoardRenderer {
     ctx.fillText('Ayasofya-i Kebir', 0, 42);
     ctx.restore();
 
-    // 6. Flying Seagulls (Martılar) in the sky
+    // 6. Kız Kulesi (Maiden's Tower) on its own islet at (740, 390)
+    ctx.save();
+    ctx.translate(740, 390);
+    ctx.fillStyle = '#78716C';
+    ctx.beginPath(); ctx.ellipse(0, 16, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#E7E5E4';
+    ctx.fillRect(-12, -10, 24, 24);
+    ctx.strokeStyle = '#A8A29E'; ctx.lineWidth = 1.5; ctx.strokeRect(-12, -10, 24, 24);
+    ctx.fillStyle = '#D6D3D1'; ctx.fillRect(-8, -22, 16, 12);
+    ctx.beginPath(); ctx.arc(0, -22, 8, Math.PI, 0); ctx.fillStyle = '#DC2626'; ctx.fill();
+    // Sweeping Lighthouse Beam
+    const ltAngle = this.starPulse * 1.2;
+    const ltLen = 130;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0, -22);
+    ctx.lineTo(Math.cos(ltAngle - 0.25) * ltLen, -22 + Math.sin(ltAngle - 0.25) * ltLen * 0.5);
+    ctx.lineTo(Math.cos(ltAngle + 0.25) * ltLen, -22 + Math.sin(ltAngle + 0.25) * ltLen * 0.5);
+    ctx.closePath();
+    const ltGrad = ctx.createRadialGradient(0, -22, 4, 0, -22, ltLen);
+    ltGrad.addColorStop(0, 'rgba(254, 240, 138, 0.8)');
+    ltGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+    ctx.fillStyle = ltGrad;
+    ctx.fill();
+    ctx.restore();
+    ctx.font = 'bold 8px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.fillText('Kız Kulesi', 0, 34);
+    ctx.restore();
+
+    // 7. Taksim Nostaljik Kırmızı Tramvay on Rails
+    ctx.save();
+    const tramX = 180 + Math.sin(this.starPulse * 0.8) * 20;
+    const tramY = 360;
+    ctx.translate(tramX, tramY);
+    ctx.strokeStyle = '#64748B'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-45, 14); ctx.lineTo(45, 14); ctx.moveTo(-45, 18); ctx.lineTo(45, 18); ctx.stroke();
+    ctx.fillStyle = '#DC2626'; ctx.fillRect(-18, -12, 36, 22);
+    ctx.fillStyle = '#FEF08A'; ctx.fillRect(-18, 0, 36, 4);
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillRect(-14, -8, 7, 7); ctx.fillRect(-4, -8, 8, 7); ctx.fillRect(7, -8, 7, 7);
+    ctx.fillStyle = '#1E293B'; ctx.fillRect(-14, 10, 6, 4); ctx.fillRect(8, 10, 6, 4);
+    ctx.strokeStyle = '#1E293B'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(4, -24); ctx.lineTo(12, -24); ctx.stroke();
+    ctx.font = 'bold 7px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.fillText('Nostaljik Tramvay', 0, 28);
+    ctx.restore();
+
+    // 8. Flying Seagulls (Martılar) in the sky
     ctx.strokeStyle = '#1E293B';
     ctx.lineWidth = 1.5;
     const gulls = [
@@ -976,6 +1190,79 @@ class BoardRenderer {
     ctx.fillRect( cabPos + 336, 689, 5, 5);
     ctx.fillStyle = '#EF4444';
     ctx.fillRect( cabPos + 342, 682, 2, 4);
+
+    ctx.restore();
+  }
+
+  /* ----------------------------------------------------
+     AMBIENT WORLD DETAILS (Street Lamps, Light Cones, Trees, Foliage)
+     ---------------------------------------------------- */
+  drawAmbientWorldDetails(ctx, theme) {
+    ctx.save();
+
+    // 1. Street Lamps with Warm Glowing Cones along the track
+    const lampCoords = [
+      { x: 267, y: 560 }, { x: 533, y: 655 }, { x: 813, y: 615 }, { x: 990, y: 500 },
+      { x: 878, y: 175 }, { x: 524, y: 145 }, { x: 241, y: 165 }, { x: 118, y: 295 }
+    ];
+
+    lampCoords.forEach(lamp => {
+      // Warm ground light circle
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.18)';
+      ctx.beginPath();
+      ctx.ellipse(lamp.x, lamp.y + 6, 22, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lamp post & glowing head
+      ctx.fillStyle = '#1E293B';
+      ctx.fillRect(lamp.x - 1.5, lamp.y - 18, 3, 18);
+      ctx.fillStyle = '#FEF08A';
+      ctx.beginPath();
+      ctx.arc(lamp.x, lamp.y - 19, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 2. Isometric 3D Puffy Cartoon Trees (Fills empty spaces with greenery)
+    const treeCoords = [
+      { x: 270, y: 350, s: 1.1 }, { x: 310, y: 380, s: 0.9 }, { x: 280, y: 420, s: 1.2 },
+      { x: 820, y: 280, s: 1.0 }, { x: 860, y: 310, s: 1.2 }, { x: 790, y: 340, s: 0.9 },
+      { x: 410, y: 530, s: 1.1 }, { x: 670, y: 530, s: 1.0 }, { x: 490, y: 260, s: 1.2 },
+      { x: 580, y: 260, s: 1.1 }, { x: 370, y: 280, s: 0.9 }, { x: 720, y: 270, s: 1.0 }
+    ];
+
+    treeCoords.forEach(t => {
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.scale(t.s, t.s);
+
+      // Shadow
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+      ctx.beginPath();
+      ctx.ellipse(0, 12, 16, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Trunk
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-3, 0, 6, 12);
+
+      // Foliage Layers (Puffy Cartoon Tree)
+      ctx.fillStyle = '#15803D';
+      ctx.beginPath();
+      ctx.arc(0, -6, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#22C55E';
+      ctx.beginPath();
+      ctx.arc(-2, -10, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#86EFAC';
+      ctx.beginPath();
+      ctx.arc(-5, -14, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
 
     ctx.restore();
   }
@@ -2047,3 +2334,5 @@ class BoardRenderer {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
+
+window.BoardRenderer = BoardRenderer;

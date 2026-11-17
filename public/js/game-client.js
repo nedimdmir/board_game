@@ -153,6 +153,40 @@ class ClientEngine {
     }
   }
 
+  async leaveRoom() {
+    this.stopPolling();
+    const rId = this.roomId;
+    const pId = this.player ? (this.player.id || this.player.sessionId) : null;
+
+    if (this.backendType === 'php' && rId) {
+      try {
+        await this.apiPost('leave_room', { playerId: pId });
+      } catch (e) {}
+    } else if (this.backendType === 'ws' && this.ws && this.connected) {
+      this.send('leave_room', { roomId: rId });
+    } else if (window.LocalServer) {
+      window.LocalServer.handleMessage(pId || 's_host', 'leave_room', {});
+    }
+
+    this.roomId = null;
+    this.player = null;
+    this.state = null;
+    window.CURRENT_ROOM_STATE = null;
+    try {
+      localStorage.removeItem('partycraft_active_room');
+    } catch (e) {}
+
+    // Clean URL query parameter (?room=...)
+    if (window.history && window.history.replaceState) {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+
+    if (window.UI) {
+      window.UI.returnToHomeScreen();
+    }
+  }
+
   connect() {
     return Promise.resolve();
   }

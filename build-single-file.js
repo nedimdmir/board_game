@@ -148,6 +148,11 @@ class LocalGameServer {
         room.sendEmote(sessionId, data.emoteId);
         break;
 
+      case 'leave_room': {
+        this.currentRoom = null;
+        break;
+      }
+
       case 'kick_player': {
         const pIdx = room.players.findIndex(p => p.id === data.playerId || p.sessionId === data.playerId);
         if (pIdx > 0) {
