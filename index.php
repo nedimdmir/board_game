@@ -5531,13 +5531,63 @@ const SUPPORTED_LANGUAGES = ['tr', 'en', 'de', 'es', 'fr'];
 
 class I18nManager {
   constructor() {
-    this.currentLang = 'tr';
+    this.currentLang = this.detectUserLanguage();
+  }
+
+  /**
+   * Automatically detects the user's preferred language:
+   * 1. URL parameter override: ?lang=en / ?lang=de / etc.
+   * 2. Saved user preference in localStorage
+   * 3. Browser locale from navigator.language / navigator.languages (e.g. US/UK -> en, DE -> de, FR -> fr, ES -> es, TR -> tr)
+   * 4. Smart fallback: 'en' for international visitors outside Turkey, 'tr' for Turkish systems.
+   */
+  detectUserLanguage() {
+    // 1. URL Query Parameter Override (?lang=en)
     try {
-      const saved = localStorage.getItem('partycraft_lang');
-      if (saved && SUPPORTED_LANGUAGES.includes(saved)) {
-        this.currentLang = saved;
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlLang = urlParams.get('lang');
+        if (urlLang && SUPPORTED_LANGUAGES.includes(urlLang.toLowerCase())) {
+          const clean = urlLang.toLowerCase();
+          try { localStorage.setItem('partycraft_lang', clean); } catch (e) {}
+          return clean;
+        }
       }
     } catch (e) {}
+
+    // 2. Previously Saved Preference in LocalStorage
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('partycraft_lang');
+        if (saved && SUPPORTED_LANGUAGES.includes(saved.toLowerCase())) {
+          return saved.toLowerCase();
+        }
+      }
+    } catch (e) {}
+
+    // 3. Browser / System Locale Detection (America, Europe, International)
+    try {
+      if (typeof navigator !== 'undefined') {
+        const locales = navigator.languages || [navigator.language || navigator.userLanguage || ''];
+        for (const loc of locales) {
+          if (!loc || typeof loc !== 'string') continue;
+          const clean = loc.toLowerCase().split('-')[0].split('_')[0]; // 'en-US' -> 'en', 'de-AT' -> 'de'
+          if (SUPPORTED_LANGUAGES.includes(clean)) {
+            return clean;
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 4. Default Fallback: If Turkish system, use 'tr'; otherwise default to international 'en'
+    try {
+      if (typeof navigator !== 'undefined') {
+        const primary = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        if (primary.startsWith('tr')) return 'tr';
+      }
+    } catch (e) {}
+
+    return 'en'; // International English fallback for visitors from America or other countries
   }
 
   getLang() {
@@ -5574,6 +5624,13 @@ class I18nManager {
   }
 
   applyTranslations() {
+    if (typeof document === 'undefined') return;
+
+    // Update HTML root lang attribute
+    try {
+      document.documentElement.lang = this.currentLang;
+    } catch (e) {}
+
     // 1. Text content elements
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(el => {
@@ -5615,6 +5672,15 @@ class I18nManager {
 window.i18n = new I18nManager();
 window.t = (key, fallback) => window.i18n.t(key, fallback);
 window.setLanguage = (lang) => window.i18n.setLang(lang);
+
+// Auto-apply translations on initial load
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => window.i18n.applyTranslations());
+  } else {
+    window.i18n.applyTranslations();
+  }
+}
 
 
 /* =================== 2. QR CODE SVG GENERATOR =================== */
