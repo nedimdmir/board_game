@@ -65,7 +65,7 @@ Eğer oyunu web sitenizdeki bir sayfanın veya blog yazısının içine gömmek 
 
 ## 4. 💻 YEREL TEST (Kendi Bilgisayarınızda Deneme)
 
-- **İnternetsiz / Doğrudan Açma:** `index.html` veya `oyun.html` dosyasına çift tıklayarak Chrome, Edge, Safari veya Firefox tarayıcınızda hemen oynayabilirsiniz.
+- **İnternetsiz / Doğrudan Açma:** `index.html` dosyasına çift tıklayarak Chrome, Edge, Safari veya Firefox tarayıcınızda hemen oynayabilirsiniz.
 - **Node.js ile Yerel Ağ Partisi:**
   ```bash
   npm install

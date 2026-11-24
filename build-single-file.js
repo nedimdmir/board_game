@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('Generating standalone single-file game: parti-dunyasi-tek-dosya.html, oyun.html, and index.html...');
+console.log('Generating standalone single-file packages: index.html and index.php...');
 
 const htmlSrc = fs.readFileSync('public/index.html', 'utf8');
 const boardCss = fs.readFileSync('public/css/board.css', 'utf8');
@@ -228,9 +228,7 @@ ${uiJs}
   </script>`
 );
 
-// Write to parti-dunyasi-tek-dosya.html, oyun.html, and root index.html
-fs.writeFileSync('parti-dunyasi-tek-dosya.html', singleHtml, 'utf8');
-fs.writeFileSync('oyun.html', singleHtml, 'utf8');
+// Write root index.html (Static / GitHub Pages / Offline Single-File)
 fs.writeFileSync('index.html', singleHtml, 'utf8');
 
 // Build All-In-One index.php (Multiplayer PHP Backend + Full Web Frontend in ONE single file)
@@ -266,6 +264,6 @@ ${singleHtml}
 
 fs.writeFileSync('index.php', allInOnePhp, 'utf8');
 
-console.log('SUCCESS: Generated "parti-dunyasi-tek-dosya.html", "oyun.html", root "index.html", and All-in-One "index.php" successfully!');
+console.log('SUCCESS: Generated root "index.html" and All-in-One "index.php" successfully!');
 console.log('index.html size:', (Buffer.byteLength(singleHtml) / 1024).toFixed(1), 'KB');
 console.log('index.php (All-In-One) size:', (Buffer.byteLength(allInOnePhp) / 1024).toFixed(1), 'KB');
