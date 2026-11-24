@@ -572,6 +572,34 @@
     </div>
   </div>
 
+  <!-- Lucky Die Picker Modal -->
+  <div id="modal-lucky-die" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 360px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title">🎯 Şanslı Zarını Seç</h3>
+        <button class="modal-close-btn" id="btn-close-lucky-die">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #64748B; margin-bottom: 16px;">Sıradaki zar atışında gelmesini istediğin kesin sayıyı belirle:</p>
+      <div class="lucky-die-grid" id="lucky-die-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px;">
+        <!-- 1 to 6 injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Swap Wand Target Picker Modal -->
+  <div id="modal-swap-wand" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🪄 Takas Asası - Hedef Seç</h3>
+        <button class="modal-close-btn" id="btn-close-swap-wand">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #64748B; margin-bottom: 14px;">Konumunu anında takas etmek istediğin rakip oyuncuyu seç:</p>
+      <div class="swap-wand-list" id="swap-wand-list" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Rival player cards injected dynamically -->
+      </div>
+    </div>
+  </div>
+
   <!-- Mystery Roulette Modal -->
   <div id="modal-mystery" class="modal-overlay hidden">
     <div class="modal-card mystery-roulette-container">

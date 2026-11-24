@@ -793,7 +793,9 @@ if ($action === 'roll_dice') {
         }
     }
 
-    $die1 = mt_rand(1, 6);
+    $die1 = !empty($player['fixedRollNext']) ? intval($player['fixedRollNext']) : mt_rand(1, 6);
+    $wasFixed = !empty($player['fixedRollNext']);
+    unset($player['fixedRollNext']);
     $die2 = null;
     $totalRoll = $die1;
 
@@ -801,9 +803,13 @@ if ($action === 'roll_dice') {
         $die2 = mt_rand(1, 6);
         $totalRoll = $die1 + $die2;
         $player['doubleDiceActive'] = false;
-        addRoomLog($room, "🎲 {$player['name']} ÇİFT ZAR attı: [{$die1}] + [{$die2}] = {$totalRoll} adım!");
+        addRoomLog($room, "🎲🎲 {$player['name']} ÇİFT ZAR attı: [{$die1}] + [{$die2}] = {$totalRoll} adım!");
     } else {
-        addRoomLog($room, "🎲 {$player['name']} zar attı: [{$die1}]!");
+        if ($wasFixed) {
+            addRoomLog($room, "🎯 {$player['name']} Şanslı Altın Zarını attı: [{$die1}]!");
+        } else {
+            addRoomLog($room, "🎲 {$player['name']} zar attı: [{$die1}]!");
+        }
     }
 
     $isReverse = !empty($player['reverseNext']);
@@ -1084,16 +1090,25 @@ if ($action === 'use_item') {
         } else if ($itemId === 'banana') {
             $room['trapsOnBoard'][] = ['tileIndex' => $player['position'], 'ownerId' => $player['id']];
             addRoomLog($room, "🍌 {$player['name']} {$player['position']}. karoya Muz Kabuğu tuzağı kurdu!");
-        } else if ($itemId === 'swap_wand' && $targetId) {
+        } else if ($itemId === 'swap_wand') {
+            $targetOpp = null;
             foreach ($room['players'] as &$opp) {
-                if ($opp['id'] === $targetId) {
-                    $tmp = $player['position'];
-                    $player['position'] = $opp['position'];
-                    $opp['position'] = $tmp;
-                    addRoomLog($room, "🪄 {$player['name']} Takas Asası ile {$opp['name']} ile yer değiştirdi!");
-                    break;
-                }
+                if ($targetId && $opp['id'] === $targetId) { $targetOpp = &$opp; break; }
+                if (!$targetId && $opp['id'] !== $player['id']) { $targetOpp = &$opp; break; }
             }
+            if ($targetOpp) {
+                $tmp = $player['position'];
+                $player['position'] = $targetOpp['position'];
+                $targetOpp['position'] = $tmp;
+                addRoomLog($room, "🪄 {$player['name']} Takas Asası ile {$targetOpp['name']} ile yer değiştirdi!");
+            }
+        } else if ($itemId === 'ghost_cloak') {
+            $player['ghostCloakActive'] = 2;
+            addRoomLog($room, "👻 {$player['name']} Hayalet Pelerin kuşandı! 2 tur cezalardan muaf!");
+        } else if ($itemId === 'lucky_die') {
+            $fixed = intval($targetId) ?: 6;
+            $player['fixedRollNext'] = min(6, max(1, $fixed));
+            addRoomLog($room, "🎯 {$player['name']} Şanslı Altın Zar ayarladı [{$player['fixedRollNext']}]!");
         }
 
         $room['updatedAt'] = time();
@@ -2965,6 +2980,8 @@ input:checked + .slider-round:before {
   align-items: center;
   text-align: center;
   gap: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .shop-item-card.disabled {
@@ -2978,18 +2995,24 @@ input:checked + .slider-round:before {
 
 .shop-item-name {
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 1.25;
+  color: #1E293B;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .shop-item-desc {
   font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.3;
+  color: #64748B;
+  line-height: 1.35;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .shop-buy-btn {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: var(--lego-yellow);
   color: #78350F;
   border: none;
@@ -2998,6 +3021,10 @@ input:checked + .slider-round:before {
   font-size: 12px;
   cursor: pointer;
   box-shadow: 0 2px 0 #D97706;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 .shop-buy-btn:disabled {
@@ -3017,39 +3044,56 @@ input:checked + .slider-round:before {
 .inventory-item-card {
   background: #F8FAFC;
   border: 2px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .inv-icon {
-  font-size: 26px;
+  font-size: 28px;
+  flex-shrink: 0;
 }
 
 .inv-info {
   flex: 1;
+  min-width: 0; /* Prevents text overflowing flex container */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .inv-name {
   font-weight: 800;
   font-size: 14px;
+  color: #1E293B;
+  word-break: break-word;
+  line-height: 1.25;
 }
 
 .inv-desc {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: #64748B;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .inv-use-btn {
-  padding: 8px 16px;
+  padding: 8px 18px;
   background: var(--lego-green);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #047857;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
   cursor: pointer;
   box-shadow: 0 2px 0 #059669;
 }
@@ -4006,6 +4050,89 @@ input:checked + .slider-round:before {
   }
 }
 
+/* ==========================================================================
+   LUCKY DIE & SWAP WAND INTERACTIVE MODALS
+   ========================================================================== */
+.lucky-die-btn {
+  background: #F8FAFC;
+  border: 2px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 14px 10px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #1E293B;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.lucky-die-btn:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #B45309;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 16px -2px rgba(245, 158, 11, 0.25);
+}
+.lucky-die-btn span.die-dot {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748B;
+}
+
+.swap-wand-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.swap-wand-card:hover {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+.swap-wand-avatar {
+  font-size: 24px;
+  margin-right: 10px;
+}
+.swap-wand-info {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+.swap-wand-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.swap-wand-sub {
+  font-size: 11px;
+  color: #64748B;
+}
+.swap-wand-action-btn {
+  background: #8B5CF6;
+  color: #FFFFFF;
+  border: none;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
   </style>
 </head>
 <body>
@@ -4563,6 +4690,34 @@ input:checked + .slider-round:before {
         <button class="modal-close-btn" id="btn-close-inventory">✕</button>
       </div>
       <div class="inventory-items-grid" id="inventory-items-grid"></div>
+    </div>
+  </div>
+
+  <!-- Lucky Die Picker Modal -->
+  <div id="modal-lucky-die" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 360px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title">🎯 Şanslı Zarını Seç</h3>
+        <button class="modal-close-btn" id="btn-close-lucky-die">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #64748B; margin-bottom: 16px;">Sıradaki zar atışında gelmesini istediğin kesin sayıyı belirle:</p>
+      <div class="lucky-die-grid" id="lucky-die-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px;">
+        <!-- 1 to 6 injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Swap Wand Target Picker Modal -->
+  <div id="modal-swap-wand" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🪄 Takas Asası - Hedef Seç</h3>
+        <button class="modal-close-btn" id="btn-close-swap-wand">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #64748B; margin-bottom: 14px;">Konumunu anında takas etmek istediğin rakip oyuncuyu seç:</p>
+      <div class="swap-wand-list" id="swap-wand-list" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Rival player cards injected dynamically -->
+      </div>
     </div>
   </div>
 
@@ -8956,6 +9111,22 @@ class BoardRenderer {
       ctx.stroke();
     }
 
+    // 3.1 Ghost Cloak Ethereal Aura if active
+    if (player.ghostCloakActive > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, -18, 30, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+      ctx.shadowColor = '#22D3EE';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.strokeStyle = '#67E8F9';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // 4. Ice Block if frozen
     if (player.frozenTurns > 0) {
       ctx.beginPath();
@@ -9278,22 +9449,55 @@ class BoardRenderer {
       ctx.beginPath(); ctx.moveTo(9, -37); ctx.quadraticCurveTo(16, -43, 15, -49); ctx.quadraticCurveTo(11, -43, 6, -39); ctx.closePath(); ctx.fill();
     }
 
-    // 7. Clean Name Tag Pill
+    // 7. Dynamic Auto-Sizing Name Tag Pill (Guarantees zero text overflow!)
     if (isCurrent || !isClustered) {
+      ctx.font = 'bold 9.5px sans-serif';
+      const displayName = player.name.length > 10 ? player.name.substr(0, 9) + '..' : player.name;
+      const tagText = `${displayName} ⭐${player.stars}`;
+      const textWidth = ctx.measureText(tagText).width;
+      const pillWidth = Math.max(76, textWidth + 18);
+      const pillHeight = 18;
+
       ctx.beginPath();
-      ctx.roundRect(-36, -56, 72, 16, 8);
-      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.88)';
+      ctx.roundRect(-pillWidth / 2, -56, pillWidth, pillHeight, 9);
+      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.9)';
       ctx.fill();
-      ctx.strokeStyle = player.color;
-      ctx.lineWidth = isCurrent ? 2 : 1;
+      ctx.strokeStyle = player.color || '#38BDF8';
+      ctx.lineWidth = isCurrent ? 2 : 1.2;
       ctx.stroke();
 
       ctx.fillStyle = isCurrent ? '#854D0E' : '#FFFFFF';
-      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const displayName = player.name.length > 8 ? player.name.substr(0, 7) + '..' : player.name;
-      ctx.fillText(`${displayName} ⭐${player.stars}`, 0, -48);
+      ctx.fillText(tagText, 0, -47);
+
+      // Active Buff Badges (Double Dice, Lucky Die, Ghost)
+      let buffOffset = pillWidth / 2 + 10;
+      if (player.doubleDiceActive) {
+        ctx.beginPath();
+        ctx.arc(buffOffset, -47, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.font = '9px sans-serif';
+        ctx.fillText('🎲', buffOffset, -46);
+        buffOffset += 18;
+      }
+      if (player.fixedRollNext) {
+        ctx.beginPath();
+        ctx.arc(buffOffset, -47, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#10B981';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(player.fixedRollNext, buffOffset, -47);
+        buffOffset += 18;
+      }
     } else {
       ctx.beginPath();
       ctx.arc(0, -45, 10, 0, Math.PI * 2);
@@ -10333,6 +10537,8 @@ class LocalRoom {
       frozenTurns: 0,
       reverseNext: false,
       doubleDiceActive: false,
+      ghostCloakActive: 0,
+      fixedRollNext: null,
       isBot: false,
       disconnected: false,
       ws: ws
@@ -10381,6 +10587,8 @@ class LocalRoom {
       frozenTurns: 0,
       reverseNext: false,
       doubleDiceActive: false,
+      ghostCloakActive: 0,
+      fixedRollNext: null,
       isBot: true,
       personality: personality || botTemplate.personality,
       disconnected: false,
@@ -10469,7 +10677,10 @@ class LocalRoom {
         coins: p.coins,
         stars: p.stars,
         inventory: p.inventory,
-        shieldActive: p.shieldActive,
+        shieldActive: p.shieldActive || 0,
+        ghostCloakActive: p.ghostCloakActive || 0,
+        doubleDiceActive: !!p.doubleDiceActive,
+        fixedRollNext: p.fixedRollNext || null,
         jailedTurns: p.jailedTurns,
         frozenTurns: p.frozenTurns,
         reverseNext: p.reverseNext,
@@ -10565,7 +10776,9 @@ class LocalRoom {
       }
     }
 
-    let die1 = Math.floor(Math.random() * 6) + 1;
+    let die1 = player.fixedRollNext ? player.fixedRollNext : (Math.floor(Math.random() * 6) + 1);
+    const wasFixed = !!player.fixedRollNext;
+    player.fixedRollNext = null;
     let die2 = null;
     let totalRoll = die1;
 
@@ -10575,7 +10788,11 @@ class LocalRoom {
       player.doubleDiceActive = false;
       this.addLog(`🎲 ${player.name} ÇİFT ZAR attı: [${die1}] + [${die2}] = ${totalRoll} adım!`);
     } else {
-      this.addLog(`🎲 ${player.name} zar attı: [${die1}]!`);
+      if (wasFixed) {
+        this.addLog(`🎯 ${player.name} Şanslı Altın Zarını attı: [${die1}]!`);
+      } else {
+        this.addLog(`🎲 ${player.name} zar attı: [${die1}]!`);
+      }
     }
 
     // Broadcast dice roll event so client can play 3D dice rolling animation
@@ -10664,21 +10881,33 @@ class LocalRoom {
 
     // Check if there is a Banana Trap set here by another player
     if (this.trapsOnBoard[tileIndex] && this.trapsOnBoard[tileIndex] !== player.id) {
-      delete this.trapsOnBoard[tileIndex];
-      this.addLog(`🍌 Oooops! ${player.name} muz kabuğuna bastı ve 3 adım geri kaydı!`);
-      player.position = (player.position - 3 + this.board.length) % this.board.length;
-      this.broadcast('tile_event', {
-        playerId: player.id,
-        playerName: player.name,
-        avatar: player.avatar,
-        category: 'penalty',
-        title: '🍌 MUZ KABUĞUNA BASTI!',
-        message: `${player.name} muz kabuğuna basıp 360° takla attı ve 3 adım geri kaydı! 😂`,
-        animation: 'banana_slip',
-        sound: 'slip'
-      });
+      if (player.ghostCloakActive > 0) {
+        this.addLog(`👻 ${player.name} Hayalet Pelerin sayesinde muz kabuğu tuzağının üstünden süzülüp geçti!`);
+      } else {
+        delete this.trapsOnBoard[tileIndex];
+        this.addLog(`🍌 Oooops! ${player.name} muz kabuğuna bastı ve 3 adım geri kaydı!`);
+        player.position = (player.position - 3 + this.board.length) % this.board.length;
+        this.broadcast('tile_event', {
+          playerId: player.id,
+          playerName: player.name,
+          avatar: player.avatar,
+          category: 'penalty',
+          title: '🍌 MUZ KABUĞUNA BASTI!',
+          message: `${player.name} muz kabuğuna basıp 360° takla attı ve 3 adım geri kaydı! 😂`,
+          animation: 'banana_slip',
+          sound: 'slip'
+        });
+        this.broadcastState();
+        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+        return;
+      }
+    }
+
+    // Check Ghost Cloak immunity against hazard tiles
+    if (player.ghostCloakActive > 0 && (tile.type === 'trap' || tile.type === 'tax' || tile.type === 'jail' || tile.type === 'slip' || tile.type === 'freeze')) {
+      this.addLog(`👻 Hayalet Pelerin devrede! ${player.name} ${tile.type.toUpperCase()} cezasını dokunmadan es geçti!`);
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(900 / spd)));
       return;
     }
 
@@ -11057,8 +11286,19 @@ class LocalRoom {
           const tempPos = player.position;
           player.position = target.position;
           target.position = tempPos;
-          this.addLog(`🔄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
+          this.addLog(`🪄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
         }
+        break;
+
+      case 'ghost_cloak':
+        player.ghostCloakActive = 2;
+        this.addLog(`👻 ${player.name} Hayalet Pelerin kuşandı! 2 tur boyunca cezalardan ve tuzaklardan muaf!`);
+        break;
+
+      case 'lucky_die':
+        const fixedVal = Math.min(6, Math.max(1, parseInt(targetPlayerId) || 6));
+        player.fixedRollNext = fixedVal;
+        this.addLog(`🎯 ${player.name} Şanslı Altın Zar ayarladı: Sıradaki zarı garanti [${fixedVal}] gelecek!`);
         break;
     }
 
@@ -11068,8 +11308,10 @@ class LocalRoom {
   finishTurn() {
     this.isProcessingTurn = false;
     const current = this.getCurrentPlayer();
-    if (current && current.frozenTurns > 0) {
-      current.frozenTurns--;
+    if (current) {
+      if (current.shieldActive > 0) current.shieldActive--;
+      if (current.ghostCloakActive > 0) current.ghostCloakActive--;
+      if (current.frozenTurns > 0) current.frozenTurns--;
     }
     if (this.state !== 'playing') return;
 
@@ -12854,6 +13096,25 @@ class UIEngine {
     if (rollBtn) {
       rollBtn.disabled = !isMyTurn;
       rollBtn.classList.toggle('pulse-turn', isMyTurn);
+      if (isMyTurn && activePlayer) {
+        if (activePlayer.doubleDiceActive) {
+          rollBtn.innerHTML = '<span>🎲🎲</span> 2X ÇİFT ZAR! (SPACE)';
+          rollBtn.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+          rollBtn.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.45)';
+        } else if (activePlayer.fixedRollNext) {
+          rollBtn.innerHTML = `<span>🎯</span> KİLİTLİ ZAR: ${activePlayer.fixedRollNext} (SPACE)`;
+          rollBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+          rollBtn.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.45)';
+        } else {
+          rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
+          rollBtn.style.background = '';
+          rollBtn.style.boxShadow = '';
+        }
+      } else {
+        rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
+        rollBtn.style.background = '';
+        rollBtn.style.boxShadow = '';
+      }
     }
 
     // Update Top Screen Unmissable Turn Alert Banner
@@ -12870,6 +13131,12 @@ class UIEngine {
         if (bannerSub) {
           if (activePlayer.jailedTurns > 0) {
             bannerSub.innerText = '🔒 Kodes Cezası: 5 altın kefalet öde veya pas geç!';
+          } else if (activePlayer.doubleDiceActive) {
+            bannerSub.innerText = '🎲🎲 2X Çift Zar Etkin! Bu tur iki zar birden atacaksın!';
+          } else if (activePlayer.fixedRollNext) {
+            bannerSub.innerText = `🎯 Şanslı Zar Etkin! Bu tur tam ${activePlayer.fixedRollNext} adım atacaksın!`;
+          } else if (activePlayer.ghostCloakActive > 0) {
+            bannerSub.innerText = `👻 Hayalet Pelerini Aktif (${activePlayer.ghostCloakActive} tur)! Tüm tuzak ve cezalardan muafsın!`;
           } else if (activePlayer.reverseNext) {
             bannerSub.innerText = '🔄 Boğaz Ters Akıntısı: Bir sonraki zarda geriye doğru yürüyeceksin!';
           } else {
@@ -13732,9 +13999,61 @@ class UIEngine {
         `;
 
         card.querySelector('.inv-use-btn').onclick = () => {
-          AudioPlayer.playStarFanfare();
-          GameClient.useItem(itemId);
           modal.classList.add('hidden');
+          if (itemId === 'lucky_die') {
+            this.showLuckyDiePicker();
+          } else if (itemId === 'swap_wand') {
+            this.showSwapWandTargetPicker();
+          } else {
+            AudioPlayer.playStarFanfare();
+            GameClient.useItem(itemId);
+            const feedbackDict = {
+              double_dice: {
+                tr: '🎲🎲 2X Çift Zar hazır! Sıradaki turunda 2 zar birden atacaksın.',
+                en: '🎲🎲 Double Dice ready! You will roll 2 dice next turn.',
+                de: '🎲🎲 Doppelwürfel bereit! Du würfelst 2 Würfel.',
+                es: '🎲🎲 ¡Dado Doble listo! Tirarás 2 dados.',
+                fr: '🎲🎲 Double Dé prêt ! Vous lancerez 2 dés.'
+              },
+              rocket: {
+                tr: '🚀 Roket ateşlendi! 5 kare ileri fırladın!',
+                en: '🚀 Rocket fired! Blasted 5 steps forward!',
+                de: '🚀 Rakete gezündet! 5 Felder nach vorne geflogen!',
+                es: '🚀 ¡Cohete disparado! ¡5 casillas hacia adelante!',
+                fr: '🚀 Fusée lancée ! 5 cases en avant !'
+              },
+              magnet: {
+                tr: '🧲 Mıknatıs çekildi! Rakiplerden altın topladın.',
+                en: '🧲 Magnet pulled! Collected coins from rivals.',
+                de: '🧲 Magnet aktiviert! Münzen von Gegnern geholt.',
+                es: '🧲 ¡Imán activado! Has atraído monedas de los rivales.',
+                fr: '🧲 Aimant activé ! Pièces attirées des rivaux.'
+              },
+              shield: {
+                tr: '🛡️ Koruma Kalkanı aktif! 2 tur tuzaklara bağışıklısın.',
+                en: '🛡️ Shield active! Immune to traps for 2 turns.',
+                de: '🛡️ Schild aktiv! 2 Runden vor Fallen geschützt.',
+                es: '🛡️ ¡Escudo activo! Inmune a trampas por 2 turnos.',
+                fr: '🛡️ Bouclier actif ! Immunisé aux pièges 2 tours.'
+              },
+              banana: {
+                tr: '🍌 Muz Kabuğu yere bırakıldı! Arkandan gelen kayacak.',
+                en: '🍌 Banana peel placed! Rivals behind will slip.',
+                de: '🍌 Banane platziert! Nachfolgende rutschen aus.',
+                es: '🍌 ¡Piel de plátano colocada! Quien la pise resbalará.',
+                fr: '🍌 Peau de banane posée ! Les suivants glisseront.'
+              },
+              ghost_cloak: {
+                tr: '👻 Hayalet Pelerini aktif! 2 tur tüm cezalardan ve tuzaklardan muafsın.',
+                en: '👻 Ghost Cloak active! Immune to all penalties and traps for 2 turns.',
+                de: '👻 Geisterumhang aktiv! 2 Runden immun gegen alle Strafen.',
+                es: '👻 ¡Capa Fantasma activa! Inmune a multas y trampas por 2 turnos.',
+                fr: '👻 Cape Fantôme active ! Immunisé contre tous les pièges 2 tours.'
+              }
+            };
+            const fMsg = (feedbackDict[itemId] && feedbackDict[itemId][lang]) || (feedbackDict[itemId] && feedbackDict[itemId].tr) || '✨ Eşya kullanıldı!';
+            this.showToast(fMsg, 'success');
+          }
         };
 
         list.appendChild(card);
@@ -13745,6 +14064,118 @@ class UIEngine {
       AudioPlayer.playClick();
       modal.classList.add('hidden');
     };
+  }
+
+  showLuckyDiePicker() {
+    const modal = document.getElementById('modal-lucky-die');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const grid = document.getElementById('lucky-die-grid');
+    grid.innerHTML = '';
+
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const stepWord = { tr: 'Adım', en: 'Steps', de: 'Schritte', es: 'Pasos', fr: 'Pas' }[lang] || 'Adım';
+
+    const diceIcons = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    for (let i = 1; i <= 6; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'lucky-die-btn';
+      btn.innerHTML = `<span>${diceIcons[i - 1]}</span><span class="die-dot">${i} ${stepWord}</span>`;
+      btn.onclick = () => {
+        AudioPlayer.playStarFanfare();
+        GameClient.useItem('lucky_die', i);
+        modal.classList.add('hidden');
+        const lockedMsg = {
+          tr: `🎯 Sıradaki zarın ${i} olarak kilitlendi! Zarı atabilirsin.`,
+          en: `🎯 Next die roll locked to ${i}! Roll when ready.`,
+          de: `🎯 Nächster Wurf auf ${i} fixiert! Würfle jetzt.`,
+          es: `🎯 ¡Próximo dado fijado en ${i}! Tira cuando quieras.`,
+          fr: `🎯 Prochain dé verrouillé à ${i} ! Lancez quand vous voulez.`
+        }[lang] || `🎯 Sıradaki zarın ${i} olarak kilitlendi!`;
+        this.showToast(lockedMsg, 'success');
+      };
+      grid.appendChild(btn);
+    }
+
+    const closeBtn = document.getElementById('btn-close-lucky-die');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        AudioPlayer.playClick();
+        modal.classList.add('hidden');
+      };
+    }
+  }
+
+  showSwapWandTargetPicker() {
+    const modal = document.getElementById('modal-swap-wand');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const list = document.getElementById('swap-wand-list');
+    list.innerHTML = '';
+
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const state = GameClient.state;
+    const myPlayer = state ? state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId) : null;
+    const rivals = state ? state.players.filter(p => !myPlayer || p.id !== myPlayer.id) : [];
+
+    const noRivalsMsg = {
+      tr: 'Takas yapılabilecek başka oyuncu yok!',
+      en: 'No other players available to swap with!',
+      de: 'Keine anderen Spieler zum Tauschen verfügbar!',
+      es: '¡No hay otros jugadores para intercambiar!',
+      fr: 'Aucun autre joueur disponible pour l\'échange !'
+    }[lang] || 'Takas yapılabilecek başka oyuncu yok!';
+
+    const swapActionLabel = {
+      tr: 'Konum Değiş',
+      en: 'Swap Place',
+      de: 'Position tauschen',
+      es: 'Cambiar lugar',
+      fr: 'Changer de place'
+    }[lang] || 'Konum Değiş';
+
+    if (rivals.length === 0) {
+      list.innerHTML = `<div style="color:#64748B; font-size:13px; text-align:center; padding:16px;">${noRivalsMsg}</div>`;
+    } else {
+      rivals.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'swap-wand-card';
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; min-width:0;">
+            <div class="swap-wand-avatar">${r.avatar === 'cat' ? '🐱' : (r.avatar === 'dino' ? '🦖' : (r.avatar === 'ninja' ? '🥷' : '🤠'))}</div>
+            <div class="swap-wand-info">
+              <div class="swap-wand-name">${r.name}</div>
+              <div class="swap-wand-sub">#${r.position} • ⭐${r.stars} • 🪙${r.coins}</div>
+            </div>
+          </div>
+          <button class="swap-wand-action-btn">${swapActionLabel}</button>
+        `;
+        card.onclick = () => {
+          AudioPlayer.playStarFanfare();
+          GameClient.useItem('swap_wand', r.id);
+          modal.classList.add('hidden');
+          const swappedMsg = {
+            tr: `🪄 ${r.name} ile konumlar takas edildi!`,
+            en: `🪄 Swapped positions with ${r.name}!`,
+            de: `🪄 Position mit ${r.name} getauscht!`,
+            es: `🪄 ¡Has intercambiado lugares con ${r.name}!`,
+            fr: `🪄 Positions échangées avec ${r.name} !`
+          }[lang] || `🪄 ${r.name} ile konumlar takas edildi!`;
+          this.showToast(swappedMsg, 'success');
+        };
+        list.appendChild(card);
+      });
+    }
+
+    const closeBtn = document.getElementById('btn-close-swap-wand');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        AudioPlayer.playClick();
+        modal.classList.add('hidden');
+      };
+    }
   }
 
   openEmoteWheel() {

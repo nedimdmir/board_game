@@ -1,15 +1,15 @@
 # 🎲 PartyCraft: Wonder Board
 
 <p align="center">
-  <img src="./assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
+  <img src="assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
 </p>
 
 <p align="center">
-  <img src="./assets/badges/badge-languages.svg" alt="Languages">
-  <img src="./assets/badges/badge-singlefile.svg" alt="Single-File">
-  <img src="./assets/badges/badge-dependencies.svg" alt="Zero Dependencies">
-  <img src="./assets/badges/badge-platforms.svg" alt="Platforms">
-  <img src="./assets/badges/badge-license.svg" alt="License">
+  <img src="https://img.shields.io/badge/Languages-TR%20%E2%80%A2%20EN%20%E2%80%A2%20DE%20%E2%80%A2%20ES%20%E2%80%A2%20FR-0284c7?style=flat-square" alt="Languages">
+  <img src="https://img.shields.io/badge/Architecture-Single--File%20(index.html%20%2B%20api.php)-10b981?style=flat-square" alt="Single-File">
+  <img src="https://img.shields.io/badge/Dependencies-Zero%20NPM%20%2F%20Zero%20DB-f59e0b?style=flat-square" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/Platform-Web%20%E2%80%A2%20Mobile%20%E2%80%A2%20Tablet-8b5cf6?style=flat-square" alt="Platforms">
+  <img src="https://img.shields.io/badge/License-MIT-64748b?style=flat-square" alt="License">
 </p>
 
 ---
@@ -17,7 +17,7 @@
 **PartyCraft: Wonder Board** is a vibrant, zero-dependency turn-based multiplayer board game celebrating world cities (Istanbul, Tokyo, Paris, and New York) with interactive board tiles, tactical items, and 6 competitive mini-games.
 
 <p align="center">
-  <img src="./assets/gameplay-preview.svg" alt="Gameplay Preview" width="100%">
+  <img src="assets/gameplay-preview.svg" alt="Gameplay Preview" width="100%">
 </p>
 
 ## 🌟 Key Highlights
@@ -38,20 +38,21 @@
   6. 🔨 **Timing Hammer (Power Striker):** Stop the oscillating power gauge at 100% bullseye to ring the bell and win +15 Gold!
 
 <p align="center">
-  <img src="./assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
+  <img src="assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
 </p>
 
-## 🎒 Tactical Items
+## 🎒 Fully Functional Tactical Items (Inventory)
 
 | Item | Icon | Effect |
 | :--- | :---: | :--- |
-| **Double Dice** | 🎲 | Roll two dice on your next turn (2 - 12 steps). |
-| **Super Rocket** | 🚀 | Launch 7 tiles forward instantly. |
-| **Magnetic Shield** | 🛡️ | Complete protection from traps and coin steals for 2 turns. |
-| **Star Magnet** | 🧲 | Pull the Star Kaide 3 tiles closer to your pawn. |
-| **Swap Warp** | 🔄 | Swap board positions with any chosen rival. |
-| **Ghost Cloak** *(New!)* | 👻 | Immune to all traps, hazards, and penalties for 2 turns. |
-| **Lucky Die** *(New!)* | 🍀 | Guarantees your next roll is a max 6 (or 12 with Double Dice). |
+| **Double Dice** | 🎲 | Roll 2 dice at once on your next turn (2 - 12 steps) with glowing amber turn button. |
+| **Super Rocket** | 🚀 | Launch 7 tiles forward instantly towards the next star. |
+| **Magnetic Shield** | 🛡️ | Complete protection sphere against traps, steals, and hazards for 2 turns. |
+| **Coin Magnet** | 🧲 | Siphon 4 coins from every unshielded rival on the board. |
+| **Banana Peel** | 🍌 | Lay a slippery trap on current tile; rivals stepping on it slip 3 steps backward. |
+| **Warp Wand** | 🪄 | Interactive modal opens to choose any rival and instantly swap board positions! |
+| **Ghost Cloak** | 👻 | Radiant cyan aura: bypass all penalties, traps, police, and tax tiles for 2 turns! |
+| **Lucky Gold Die** | 🎯 | Interactive 1-6 selector: pick your exact next roll guaranteed! |
 
 ## 🚀 How to Deploy to Your Website (Single File!)
 

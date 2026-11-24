@@ -295,6 +295,8 @@ class Room {
       frozenTurns: 0,
       reverseNext: false,
       doubleDiceActive: false,
+      ghostCloakActive: 0,
+      fixedRollNext: null,
       isBot: false,
       disconnected: false,
       ws: ws
@@ -343,6 +345,8 @@ class Room {
       frozenTurns: 0,
       reverseNext: false,
       doubleDiceActive: false,
+      ghostCloakActive: 0,
+      fixedRollNext: null,
       isBot: true,
       personality: personality || botTemplate.personality,
       disconnected: false,
@@ -431,7 +435,10 @@ class Room {
         coins: p.coins,
         stars: p.stars,
         inventory: p.inventory,
-        shieldActive: p.shieldActive,
+        shieldActive: p.shieldActive || 0,
+        ghostCloakActive: p.ghostCloakActive || 0,
+        doubleDiceActive: !!p.doubleDiceActive,
+        fixedRollNext: p.fixedRollNext || null,
         jailedTurns: p.jailedTurns,
         frozenTurns: p.frozenTurns,
         reverseNext: p.reverseNext,
@@ -527,7 +534,9 @@ class Room {
       }
     }
 
-    let die1 = Math.floor(Math.random() * 6) + 1;
+    let die1 = player.fixedRollNext ? player.fixedRollNext : (Math.floor(Math.random() * 6) + 1);
+    const wasFixed = !!player.fixedRollNext;
+    player.fixedRollNext = null;
     let die2 = null;
     let totalRoll = die1;
 
@@ -537,7 +546,11 @@ class Room {
       player.doubleDiceActive = false;
       this.addLog(`🎲 ${player.name} ÇİFT ZAR attı: [${die1}] + [${die2}] = ${totalRoll} adım!`);
     } else {
-      this.addLog(`🎲 ${player.name} zar attı: [${die1}]!`);
+      if (wasFixed) {
+        this.addLog(`🎯 ${player.name} Şanslı Altın Zarını attı: [${die1}]!`);
+      } else {
+        this.addLog(`🎲 ${player.name} zar attı: [${die1}]!`);
+      }
     }
 
     // Broadcast dice roll event so client can play 3D dice rolling animation
@@ -626,21 +639,33 @@ class Room {
 
     // Check if there is a Banana Trap set here by another player
     if (this.trapsOnBoard[tileIndex] && this.trapsOnBoard[tileIndex] !== player.id) {
-      delete this.trapsOnBoard[tileIndex];
-      this.addLog(`🍌 Oooops! ${player.name} muz kabuğuna bastı ve 3 adım geri kaydı!`);
-      player.position = (player.position - 3 + this.board.length) % this.board.length;
-      this.broadcast('tile_event', {
-        playerId: player.id,
-        playerName: player.name,
-        avatar: player.avatar,
-        category: 'penalty',
-        title: '🍌 MUZ KABUĞUNA BASTI!',
-        message: `${player.name} muz kabuğuna basıp 360° takla attı ve 3 adım geri kaydı! 😂`,
-        animation: 'banana_slip',
-        sound: 'slip'
-      });
+      if (player.ghostCloakActive > 0) {
+        this.addLog(`👻 ${player.name} Hayalet Pelerin sayesinde muz kabuğu tuzağının üstünden süzülüp geçti!`);
+      } else {
+        delete this.trapsOnBoard[tileIndex];
+        this.addLog(`🍌 Oooops! ${player.name} muz kabuğuna bastı ve 3 adım geri kaydı!`);
+        player.position = (player.position - 3 + this.board.length) % this.board.length;
+        this.broadcast('tile_event', {
+          playerId: player.id,
+          playerName: player.name,
+          avatar: player.avatar,
+          category: 'penalty',
+          title: '🍌 MUZ KABUĞUNA BASTI!',
+          message: `${player.name} muz kabuğuna basıp 360° takla attı ve 3 adım geri kaydı! 😂`,
+          animation: 'banana_slip',
+          sound: 'slip'
+        });
+        this.broadcastState();
+        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+        return;
+      }
+    }
+
+    // Check Ghost Cloak immunity against hazard tiles
+    if (player.ghostCloakActive > 0 && (tile.type === 'trap' || tile.type === 'tax' || tile.type === 'jail' || tile.type === 'slip' || tile.type === 'freeze')) {
+      this.addLog(`👻 Hayalet Pelerin devrede! ${player.name} ${tile.type.toUpperCase()} cezasını dokunmadan es geçti!`);
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(900 / spd)));
       return;
     }
 
@@ -1019,8 +1044,19 @@ class Room {
           const tempPos = player.position;
           player.position = target.position;
           target.position = tempPos;
-          this.addLog(`🔄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
+          this.addLog(`🪄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
         }
+        break;
+
+      case 'ghost_cloak':
+        player.ghostCloakActive = 2;
+        this.addLog(`👻 ${player.name} Hayalet Pelerin kuşandı! 2 tur boyunca cezalardan ve tuzaklardan muaf!`);
+        break;
+
+      case 'lucky_die':
+        const fixedVal = Math.min(6, Math.max(1, parseInt(targetPlayerId) || 6));
+        player.fixedRollNext = fixedVal;
+        this.addLog(`🎯 ${player.name} Şanslı Altın Zar ayarladı: Sıradaki zarı garanti [${fixedVal}] gelecek!`);
         break;
     }
 
@@ -1030,8 +1066,10 @@ class Room {
   finishTurn() {
     this.isProcessingTurn = false;
     const current = this.getCurrentPlayer();
-    if (current && current.frozenTurns > 0) {
-      current.frozenTurns--;
+    if (current) {
+      if (current.shieldActive > 0) current.shieldActive--;
+      if (current.ghostCloakActive > 0) current.ghostCloakActive--;
+      if (current.frozenTurns > 0) current.frozenTurns--;
     }
     if (this.state !== 'playing') return;
 

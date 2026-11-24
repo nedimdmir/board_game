@@ -774,7 +774,9 @@ if ($action === 'roll_dice') {
         }
     }
 
-    $die1 = mt_rand(1, 6);
+    $die1 = !empty($player['fixedRollNext']) ? intval($player['fixedRollNext']) : mt_rand(1, 6);
+    $wasFixed = !empty($player['fixedRollNext']);
+    unset($player['fixedRollNext']);
     $die2 = null;
     $totalRoll = $die1;
 
@@ -782,9 +784,13 @@ if ($action === 'roll_dice') {
         $die2 = mt_rand(1, 6);
         $totalRoll = $die1 + $die2;
         $player['doubleDiceActive'] = false;
-        addRoomLog($room, "🎲 {$player['name']} ÇİFT ZAR attı: [{$die1}] + [{$die2}] = {$totalRoll} adım!");
+        addRoomLog($room, "🎲🎲 {$player['name']} ÇİFT ZAR attı: [{$die1}] + [{$die2}] = {$totalRoll} adım!");
     } else {
-        addRoomLog($room, "🎲 {$player['name']} zar attı: [{$die1}]!");
+        if ($wasFixed) {
+            addRoomLog($room, "🎯 {$player['name']} Şanslı Altın Zarını attı: [{$die1}]!");
+        } else {
+            addRoomLog($room, "🎲 {$player['name']} zar attı: [{$die1}]!");
+        }
     }
 
     $isReverse = !empty($player['reverseNext']);
@@ -1065,16 +1071,25 @@ if ($action === 'use_item') {
         } else if ($itemId === 'banana') {
             $room['trapsOnBoard'][] = ['tileIndex' => $player['position'], 'ownerId' => $player['id']];
             addRoomLog($room, "🍌 {$player['name']} {$player['position']}. karoya Muz Kabuğu tuzağı kurdu!");
-        } else if ($itemId === 'swap_wand' && $targetId) {
+        } else if ($itemId === 'swap_wand') {
+            $targetOpp = null;
             foreach ($room['players'] as &$opp) {
-                if ($opp['id'] === $targetId) {
-                    $tmp = $player['position'];
-                    $player['position'] = $opp['position'];
-                    $opp['position'] = $tmp;
-                    addRoomLog($room, "🪄 {$player['name']} Takas Asası ile {$opp['name']} ile yer değiştirdi!");
-                    break;
-                }
+                if ($targetId && $opp['id'] === $targetId) { $targetOpp = &$opp; break; }
+                if (!$targetId && $opp['id'] !== $player['id']) { $targetOpp = &$opp; break; }
             }
+            if ($targetOpp) {
+                $tmp = $player['position'];
+                $player['position'] = $targetOpp['position'];
+                $targetOpp['position'] = $tmp;
+                addRoomLog($room, "🪄 {$player['name']} Takas Asası ile {$targetOpp['name']} ile yer değiştirdi!");
+            }
+        } else if ($itemId === 'ghost_cloak') {
+            $player['ghostCloakActive'] = 2;
+            addRoomLog($room, "👻 {$player['name']} Hayalet Pelerin kuşandı! 2 tur cezalardan muaf!");
+        } else if ($itemId === 'lucky_die') {
+            $fixed = intval($targetId) ?: 6;
+            $player['fixedRollNext'] = min(6, max(1, $fixed));
+            addRoomLog($room, "🎯 {$player['name']} Şanslı Altın Zar ayarladı [{$player['fixedRollNext']}]!");
         }
 
         $room['updatedAt'] = time();

@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="./assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
+  <img src="assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
 </p>
 
 <p align="center">
-  <img src="./assets/badges/badge-languages.svg" alt="Languages">
-  <img src="./assets/badges/badge-singlefile.svg" alt="Single-File">
-  <img src="./assets/badges/badge-dependencies.svg" alt="Zero Dependencies">
-  <img src="./assets/badges/badge-platforms.svg" alt="Platforms">
-  <img src="./assets/badges/badge-license.svg" alt="License">
+  <img src="https://img.shields.io/badge/Languages-TR%20%E2%80%A2%20EN%20%E2%80%A2%20DE%20%E2%80%A2%20ES%20%E2%80%A2%20FR-0284c7?style=flat-square" alt="Languages">
+  <img src="https://img.shields.io/badge/Architecture-Single--File%20(index.html%20%2B%20api.php)-10b981?style=flat-square" alt="Single-File">
+  <img src="https://img.shields.io/badge/Dependencies-Zero%20NPM%20%2F%20Zero%20DB-f59e0b?style=flat-square" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/Platform-Web%20%E2%80%A2%20Mobile%20%E2%80%A2%20Tablet-8b5cf6?style=flat-square" alt="Platforms">
+  <img src="https://img.shields.io/badge/License-MIT-64748b?style=flat-square" alt="License">
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 ---
 
 <p align="center">
-  <img src="./assets/gameplay-preview.svg" alt="PartyCraft Gameplay Showcase" width="100%">
+  <img src="assets/gameplay-preview.svg" alt="PartyCraft Gameplay Showcase" width="100%">
 </p>
 
 ---
@@ -48,17 +48,18 @@
   6. 🔨 **Güç Çekici & Hassas Zamanlama (Timing Hammer):** Salınan güç barını tam merkezdeki %100 hedefte durdur, çanı çaldır!
 
 <p align="center">
-  <img src="./assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
+  <img src="assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
 </p>
 
-### 🎒 Taktik Eşyaları (Çanta)
-- 🎲 **Çift Zar:** Sonraki turda 2 zar birden atarsınız (2 - 12 adım).
+### 🎒 Tamamen Çalışır 8 Taktik Eşyası (Çanta)
+- 🎲 **Çift Zar:** Sonraki turda 2 zar birden atarsınız (2 - 12 adım) ve arayüzde özel çift zar butonu belirir.
 - 🚀 **Süper Roket:** Hedefe doğru direkt olarak 7 adım ileri fırlar.
-- 🛡️ **Manyetik Kalkan:** Tuzaklara ve altın çalma hamlelerine karşı 2 tur tam koruma sağlar.
-- 🧲 **Yıldız Mıknatısı:** Yıldız kaidesini haritada 3 adım kendinize doğru çeker.
-- 🔄 **Takas Işınlanması:** Seçilen bir rakip ile haritadaki konumlarınızı takas eder.
-- 👻 **Hayalet Pelerin:** 2 tur boyunca tüm karo tuzaklarından ve cezalardan muaf olursunuz.
-- 🍀 **Şanslı Altın Zar:** Sonraki zarınız kesinlikle 6 (çift zarda 12) gelir!
+- 🛡️ **Manyetik Kalkan:** Tuzaklara ve altın çalma hamlelerine karşı 2 tur tam koruma küresi açar.
+- 🧲 **Altın Mıknatısı:** Tüm rakiplerden anında 4'er altın çeker.
+- 🍌 **Muz Kabuğu:** Bulunulan karoya gizli tuzak kurar; basan rakip 3 adım geriye kayar.
+- 🪄 **Takas Asası:** Seçtiğiniz herhangi bir rakiple haritadaki yerlerinizi anında takas eder.
+- 👻 **Hayalet Pelerin:** 2 tur boyunca oyuncunun etrafında parlayan hayalet aurası oluşturur ve tüm tuzak/cezalardan muaf tutar.
+- 🎯 **Şanslı Altın Zar:** Özel arayüzden 1-6 arasında seçeceğiniz zar değerini sıradaki atışınızda garanti eder!
 
 ### 🚀 Sunucunuza Nasıl Yüklersiniz? (Sadece 1 Dosya!)
 1. Hostinginize (cPanel, Plesk, Apache, Nginx vb.) **SADECE `index.php`** dosyasını yükleyin.

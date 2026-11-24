@@ -808,6 +808,25 @@ class UIEngine {
     if (rollBtn) {
       rollBtn.disabled = !isMyTurn;
       rollBtn.classList.toggle('pulse-turn', isMyTurn);
+      if (isMyTurn && activePlayer) {
+        if (activePlayer.doubleDiceActive) {
+          rollBtn.innerHTML = '<span>🎲🎲</span> 2X ÇİFT ZAR! (SPACE)';
+          rollBtn.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+          rollBtn.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.45)';
+        } else if (activePlayer.fixedRollNext) {
+          rollBtn.innerHTML = `<span>🎯</span> KİLİTLİ ZAR: ${activePlayer.fixedRollNext} (SPACE)`;
+          rollBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+          rollBtn.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.45)';
+        } else {
+          rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
+          rollBtn.style.background = '';
+          rollBtn.style.boxShadow = '';
+        }
+      } else {
+        rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
+        rollBtn.style.background = '';
+        rollBtn.style.boxShadow = '';
+      }
     }
 
     // Update Top Screen Unmissable Turn Alert Banner
@@ -824,6 +843,12 @@ class UIEngine {
         if (bannerSub) {
           if (activePlayer.jailedTurns > 0) {
             bannerSub.innerText = '🔒 Kodes Cezası: 5 altın kefalet öde veya pas geç!';
+          } else if (activePlayer.doubleDiceActive) {
+            bannerSub.innerText = '🎲🎲 2X Çift Zar Etkin! Bu tur iki zar birden atacaksın!';
+          } else if (activePlayer.fixedRollNext) {
+            bannerSub.innerText = `🎯 Şanslı Zar Etkin! Bu tur tam ${activePlayer.fixedRollNext} adım atacaksın!`;
+          } else if (activePlayer.ghostCloakActive > 0) {
+            bannerSub.innerText = `👻 Hayalet Pelerini Aktif (${activePlayer.ghostCloakActive} tur)! Tüm tuzak ve cezalardan muafsın!`;
           } else if (activePlayer.reverseNext) {
             bannerSub.innerText = '🔄 Boğaz Ters Akıntısı: Bir sonraki zarda geriye doğru yürüyeceksin!';
           } else {
@@ -1686,9 +1711,61 @@ class UIEngine {
         `;
 
         card.querySelector('.inv-use-btn').onclick = () => {
-          AudioPlayer.playStarFanfare();
-          GameClient.useItem(itemId);
           modal.classList.add('hidden');
+          if (itemId === 'lucky_die') {
+            this.showLuckyDiePicker();
+          } else if (itemId === 'swap_wand') {
+            this.showSwapWandTargetPicker();
+          } else {
+            AudioPlayer.playStarFanfare();
+            GameClient.useItem(itemId);
+            const feedbackDict = {
+              double_dice: {
+                tr: '🎲🎲 2X Çift Zar hazır! Sıradaki turunda 2 zar birden atacaksın.',
+                en: '🎲🎲 Double Dice ready! You will roll 2 dice next turn.',
+                de: '🎲🎲 Doppelwürfel bereit! Du würfelst 2 Würfel.',
+                es: '🎲🎲 ¡Dado Doble listo! Tirarás 2 dados.',
+                fr: '🎲🎲 Double Dé prêt ! Vous lancerez 2 dés.'
+              },
+              rocket: {
+                tr: '🚀 Roket ateşlendi! 5 kare ileri fırladın!',
+                en: '🚀 Rocket fired! Blasted 5 steps forward!',
+                de: '🚀 Rakete gezündet! 5 Felder nach vorne geflogen!',
+                es: '🚀 ¡Cohete disparado! ¡5 casillas hacia adelante!',
+                fr: '🚀 Fusée lancée ! 5 cases en avant !'
+              },
+              magnet: {
+                tr: '🧲 Mıknatıs çekildi! Rakiplerden altın topladın.',
+                en: '🧲 Magnet pulled! Collected coins from rivals.',
+                de: '🧲 Magnet aktiviert! Münzen von Gegnern geholt.',
+                es: '🧲 ¡Imán activado! Has atraído monedas de los rivales.',
+                fr: '🧲 Aimant activé ! Pièces attirées des rivaux.'
+              },
+              shield: {
+                tr: '🛡️ Koruma Kalkanı aktif! 2 tur tuzaklara bağışıklısın.',
+                en: '🛡️ Shield active! Immune to traps for 2 turns.',
+                de: '🛡️ Schild aktiv! 2 Runden vor Fallen geschützt.',
+                es: '🛡️ ¡Escudo activo! Inmune a trampas por 2 turnos.',
+                fr: '🛡️ Bouclier actif ! Immunisé aux pièges 2 tours.'
+              },
+              banana: {
+                tr: '🍌 Muz Kabuğu yere bırakıldı! Arkandan gelen kayacak.',
+                en: '🍌 Banana peel placed! Rivals behind will slip.',
+                de: '🍌 Banane platziert! Nachfolgende rutschen aus.',
+                es: '🍌 ¡Piel de plátano colocada! Quien la pise resbalará.',
+                fr: '🍌 Peau de banane posée ! Les suivants glisseront.'
+              },
+              ghost_cloak: {
+                tr: '👻 Hayalet Pelerini aktif! 2 tur tüm cezalardan ve tuzaklardan muafsın.',
+                en: '👻 Ghost Cloak active! Immune to all penalties and traps for 2 turns.',
+                de: '👻 Geisterumhang aktiv! 2 Runden immun gegen alle Strafen.',
+                es: '👻 ¡Capa Fantasma activa! Inmune a multas y trampas por 2 turnos.',
+                fr: '👻 Cape Fantôme active ! Immunisé contre tous les pièges 2 tours.'
+              }
+            };
+            const fMsg = (feedbackDict[itemId] && feedbackDict[itemId][lang]) || (feedbackDict[itemId] && feedbackDict[itemId].tr) || '✨ Eşya kullanıldı!';
+            this.showToast(fMsg, 'success');
+          }
         };
 
         list.appendChild(card);
@@ -1699,6 +1776,118 @@ class UIEngine {
       AudioPlayer.playClick();
       modal.classList.add('hidden');
     };
+  }
+
+  showLuckyDiePicker() {
+    const modal = document.getElementById('modal-lucky-die');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const grid = document.getElementById('lucky-die-grid');
+    grid.innerHTML = '';
+
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const stepWord = { tr: 'Adım', en: 'Steps', de: 'Schritte', es: 'Pasos', fr: 'Pas' }[lang] || 'Adım';
+
+    const diceIcons = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    for (let i = 1; i <= 6; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'lucky-die-btn';
+      btn.innerHTML = `<span>${diceIcons[i - 1]}</span><span class="die-dot">${i} ${stepWord}</span>`;
+      btn.onclick = () => {
+        AudioPlayer.playStarFanfare();
+        GameClient.useItem('lucky_die', i);
+        modal.classList.add('hidden');
+        const lockedMsg = {
+          tr: `🎯 Sıradaki zarın ${i} olarak kilitlendi! Zarı atabilirsin.`,
+          en: `🎯 Next die roll locked to ${i}! Roll when ready.`,
+          de: `🎯 Nächster Wurf auf ${i} fixiert! Würfle jetzt.`,
+          es: `🎯 ¡Próximo dado fijado en ${i}! Tira cuando quieras.`,
+          fr: `🎯 Prochain dé verrouillé à ${i} ! Lancez quand vous voulez.`
+        }[lang] || `🎯 Sıradaki zarın ${i} olarak kilitlendi!`;
+        this.showToast(lockedMsg, 'success');
+      };
+      grid.appendChild(btn);
+    }
+
+    const closeBtn = document.getElementById('btn-close-lucky-die');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        AudioPlayer.playClick();
+        modal.classList.add('hidden');
+      };
+    }
+  }
+
+  showSwapWandTargetPicker() {
+    const modal = document.getElementById('modal-swap-wand');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const list = document.getElementById('swap-wand-list');
+    list.innerHTML = '';
+
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const state = GameClient.state;
+    const myPlayer = state ? state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId) : null;
+    const rivals = state ? state.players.filter(p => !myPlayer || p.id !== myPlayer.id) : [];
+
+    const noRivalsMsg = {
+      tr: 'Takas yapılabilecek başka oyuncu yok!',
+      en: 'No other players available to swap with!',
+      de: 'Keine anderen Spieler zum Tauschen verfügbar!',
+      es: '¡No hay otros jugadores para intercambiar!',
+      fr: 'Aucun autre joueur disponible pour l\'échange !'
+    }[lang] || 'Takas yapılabilecek başka oyuncu yok!';
+
+    const swapActionLabel = {
+      tr: 'Konum Değiş',
+      en: 'Swap Place',
+      de: 'Position tauschen',
+      es: 'Cambiar lugar',
+      fr: 'Changer de place'
+    }[lang] || 'Konum Değiş';
+
+    if (rivals.length === 0) {
+      list.innerHTML = `<div style="color:#64748B; font-size:13px; text-align:center; padding:16px;">${noRivalsMsg}</div>`;
+    } else {
+      rivals.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'swap-wand-card';
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; min-width:0;">
+            <div class="swap-wand-avatar">${r.avatar === 'cat' ? '🐱' : (r.avatar === 'dino' ? '🦖' : (r.avatar === 'ninja' ? '🥷' : '🤠'))}</div>
+            <div class="swap-wand-info">
+              <div class="swap-wand-name">${r.name}</div>
+              <div class="swap-wand-sub">#${r.position} • ⭐${r.stars} • 🪙${r.coins}</div>
+            </div>
+          </div>
+          <button class="swap-wand-action-btn">${swapActionLabel}</button>
+        `;
+        card.onclick = () => {
+          AudioPlayer.playStarFanfare();
+          GameClient.useItem('swap_wand', r.id);
+          modal.classList.add('hidden');
+          const swappedMsg = {
+            tr: `🪄 ${r.name} ile konumlar takas edildi!`,
+            en: `🪄 Swapped positions with ${r.name}!`,
+            de: `🪄 Position mit ${r.name} getauscht!`,
+            es: `🪄 ¡Has intercambiado lugares con ${r.name}!`,
+            fr: `🪄 Positions échangées avec ${r.name} !`
+          }[lang] || `🪄 ${r.name} ile konumlar takas edildi!`;
+          this.showToast(swappedMsg, 'success');
+        };
+        list.appendChild(card);
+      });
+    }
+
+    const closeBtn = document.getElementById('btn-close-swap-wand');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        AudioPlayer.playClick();
+        modal.classList.add('hidden');
+      };
+    }
   }
 
   openEmoteWheel() {

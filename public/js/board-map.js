@@ -2158,6 +2158,22 @@ class BoardRenderer {
       ctx.stroke();
     }
 
+    // 3.1 Ghost Cloak Ethereal Aura if active
+    if (player.ghostCloakActive > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, -18, 30, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+      ctx.shadowColor = '#22D3EE';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.strokeStyle = '#67E8F9';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // 4. Ice Block if frozen
     if (player.frozenTurns > 0) {
       ctx.beginPath();
@@ -2480,22 +2496,55 @@ class BoardRenderer {
       ctx.beginPath(); ctx.moveTo(9, -37); ctx.quadraticCurveTo(16, -43, 15, -49); ctx.quadraticCurveTo(11, -43, 6, -39); ctx.closePath(); ctx.fill();
     }
 
-    // 7. Clean Name Tag Pill
+    // 7. Dynamic Auto-Sizing Name Tag Pill (Guarantees zero text overflow!)
     if (isCurrent || !isClustered) {
+      ctx.font = 'bold 9.5px sans-serif';
+      const displayName = player.name.length > 10 ? player.name.substr(0, 9) + '..' : player.name;
+      const tagText = `${displayName} ⭐${player.stars}`;
+      const textWidth = ctx.measureText(tagText).width;
+      const pillWidth = Math.max(76, textWidth + 18);
+      const pillHeight = 18;
+
       ctx.beginPath();
-      ctx.roundRect(-36, -56, 72, 16, 8);
-      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.88)';
+      ctx.roundRect(-pillWidth / 2, -56, pillWidth, pillHeight, 9);
+      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.9)';
       ctx.fill();
-      ctx.strokeStyle = player.color;
-      ctx.lineWidth = isCurrent ? 2 : 1;
+      ctx.strokeStyle = player.color || '#38BDF8';
+      ctx.lineWidth = isCurrent ? 2 : 1.2;
       ctx.stroke();
 
       ctx.fillStyle = isCurrent ? '#854D0E' : '#FFFFFF';
-      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const displayName = player.name.length > 8 ? player.name.substr(0, 7) + '..' : player.name;
-      ctx.fillText(`${displayName} ⭐${player.stars}`, 0, -48);
+      ctx.fillText(tagText, 0, -47);
+
+      // Active Buff Badges (Double Dice, Lucky Die, Ghost)
+      let buffOffset = pillWidth / 2 + 10;
+      if (player.doubleDiceActive) {
+        ctx.beginPath();
+        ctx.arc(buffOffset, -47, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.font = '9px sans-serif';
+        ctx.fillText('🎲', buffOffset, -46);
+        buffOffset += 18;
+      }
+      if (player.fixedRollNext) {
+        ctx.beginPath();
+        ctx.arc(buffOffset, -47, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#10B981';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(player.fixedRollNext, buffOffset, -47);
+        buffOffset += 18;
+      }
     } else {
       ctx.beginPath();
       ctx.arc(0, -45, 10, 0, Math.PI * 2);
