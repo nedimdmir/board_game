@@ -436,6 +436,19 @@ class ClientEngine {
     }
   }
 
+  setGameSpeed(speed) {
+    window.GAME_SPEED = speed;
+    if (window.BoardMap) {
+      window.BoardMap.gameSpeed = speed;
+    }
+    if (window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'set_game_speed', { speed });
+    }
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send('set_game_speed', { speed });
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Message Handling Dispatcher
   // ---------------------------------------------------------------------------

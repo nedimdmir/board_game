@@ -15,11 +15,27 @@ class UIEngine {
     if (window.i18n) {
       window.i18n.applyTranslations();
     }
+    const savedSpeed = parseInt(localStorage.getItem('partycraft_game_speed') || '1', 10);
+    window.GAME_SPEED = [1, 2, 4].includes(savedSpeed) ? savedSpeed : 1;
+    this.updateSpeedUI();
+
     GameClient.init();
     this.initSettings();
     this.renderProfileCard();
     this.bindHomeEvents();
     this.bindGameEvents();
+  }
+
+  updateSpeedUI() {
+    const lbl = document.getElementById('speed-label');
+    const btn = document.getElementById('btn-toggle-speed');
+    const spd = window.GAME_SPEED || 1;
+    if (lbl) {
+      lbl.innerText = spd === 4 ? '4x 🚀' : (spd === 2 ? '2x ⚡' : '1x');
+    }
+    if (btn) {
+      btn.classList.toggle('active-speed', spd > 1);
+    }
   }
 
   onLanguageChanged(lang) {
@@ -849,6 +865,28 @@ class UIEngine {
       GameClient.rollDice();
     });
 
+    // Speed Toggle Button (1x -> 2x -> 4x -> 1x)
+    const btnToggleSpeed = document.getElementById('btn-toggle-speed');
+    if (btnToggleSpeed) {
+      btnToggleSpeed.onclick = () => {
+        let current = window.GAME_SPEED || 1;
+        let next = 1;
+        if (current === 1) next = 2;
+        else if (current === 2) next = 4;
+        else next = 1;
+
+        window.GAME_SPEED = next;
+        localStorage.setItem('partycraft_game_speed', next.toString());
+        this.updateSpeedUI();
+        if (window.GameClient) {
+          window.GameClient.setGameSpeed(next);
+        }
+        AudioPlayer.playClick();
+        const toastMsg = next === 4 ? '🚀 Oyun Hızı: 4x Turbo!' : (next === 2 ? '⚡ Oyun Hızı: 2x Hızlı!' : '⚡ Oyun Hızı: 1x Normal');
+        this.showToast(toastMsg, 'info');
+      };
+    }
+
     // Inventory Button
     document.getElementById('btn-open-inventory').addEventListener('click', () => {
       AudioPlayer.playClick();
@@ -1231,16 +1269,21 @@ class UIEngine {
 
     if (dieBox) dieBox.className = 'single-dice-box rolling';
 
+    const speed = window.GAME_SPEED || 1;
+    const tumbleTime = Math.max(160, Math.round(550 / speed));
+    const postTime = Math.max(200, Math.round(650 / speed));
+
     // Cycle through values rapidly while tumbling
     let cycleCount = 0;
     const interval = setInterval(() => {
       cycleCount++;
       const randVal = Math.floor(Math.random() * 6) + 1;
       if (pipFace) pipFace.innerHTML = this.renderDicePips(randVal);
-      if (cycleCount > 10) clearInterval(interval);
-    }, 60);
+      if (cycleCount > 8) clearInterval(interval);
+    }, Math.max(25, Math.round(55 / speed)));
 
-    setTimeout(() => {
+    let timer2 = null;
+    const finishRoll = () => {
       clearInterval(interval);
       if (dieBox) dieBox.className = 'single-dice-box landed';
       if (pipFace) pipFace.innerHTML = this.renderDicePips(data.totalRoll);
@@ -1251,10 +1294,22 @@ class UIEngine {
 
       AudioPlayer.playStep();
 
-      setTimeout(() => {
+      timer2 = setTimeout(() => {
         overlay.classList.add('hidden');
-      }, 850);
-    }, 750);
+        overlay.onclick = null;
+      }, postTime);
+    };
+
+    const timer1 = setTimeout(finishRoll, tumbleTime);
+
+    // Instant close on click / tap anywhere on overlay (No waiting!)
+    overlay.onclick = () => {
+      clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
+      clearInterval(interval);
+      overlay.classList.add('hidden');
+      overlay.onclick = null;
+    };
   }
 
   showTileEventCard(data) {
@@ -1298,9 +1353,20 @@ class UIEngine {
     title.innerText = data.title;
     desc.innerText = data.message;
 
-    setTimeout(() => {
+    const speed = window.GAME_SPEED || 1;
+    const hideTimeoutMs = Math.max(450, Math.round(1400 / speed));
+
+    const hideTimer = setTimeout(() => {
       overlay.classList.add('hidden');
-    }, 1900);
+      overlay.onclick = null;
+    }, hideTimeoutMs);
+
+    // Instant close on click / tap anywhere on overlay (No waiting!)
+    overlay.onclick = () => {
+      clearTimeout(hideTimer);
+      overlay.classList.add('hidden');
+      overlay.onclick = null;
+    };
   }
 
   showMysteryRoulette(data) {
@@ -1408,14 +1474,26 @@ class UIEngine {
       ctx.restore();
     };
 
-    // Spin animation with physics
+    // Spin animation with physics (scaled by game speed)
     let currentAngle = 0;
-    const targetSpin = Math.PI * 2 * (5 + Math.random() * 3);
-    const duration = 2800;
+    const targetSpin = Math.PI * 2 * (4 + Math.random() * 2);
+    const speed = window.GAME_SPEED || 1;
+    const duration = Math.max(700, Math.round(2400 / speed));
+    const postWait = Math.max(350, Math.round(1800 / speed));
     const startT = performance.now();
     let lastTickAngle = 0;
+    let modalTimer = null;
+    let isFinished = false;
+
+    // Instant close on click / tap anywhere on modal
+    modal.onclick = () => {
+      if (modalTimer) clearTimeout(modalTimer);
+      modal.classList.add('hidden');
+      modal.onclick = null;
+    };
 
     const animateSpin = (now) => {
+      if (isFinished || modal.classList.contains('hidden')) return;
       const elapsed = now - startT;
       const progress = Math.min(1, elapsed / duration);
       // Cubic ease out
@@ -1428,7 +1506,7 @@ class UIEngine {
         lastTickAngle = currentAngle;
         if (pointer) {
           pointer.style.transform = 'translateX(-50%) rotate(-18deg)';
-          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 45);
+          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 40);
         }
         AudioPlayer.playWheelTick();
       }
@@ -1437,6 +1515,7 @@ class UIEngine {
         requestAnimationFrame(animateSpin);
       } else {
         // Spin finished
+        isFinished = true;
         AudioPlayer.playStarFanfare();
         const wonDict = {
           tr: 'Büyük Ödül Kazandın!',
@@ -1448,9 +1527,10 @@ class UIEngine {
         const wonText = wonDict[lang] || wonDict.tr;
         resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
-        setTimeout(() => {
+        modalTimer = setTimeout(() => {
           modal.classList.add('hidden');
-        }, 2200);
+          modal.onclick = null;
+        }, postWait);
       }
     };
 

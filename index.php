@@ -2333,21 +2333,22 @@ input:checked + .slider-round:before {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #F1F5F9;
+  background: #0B0F19;
 }
 
 /* Top Game HUD Bar */
 .game-hud-top {
-  height: 64px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 2px solid #E2E8F0;
+  height: 52px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  color: #FFFFFF;
 }
 
 .hud-left {
@@ -2357,13 +2358,13 @@ input:checked + .slider-round:before {
 }
 
 .hud-round-pill {
-  background: var(--lego-yellow);
-  color: #78350F;
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.5);
   font-weight: 800;
   font-size: 13px;
   padding: 5px 12px;
   border-radius: 12px;
-  box-shadow: 0 2px 0 #D97706;
 }
 
 .hud-active-turn-box {
@@ -2372,14 +2373,16 @@ input:checked + .slider-round:before {
   gap: 8px;
   font-size: 14px;
   font-weight: 800;
-  color: #1E293B;
+  color: #F8FAFC;
 }
 
 .hud-turn-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 2px solid var(--lego-blue);
+  border: 2px solid #38BDF8;
+  background: #1E293B;
+}
   background: #F8FAFC;
 }
 
@@ -2423,65 +2426,7 @@ input:checked + .slider-round:before {
    ========================================================================== */
 
 .hud-turn-alert-banner {
-  background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%);
-  color: #FFFFFF;
-  padding: 8px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-bottom: 2px solid #334155;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 9;
-}
-
-.hud-turn-alert-banner.my-turn {
-  background: linear-gradient(90deg, #059669 0%, #10B981 50%, #047857 100%);
-  border-bottom: 3px solid #34D399;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  animation: turnPulseGlow 1.8s infinite ease-in-out;
-}
-
-@keyframes turnPulseGlow {
-  0%, 100% {
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  }
-  50% {
-    box-shadow: 0 4px 28px rgba(16, 185, 129, 0.7);
-  }
-}
-
-.turn-banner-icon {
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: bounceDice 1.2s infinite ease-in-out;
-}
-
-@keyframes bounceDice {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(8deg); }
-}
-
-.turn-banner-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.turn-banner-title {
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  color: #FFFFFF;
-}
-
-.turn-banner-sub {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  display: none !important;
 }
 
 /* 4 Cities Selection Grid in Modal */
@@ -2497,15 +2442,20 @@ input:checked + .slider-round:before {
   margin-top: 2px;
 }
 
-/* Players HUD Carousel (Horizontal bar under top bar) */
+/* Players HUD Carousel (Floating Glass Capsules over canvas) */
 .players-hud-carousel {
+  position: absolute;
+  top: 58px;
+  left: 14px;
   display: flex;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 4px 0;
   overflow-x: auto;
-  background: rgba(248, 250, 252, 0.85);
-  border-bottom: 1px solid #E2E8F0;
+  background: transparent;
+  border-bottom: none;
   scrollbar-width: none;
+  z-index: 8;
+  pointer-events: auto;
 }
 
 .players-hud-carousel::-webkit-scrollbar {
@@ -2514,22 +2464,36 @@ input:checked + .slider-round:before {
 
 .player-hud-card {
   flex-shrink: 0;
-  background: var(--surface-card);
-  border-radius: 14px;
-  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 5px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: 2px solid #CBD5E1;
-  box-shadow: var(--shadow-sm);
+  gap: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #FFFFFF;
   transition: all 0.2s ease;
 }
 
 .player-hud-card.active-turn {
-  border-width: 3px;
+  border-color: #F59E0B;
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
-  background: #EFF6FF;
+}
+
+.player-hud-card .player-hud-name {
+  color: #F8FAFC;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.player-hud-card .hud-stat-pill {
+  color: #FDE047;
+  font-weight: 800;
+  font-size: 12px;
 }
 
 .hud-avatar-box {
@@ -2572,7 +2536,7 @@ input:checked + .slider-round:before {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at center, #FFFFFF 0%, #EFF6FF 100%);
+  background: #0B0F19;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2596,30 +2560,41 @@ input:checked + .slider-round:before {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
-  max-width: 640px;
-  background: var(--surface-card-trans);
-  backdrop-filter: blur(14px);
-  border-radius: var(--radius-lg);
-  padding: 12px 18px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: 2px solid #FFFFFF;
+  max-width: 660px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(18px);
+  border-radius: 36px;
+  padding: 8px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   z-index: 20;
 }
 
 .dock-status-bar {
-  font-size: 13px;
-  color: #334155;
-  text-align: center;
+  display: none !important;
 }
 
 .dock-buttons-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+}
+
+.dock-secondary-btn.speed-btn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 900;
+  min-width: 68px;
+}
+
+.dock-secondary-btn.speed-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #F59E0B;
 }
 
 /* Big Juicy "ZAR AT" Roll Button */
@@ -3260,8 +3235,8 @@ input:checked + .slider-round:before {
 /* Floating Camera Controls on Board Arena */
 .floating-cam-controls {
   position: absolute;
-  top: 18px;
-  left: 18px;
+  bottom: 95px;
+  left: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -3269,12 +3244,14 @@ input:checked + .slider-round:before {
 }
 
 .cam-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
-  background: white;
-  border: 2px solid #E2E8F0;
-  box-shadow: var(--shadow-sm);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4266,8 +4243,8 @@ input:checked + .slider-round:before {
       </div>
     </header>
 
-    <!-- Unmissable High-Visibility Turn Alert Banner -->
-    <div id="hud-turn-alert-banner" class="hud-turn-alert-banner">
+    <!-- Unmissable High-Visibility Turn Alert Banner (Disabled for clean minimal HUD) -->
+    <div id="hud-turn-alert-banner" class="hud-turn-alert-banner" style="display:none;">
       <div class="turn-banner-icon" id="turn-banner-icon">🎲</div>
       <div class="turn-banner-text">
         <div class="turn-banner-title" id="turn-banner-title">Parti Yükleniyor...</div>
@@ -4313,29 +4290,31 @@ input:checked + .slider-round:before {
 
     <!-- Bottom Floating Mobile Dock -->
     <footer class="game-bottom-dock">
-      <div class="dock-status-bar" id="dock-status-text">
-        Hamle bekleniyor...
-      </div>
+      <div class="dock-status-bar" id="dock-status-text" style="display:none;"></div>
       <div class="dock-buttons-row">
-        <button class="dock-secondary-btn" id="btn-open-inventory">
-          <span>🎒</span> Çantam
+        <button class="dock-secondary-btn" id="btn-open-inventory" title="Çantam">
+          <span>🎒</span> <span class="dock-btn-label">Çantam</span>
           <span class="btn-badge" id="inventory-badge">0</span>
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-trade">
-          <span>🤝</span> Takas
+        <button class="dock-secondary-btn" id="btn-open-trade" title="Takas">
+          <span>🤝</span> <span class="dock-btn-label">Takas</span>
         </button>
 
         <button class="btn-roll-dice pulse-turn" id="btn-roll-dice">
           <span>🎲</span> ZAR AT! (SPACE)
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-chat">
-          <span>🗨️</span> Sohbet
+        <button class="dock-secondary-btn speed-btn" id="btn-toggle-speed" title="Oyun Hızı">
+          <span>⚡</span> <span id="speed-label">1x</span>
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-emotes">
-          <span>💬</span> İfade
+        <button class="dock-secondary-btn" id="btn-open-chat" title="Sohbet">
+          <span>🗨️</span>
+        </button>
+
+        <button class="dock-secondary-btn" id="btn-open-emotes" title="İfade">
+          <span>💬</span>
         </button>
       </div>
     </footer>
@@ -6828,9 +6807,9 @@ const MAP_THEMES = {
     id: 'istanbul',
     name: 'İstanbul - Boğazın İncisi',
     desc: 'Tarihi yarımada, Galata Kulesi, Boğaz Köprüsü ve Ayasofya!',
-    bgColor: '#0F172A',
-    islandBase: '#FEF3C7',
-    roadBase: '#E2E8F0',
+    bgColor: '#0B0F19',
+    islandBase: '#1E293B',
+    roadBase: '#334155',
     roadBorder: '#0284C7',
     landmark: { name: 'Kız Kulesi & Vapur', x: 880, y: 520, icon: '🏰' }
   },
@@ -6838,9 +6817,9 @@ const MAP_THEMES = {
     id: 'tokyo',
     name: 'Tokyo - Neon Şehri',
     desc: 'Shibuya neonları, Tokyo Kulesi, Skytree ve Torii tapınakları!',
-    bgColor: '#090A1A',
-    islandBase: '#1E1B4B',
-    roadBase: '#1E293B',
+    bgColor: '#060714',
+    islandBase: '#0F172A',
+    roadBase: '#1E1B4B',
     roadBorder: '#06B6D4',
     landmark: { name: 'Tokyo Kulesi & Tapınak', x: 880, y: 520, icon: '🗼' }
   },
@@ -6848,18 +6827,18 @@ const MAP_THEMES = {
     id: 'paris',
     name: 'Paris - Işıklar Şehri',
     desc: 'Eyfel Kulesi, Zafer Takı, Sen Nehri ve Louvre Piramidi!',
-    bgColor: '#1E1B4B',
-    islandBase: '#FCE7F3',
-    roadBase: '#FFE4E6',
-    roadBorder: '#EC4899',
+    bgColor: '#090D1A',
+    islandBase: '#14532D',
+    roadBase: '#1E293B',
+    roadBorder: '#38BDF8',
     landmark: { name: 'Eyfel & Louvre', x: 880, y: 520, icon: '🗼' }
   },
   newyork: {
     id: 'newyork',
     name: 'New York - Büyük Elma',
     desc: 'Empire State, Özgürlük Heykeli, Brooklyn Köprüsü ve sarı taksiler!',
-    bgColor: '#111827',
-    islandBase: '#FEF08A',
+    bgColor: '#05070F',
+    islandBase: '#1E293B',
     roadBase: '#334155',
     roadBorder: '#F59E0B',
     landmark: { name: 'Özgürlük Heykeli', x: 880, y: 520, icon: '🗽' }
@@ -7233,6 +7212,11 @@ class BoardRenderer {
     // Apply high-DPI
     ctx.scale(this.dpr, this.dpr);
 
+    // Deep dark celestial background for entire viewport (No white borders on any screen!)
+    const currentTheme = MAP_THEMES[this.activeTheme] || MAP_THEMES.istanbul;
+    ctx.fillStyle = currentTheme.bgColor || '#0B0F19';
+    ctx.fillRect(0, 0, viewportW, viewportH);
+
     // Apply Center-Origin Camera Projection (Camera stays 100% centered on character on zoom!)
     ctx.translate(viewportW / 2 + this.camera.dragX, viewportH / 2 + this.camera.dragY);
     const totalScale = this.baseScale * this.camera.zoom;
@@ -7345,7 +7329,7 @@ class BoardRenderer {
     }
 
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, 1100, 760);
+    ctx.fillRect(-2500, -2500, 6000, 6000);
 
     // Twinkling Stars in upper sky
     ctx.save();
@@ -7410,50 +7394,129 @@ class BoardRenderer {
   }
 
   /* ----------------------------------------------------
-     BASE WATERWAYS & ISLAND TERRAIN CONTOURS
+     BASE WATERWAYS & 3D FLOATING DIORAMA TERRAIN
      ---------------------------------------------------- */
   drawWaterAndTerrain(ctx, theme) {
     const themeKey = theme.aliasOf || this.activeTheme;
+    ctx.save();
 
-    // 1. Water Channel / Ocean Base across the canvas
-    const waterGrad = ctx.createLinearGradient(0, 150, 1100, 760);
+    // 1. Surrounding Atmospheric Ocean / Void Base
+    const oceanGrad = ctx.createRadialGradient(550, 390, 200, 550, 390, 950);
     if (themeKey === 'tokyo') {
-      waterGrad.addColorStop(0, '#090A1A');
-      waterGrad.addColorStop(0.5, '#0F172A');
-      waterGrad.addColorStop(1, '#0284C733');
+      oceanGrad.addColorStop(0, '#090D1E');
+      oceanGrad.addColorStop(0.6, '#050711');
+      oceanGrad.addColorStop(1, '#020308');
     } else if (themeKey === 'paris') {
-      waterGrad.addColorStop(0, '#1E1B4B');
-      waterGrad.addColorStop(0.5, '#0284C7');
-      waterGrad.addColorStop(1, '#0369A1');
+      oceanGrad.addColorStop(0, '#0D1527');
+      oceanGrad.addColorStop(0.6, '#080C18');
+      oceanGrad.addColorStop(1, '#03050B');
     } else if (themeKey === 'newyork') {
-      waterGrad.addColorStop(0, '#0B132B');
-      waterGrad.addColorStop(0.5, '#0369A1');
-      waterGrad.addColorStop(1, '#075985');
+      oceanGrad.addColorStop(0, '#0B132B');
+      oceanGrad.addColorStop(0.6, '#060B18');
+      oceanGrad.addColorStop(1, '#020409');
     } else {
-      waterGrad.addColorStop(0, '#0369A1');
-      waterGrad.addColorStop(0.5, '#0284C7');
-      waterGrad.addColorStop(1, '#075985');
+      oceanGrad.addColorStop(0, '#0C2340');
+      oceanGrad.addColorStop(0.6, '#081729');
+      oceanGrad.addColorStop(1, '#030810');
+    }
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(-2500, -2500, 6000, 6000);
+
+    // 2. Volumetric Drop Shadow under the Floating Diorama Island
+    ctx.beginPath();
+    ctx.ellipse(550, 440, 540, 310, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fill();
+
+    // 3. 3D Floating Island Cliff Underside (Layered Bedrock Strata)
+    ctx.beginPath();
+    ctx.ellipse(550, 422, 528, 305, 0, 0, Math.PI); // bottom half of lower rim
+    ctx.ellipse(550, 392, 528, 305, 0, Math.PI, 0, true); // bottom half of upper rim reversed
+    ctx.closePath();
+    const cliffGrad = ctx.createLinearGradient(0, 390, 0, 428);
+    cliffGrad.addColorStop(0, '#1E293B');
+    cliffGrad.addColorStop(0.5, '#0F172A');
+    cliffGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = cliffGrad;
+    ctx.fill();
+
+    // Cliff vertical rock strata ribs
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1.5;
+    for (let angle = 0.2; angle < Math.PI - 0.2; angle += 0.14) {
+      const rx = 528 * Math.cos(angle);
+      const ry1 = 392 + 305 * Math.sin(angle);
+      const ry2 = 422 + 305 * Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(550 + rx, ry1);
+      ctx.lineTo(550 + rx, ry2);
+      ctx.stroke();
     }
 
-    // 2. Full-Canvas Outer Coastline Shelf
-    ctx.save();
+    // 4. Coastal Shoreline & Golden Sand Beach Shelf
     ctx.beginPath();
-    ctx.ellipse(550, 395, 535, 320, 0, 0, Math.PI * 2);
-    ctx.fillStyle = (themeKey === 'tokyo') ? '#1E1B4B' : (themeKey === 'newyork' ? '#1E293B' : '#FDE68A');
+    ctx.ellipse(550, 390, 528, 305, 0, 0, Math.PI * 2);
+    const sandGrad = ctx.createLinearGradient(550, 85, 550, 695);
+    if (themeKey === 'tokyo') {
+      sandGrad.addColorStop(0, '#1E1B4B');
+      sandGrad.addColorStop(1, '#312E81');
+    } else {
+      sandGrad.addColorStop(0, '#FDE68A');
+      sandGrad.addColorStop(0.5, '#F59E0B');
+      sandGrad.addColorStop(1, '#D97706');
+    }
+    ctx.fillStyle = sandGrad;
     ctx.fill();
 
-    // 3. Main Island Body (City Plaza & Hills)
+    // Water shoreline foam line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(550, 390, 510, 305, 0, 0, Math.PI * 2);
-    ctx.fillStyle = theme.islandBase;
-    ctx.fill();
-
-    // 4. Subtle Garden / Cobblestone District Insets
-    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(6, 182, 212, 0.16)' : 'rgba(0, 0, 0, 0.04)';
-    ctx.lineWidth = 16;
-    ctx.beginPath();
-    ctx.ellipse(550, 390, 440, 245, 0, 0, Math.PI * 2);
+    ctx.ellipse(550, 390, 529, 306, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    // 5. Main Island Plateau (Lush Green Parklands / City Ground)
+    ctx.beginPath();
+    ctx.ellipse(550, 388, 508, 292, 0, 0, Math.PI * 2);
+    const parkGrad = ctx.createRadialGradient(550, 388, 50, 550, 388, 500);
+    if (themeKey === 'paris') {
+      parkGrad.addColorStop(0, '#166534'); // Rich Parisian garden green
+      parkGrad.addColorStop(0.7, '#14532D');
+      parkGrad.addColorStop(1, '#0F3E22');
+    } else if (themeKey === 'tokyo') {
+      parkGrad.addColorStop(0, '#0F172A');
+      parkGrad.addColorStop(0.7, '#1E1B4B');
+      parkGrad.addColorStop(1, '#090D1A');
+    } else if (themeKey === 'newyork') {
+      parkGrad.addColorStop(0, '#1F2937');
+      parkGrad.addColorStop(0.65, '#166534'); // Central Park lushness
+      parkGrad.addColorStop(1, '#111827');
+    } else {
+      // Istanbul
+      parkGrad.addColorStop(0, '#1E293B');
+      parkGrad.addColorStop(0.65, '#14532D');
+      parkGrad.addColorStop(1, '#0F172A');
+    }
+    ctx.fillStyle = parkGrad;
+    ctx.fill();
+
+    // 6. Inner Cobblestone Promenade Ring
+    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(56, 189, 248, 0.22)' : 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.ellipse(550, 388, 435, 235, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 7. Radial Parisian/City Boulevards connecting center to racetrack
+    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 10;
+    const radAngles = [0, Math.PI / 4, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 7 * Math.PI / 4];
+    radAngles.forEach(ang => {
+      ctx.beginPath();
+      ctx.moveTo(550 + Math.cos(ang) * 90, 388 + Math.sin(ang) * 55);
+      ctx.lineTo(550 + Math.cos(ang) * 420, 388 + Math.sin(ang) * 225);
+      ctx.stroke();
+    });
 
     ctx.restore();
   }
@@ -7811,22 +7874,114 @@ class BoardRenderer {
   drawParisEnvironment(ctx) {
     ctx.save();
 
-    // 1. River Seine (Sen Nehri)
+    // 1. River Seine (Sen Nehri) with Deep Water Flow
     ctx.beginPath();
     ctx.moveTo(350, 60); ctx.bezierCurveTo(440, 220, 360, 440, 600, 720);
     ctx.lineTo(720, 720); ctx.bezierCurveTo(480, 440, 560, 220, 470, 60);
     ctx.closePath();
-    ctx.fillStyle = '#38BDF8'; ctx.fill();
+    const seineGrad = ctx.createLinearGradient(350, 60, 650, 720);
+    seineGrad.addColorStop(0, '#0284C7');
+    seineGrad.addColorStop(0.5, '#0369A1');
+    seineGrad.addColorStop(1, '#075985');
+    ctx.fillStyle = seineGrad;
+    ctx.fill();
 
-    // Arched Pont Neuf Stone Bridge
+    // Seine Water Ripples
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1.5;
+    for (let r = 0; r < 5; r++) {
+      const rx = 440 + Math.sin(this.starPulse + r * 1.4) * 30;
+      const ry = 180 + r * 95;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 20 + r * 3, 0.2 * Math.PI, 0.8 * Math.PI);
+      ctx.stroke();
+    }
+
+    // Cruise Boat (Bateau-Mouche) on Seine
+    const boatX = 490 + Math.sin(this.starPulse * 0.8) * 22;
+    const boatY = 460 + Math.cos(this.starPulse * 0.8) * 18;
+    ctx.save();
+    ctx.translate(boatX, boatY);
+    ctx.rotate(0.32);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-16, 5); ctx.lineTo(16, 5); ctx.lineTo(12, 13); ctx.lineTo(-12, 13); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#0284C7';
+    ctx.fillRect(-10, 1, 20, 4);
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillRect(-7, 2, 3, 2); ctx.fillRect(-1, 2, 3, 2); ctx.fillRect(5, 2, 3, 2);
+    ctx.restore();
+
+    // 2. Arched Pont Neuf Stone Bridge
     ctx.fillStyle = '#E2E8F0';
-    ctx.fillRect(400, 280, 110, 20);
+    ctx.fillRect(400, 280, 110, 22);
     ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 2;
-    ctx.strokeRect(400, 280, 110, 20);
-    ctx.fillStyle = '#38BDF8';
-    ctx.beginPath(); ctx.arc(430, 300, 12, Math.PI, 0); ctx.arc(480, 300, 12, Math.PI, 0); ctx.fill();
+    ctx.strokeRect(400, 280, 110, 22);
+    // Bridge Arch cutouts
+    ctx.fillStyle = '#0369A1';
+    ctx.beginPath(); ctx.arc(430, 302, 12, Math.PI, 0); ctx.arc(480, 302, 12, Math.PI, 0); ctx.fill();
+    // Bridge balustrade details
+    ctx.strokeStyle = '#64748B'; ctx.lineWidth = 1.2;
+    for (let bx = 410; bx <= 500; bx += 10) {
+      ctx.beginPath(); ctx.moveTo(bx, 280); ctx.lineTo(bx, 286); ctx.stroke();
+    }
 
-    // 2. Tour Eiffel (Eiffel Tower) with Rotating Golden Spotlight at x: 240, y: 200
+    // 3. 3D Parisian Haussmann Buildings (Living city quarters)
+    const buildings = [
+      { x: 330, y: 350, w: 32, h: 26 },
+      { x: 375, y: 385, w: 28, h: 24 },
+      { x: 740, y: 330, w: 34, h: 28 },
+      { x: 785, y: 365, w: 30, h: 26 },
+      { x: 670, y: 380, w: 26, h: 24 }
+    ];
+    buildings.forEach(b => {
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      // Drop Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(-b.w / 2 + 2, b.h / 2, b.w, 4);
+      // Stone facade
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1;
+      ctx.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      // Blue-grey zinc mansard roof
+      ctx.beginPath();
+      ctx.moveTo(-b.w / 2 - 2, -b.h / 2);
+      ctx.lineTo(-b.w / 2 + 4, -b.h / 2 - 8);
+      ctx.lineTo(b.w / 2 - 4, -b.h / 2 - 8);
+      ctx.lineTo(b.w / 2 + 2, -b.h / 2);
+      ctx.closePath();
+      ctx.fillStyle = '#475569';
+      ctx.fill();
+      // Lit warm windows
+      ctx.fillStyle = '#FEF08A';
+      for (let wx = -b.w / 2 + 5; wx <= b.w / 2 - 8; wx += 8) {
+        for (let wy = -b.h / 2 + 4; wy <= b.h / 2 - 6; wy += 8) {
+          ctx.fillRect(wx, wy, 4, 5);
+        }
+      }
+      ctx.restore();
+    });
+
+    // 4. French Formal Garden Parterres (Champs de Mars) & Fountain
+    ctx.save();
+    ctx.translate(290, 275);
+    // Green hedge borders
+    ctx.strokeStyle = '#15803D'; ctx.lineWidth = 3;
+    ctx.strokeRect(-24, -16, 48, 32);
+    ctx.fillStyle = '#14532D'; ctx.fillRect(-22, -14, 44, 28);
+    // Center Fountain
+    ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fillStyle = '#38BDF8'; ctx.fill();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Fountain water spray
+    const sprayH = 4 + Math.sin(this.starPulse * 4) * 2;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.beginPath(); ctx.arc(0, -sprayH, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // 5. Tour Eiffel (Eiffel Tower) with Rotating Golden Spotlight at x: 240, y: 200
     ctx.save();
     ctx.translate(240, 200);
     // Grand Ground Arch
@@ -7864,11 +8019,11 @@ class BoardRenderer {
     ctx.fill();
     ctx.restore();
 
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Eyfel Kulesi', 0, 65);
     ctx.restore();
 
-    // 3. Arc de Triomphe (Zafer Takı) at x: 700, y: 210
+    // 6. Arc de Triomphe (Zafer Takı) at x: 700, y: 210
     ctx.save();
     ctx.translate(700, 210);
     ctx.fillStyle = '#E7E5E4';
@@ -7876,17 +8031,17 @@ class BoardRenderer {
     ctx.strokeStyle = '#A8A29E'; ctx.lineWidth = 2;
     ctx.strokeRect(-26, -20, 52, 45);
     // Center Arch Vault
-    ctx.fillStyle = '#FCE7F3';
+    ctx.fillStyle = '#1E293B';
     ctx.beginPath();
     ctx.arc(0, 5, 12, Math.PI, 0); ctx.rect(-12, 5, 24, 20); ctx.fill();
     ctx.stroke();
     // Attic cornice frieze
     ctx.fillStyle = '#D6D3D1'; ctx.fillRect(-30, -28, 60, 8);
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Zafer Takı', 0, 40);
     ctx.restore();
 
-    // 4. Louvre Glass Pyramid (Louvre Piramidi) at x: 460, y: 460
+    // 7. Louvre Glass Pyramid (Louvre Piramidi) at x: 460, y: 460
     ctx.save();
     ctx.translate(460, 460);
     ctx.beginPath();
@@ -7898,7 +8053,7 @@ class BoardRenderer {
     ctx.moveTo(-14, 20); ctx.lineTo(0, -18); ctx.lineTo(14, 20);
     ctx.moveTo(-28, 20); ctx.lineTo(0, 2); ctx.lineTo(28, 20);
     ctx.stroke();
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Louvre Piramidi', 0, 32);
     ctx.restore();
 
@@ -8277,37 +8432,50 @@ class BoardRenderer {
     ctx.shadowBlur = 14;
     ctx.stroke();
 
-    // 3. Overhead Bouncing Turn Tag with Downward Arrow
+    // 3. Elegant Floating 3D Pointer Diamond (Unobtrusive & Never collides with name tags)
     const isMe = (window.GameClient && window.GameClient.player && window.GameClient.player.sessionId === activePlayer.sessionId);
-    const bob = Math.sin(this.starPulse * 4) * 5;
-    ctx.translate(px, py - 68 + bob);
+    const bob = Math.sin(this.starPulse * 4) * 4;
+    ctx.translate(px, py - 64 + bob);
 
-    // Downward arrow pointer
+    // Glowing 3D Diamond Indicator
+    const diamondColor = isMe ? '#10B981' : '#F59E0B';
+    const diamondBorder = isMe ? '#6EE7B7' : '#FDE047';
+
+    ctx.save();
+    ctx.shadowColor = diamondColor;
+    ctx.shadowBlur = 12;
+
+    // Diamond shape
     ctx.beginPath();
-    ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.lineTo(0, 7); ctx.closePath();
-    ctx.fillStyle = isMe ? '#10B981' : '#F59E0B';
+    ctx.moveTo(0, -9);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(0, 9);
+    ctx.lineTo(-8, 0);
+    ctx.closePath();
+    ctx.fillStyle = diamondColor;
     ctx.fill();
-
-    // Tag Box (Polite & friendly phrasing)
-    const tagText = isMe ? '✨ Senin Hamlen ✨' : `⏳ Sıra: ${activePlayer.name}`;
-    ctx.font = '800 11px sans-serif';
-    const textWidth = ctx.measureText(tagText).width;
-    const boxW = Math.max(104, textWidth + 24);
-
-    ctx.beginPath();
-    ctx.roundRect(-boxW / 2, -22, boxW, 22, 11);
-    ctx.fillStyle = isMe ? 'rgba(16, 185, 129, 0.95)' : 'rgba(30, 41, 59, 0.92)';
-    ctx.fill();
-    ctx.strokeStyle = isMe ? '#6EE7B7' : '#F59E0B';
+    ctx.strokeStyle = diamondBorder;
     ctx.lineWidth = 2;
-    ctx.shadowColor = isMe ? '#10B981' : '#F59E0B';
-    ctx.shadowBlur = 10;
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(tagText, 0, -11);
+    // Diamond facet highlight
+    ctx.beginPath();
+    ctx.moveTo(0, -9);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fill();
+
+    // Downward pointer tip
+    ctx.beginPath();
+    ctx.moveTo(-4, 7);
+    ctx.lineTo(4, 7);
+    ctx.lineTo(0, 13);
+    ctx.closePath();
+    ctx.fillStyle = diamondBorder;
+    ctx.fill();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -8628,8 +8796,9 @@ class BoardRenderer {
         const fromPos = this.tileCoords[pState.currentTile] || { x: 110, y: 620 };
         const toPos = this.tileCoords[targetTile] || { x: 110, y: 620 };
 
-        // Advance hop progress smoothly (~380ms per tile step)
-        pState.hopProgress += 0.042;
+        // Advance hop progress smoothly (accelerated by turbo speed & bot multiplier)
+        const speedMultiplier = (window.GAME_SPEED || 1) * (player.isBot ? 1.35 : 1);
+        pState.hopProgress += 0.042 * speedMultiplier;
         const p = Math.min(1, pState.hopProgress);
 
         // Linear ground position interpolation
@@ -9627,8 +9796,9 @@ class MiniGameManager {
             this.score = 0;
             AudioPlayer.playTrapSound();
           }
-          setTimeout(() => this.end(), 1200);
-        }, 500);
+          const speed = window.GAME_SPEED || 1;
+          setTimeout(() => this.end(), Math.max(250, Math.round(500 / speed)));
+        }, Math.max(150, Math.round(300 / speed)));
       });
     });
 
@@ -10121,6 +10291,7 @@ class LocalRoom {
     this.turnTimer = null;
     this.botActionTimeout = null;
     this.isProcessingTurn = false;
+    this.gameSpeed = 1;
   }
 
   addPlayer(sessionId, name, avatar = 'builder', diceSkin = 'default', level = 1, title = 'Acemi Zarcı', ws = null, hat = 'none', customColor = null) {
@@ -10339,9 +10510,10 @@ class LocalRoom {
 
   scheduleBotTurn() {
     clearTimeout(this.botActionTimeout);
+    const spd = this.gameSpeed || 1;
     this.botActionTimeout = setTimeout(() => {
       this.executeBotTurn();
-    }, 1800);
+    }, Math.max(250, Math.round(1600 / spd)));
   }
 
   executeBotTurn() {
@@ -10363,9 +10535,10 @@ class LocalRoom {
     }
 
     // Bot rolls dice after small pause
+    const spd = this.gameSpeed || 1;
     setTimeout(() => {
       this.rollDice(bot.sessionId);
-    }, 900);
+    }, Math.max(180, Math.round(800 / spd)));
   }
 
   rollDice(sessionId) {
@@ -10374,6 +10547,8 @@ class LocalRoom {
     if (!player || player.sessionId !== sessionId || this.state !== 'playing') return;
 
     this.isProcessingTurn = true;
+
+    const spd = this.gameSpeed || 1;
 
     // Check if player is jailed
     if (player.jailedTurns > 0) {
@@ -10385,7 +10560,7 @@ class LocalRoom {
         player.jailedTurns--;
         this.addLog(`⛓️ ${player.name} Kodes cezasını çekiyor, bu turu pas geçti!`);
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 1400);
+        setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
         return;
       }
     }
@@ -10415,7 +10590,7 @@ class LocalRoom {
     // Move player step by step AFTER dice modal finishes and closes completely
     setTimeout(() => {
       this.movePlayerSteps(player, totalRoll);
-    }, 1800);
+    }, Math.max(300, Math.round(1500 / spd)));
   }
 
   movePlayerSteps(player, steps) {
@@ -10470,7 +10645,8 @@ class LocalRoom {
     this.broadcastState();
 
     // Trigger Tile Effect strictly after Monopoly-style hopping completes
-    const hopDurationMs = (Math.abs(steps) * 380) + 500;
+    const spd = this.gameSpeed || 1;
+    const hopDurationMs = Math.max(300, Math.round(((Math.abs(steps) * 380) + 400) / spd));
     setTimeout(() => {
       this.resolveTileEffect(player, newPos);
     }, hopDurationMs);
@@ -10484,6 +10660,7 @@ class LocalRoom {
 
   resolveTileEffect(player, tileIndex) {
     const tile = this.board[tileIndex];
+    const spd = this.gameSpeed || 1;
 
     // Check if there is a Banana Trap set here by another player
     if (this.trapsOnBoard[tileIndex] && this.trapsOnBoard[tileIndex] !== player.id) {
@@ -10501,7 +10678,7 @@ class LocalRoom {
         sound: 'slip'
       });
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 2200);
+      setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
       return;
     }
 
@@ -10713,7 +10890,7 @@ class LocalRoom {
           sound: 'reverse'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1600 / spd)));
         break;
       }
 
@@ -10723,12 +10900,13 @@ class LocalRoom {
 
       default:
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 800);
+        setTimeout(() => this.finishTurn(), Math.max(200, Math.round(700 / spd)));
         break;
     }
   }
 
   triggerMysteryEvent(player) {
+    const spd = this.gameSpeed || 1;
     const events = [
       { name: 'Gökten Altın', fn: () => { player.coins += 12; this.addLog(`🎁 Şans Çarkı: ${player.name} gökten düşen sandıktan +12 Altın kaptı!`); } },
       { name: 'Çifte Şans', fn: () => { player.inventory.push('double_dice'); this.addLog(`🎁 Şans Çarkı: ${player.name} ücretsiz Çift Zar kazandı!`); } },
@@ -10759,11 +10937,12 @@ class LocalRoom {
     setTimeout(() => {
       chosen.fn();
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 1200);
-    }, 1500);
+      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(1000 / spd)));
+    }, Math.max(350, Math.round(1400 / spd)));
   }
 
   triggerShop(player) {
+    const spd = this.gameSpeed || 1;
     // If bot, auto buy useful item if afford
     if (player.isBot) {
       if (player.coins >= 10 && !player.inventory.includes('double_dice')) {
@@ -10776,7 +10955,7 @@ class LocalRoom {
         this.addLog(`🏪 ${player.name} Dükkandan Altın Mıknatısı aldı!`);
       }
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 1000);
+      setTimeout(() => this.finishTurn(), Math.max(200, Math.round(800 / spd)));
       return;
     }
 
@@ -10795,6 +10974,7 @@ class LocalRoom {
   }
 
   triggerDuel(player) {
+    const spd = this.gameSpeed || 1;
     const rivals = this.players.filter(p => p.id !== player.id);
     if (rivals.length === 0) {
       this.finishTurn();
@@ -10820,7 +11000,7 @@ class LocalRoom {
     this.addLog(`⚔️ Düello! ${duelResult}`);
     this.broadcast('duel_result', { text: duelResult });
     this.broadcastState();
-    setTimeout(() => this.finishTurn(), 1500);
+    setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
   }
 
   useItem(sessionId, itemId, targetPlayerId = null) {
@@ -11257,6 +11437,10 @@ class LocalGameServer {
 
       case 'roll_dice':
         room.rollDice(sessionId);
+        break;
+
+      case 'set_game_speed':
+        room.gameSpeed = data.speed || 1;
         break;
 
       case 'buy_item': {
@@ -11761,6 +11945,19 @@ class ClientEngine {
     }
   }
 
+  setGameSpeed(speed) {
+    window.GAME_SPEED = speed;
+    if (window.BoardMap) {
+      window.BoardMap.gameSpeed = speed;
+    }
+    if (window.LocalServer) {
+      window.LocalServer.handleMessage(this.player ? this.player.sessionId : 's_host', 'set_game_speed', { speed });
+    }
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send('set_game_speed', { speed });
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Message Handling Dispatcher
   // ---------------------------------------------------------------------------
@@ -11864,11 +12061,27 @@ class UIEngine {
     if (window.i18n) {
       window.i18n.applyTranslations();
     }
+    const savedSpeed = parseInt(localStorage.getItem('partycraft_game_speed') || '1', 10);
+    window.GAME_SPEED = [1, 2, 4].includes(savedSpeed) ? savedSpeed : 1;
+    this.updateSpeedUI();
+
     GameClient.init();
     this.initSettings();
     this.renderProfileCard();
     this.bindHomeEvents();
     this.bindGameEvents();
+  }
+
+  updateSpeedUI() {
+    const lbl = document.getElementById('speed-label');
+    const btn = document.getElementById('btn-toggle-speed');
+    const spd = window.GAME_SPEED || 1;
+    if (lbl) {
+      lbl.innerText = spd === 4 ? '4x 🚀' : (spd === 2 ? '2x ⚡' : '1x');
+    }
+    if (btn) {
+      btn.classList.toggle('active-speed', spd > 1);
+    }
   }
 
   onLanguageChanged(lang) {
@@ -12698,6 +12911,28 @@ class UIEngine {
       GameClient.rollDice();
     });
 
+    // Speed Toggle Button (1x -> 2x -> 4x -> 1x)
+    const btnToggleSpeed = document.getElementById('btn-toggle-speed');
+    if (btnToggleSpeed) {
+      btnToggleSpeed.onclick = () => {
+        let current = window.GAME_SPEED || 1;
+        let next = 1;
+        if (current === 1) next = 2;
+        else if (current === 2) next = 4;
+        else next = 1;
+
+        window.GAME_SPEED = next;
+        localStorage.setItem('partycraft_game_speed', next.toString());
+        this.updateSpeedUI();
+        if (window.GameClient) {
+          window.GameClient.setGameSpeed(next);
+        }
+        AudioPlayer.playClick();
+        const toastMsg = next === 4 ? '🚀 Oyun Hızı: 4x Turbo!' : (next === 2 ? '⚡ Oyun Hızı: 2x Hızlı!' : '⚡ Oyun Hızı: 1x Normal');
+        this.showToast(toastMsg, 'info');
+      };
+    }
+
     // Inventory Button
     document.getElementById('btn-open-inventory').addEventListener('click', () => {
       AudioPlayer.playClick();
@@ -13080,16 +13315,21 @@ class UIEngine {
 
     if (dieBox) dieBox.className = 'single-dice-box rolling';
 
+    const speed = window.GAME_SPEED || 1;
+    const tumbleTime = Math.max(160, Math.round(550 / speed));
+    const postTime = Math.max(200, Math.round(650 / speed));
+
     // Cycle through values rapidly while tumbling
     let cycleCount = 0;
     const interval = setInterval(() => {
       cycleCount++;
       const randVal = Math.floor(Math.random() * 6) + 1;
       if (pipFace) pipFace.innerHTML = this.renderDicePips(randVal);
-      if (cycleCount > 10) clearInterval(interval);
-    }, 60);
+      if (cycleCount > 8) clearInterval(interval);
+    }, Math.max(25, Math.round(55 / speed)));
 
-    setTimeout(() => {
+    let timer2 = null;
+    const finishRoll = () => {
       clearInterval(interval);
       if (dieBox) dieBox.className = 'single-dice-box landed';
       if (pipFace) pipFace.innerHTML = this.renderDicePips(data.totalRoll);
@@ -13100,10 +13340,22 @@ class UIEngine {
 
       AudioPlayer.playStep();
 
-      setTimeout(() => {
+      timer2 = setTimeout(() => {
         overlay.classList.add('hidden');
-      }, 850);
-    }, 750);
+        overlay.onclick = null;
+      }, postTime);
+    };
+
+    const timer1 = setTimeout(finishRoll, tumbleTime);
+
+    // Instant close on click / tap anywhere on overlay (No waiting!)
+    overlay.onclick = () => {
+      clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
+      clearInterval(interval);
+      overlay.classList.add('hidden');
+      overlay.onclick = null;
+    };
   }
 
   showTileEventCard(data) {
@@ -13147,9 +13399,20 @@ class UIEngine {
     title.innerText = data.title;
     desc.innerText = data.message;
 
-    setTimeout(() => {
+    const speed = window.GAME_SPEED || 1;
+    const hideTimeoutMs = Math.max(450, Math.round(1400 / speed));
+
+    const hideTimer = setTimeout(() => {
       overlay.classList.add('hidden');
-    }, 1900);
+      overlay.onclick = null;
+    }, hideTimeoutMs);
+
+    // Instant close on click / tap anywhere on overlay (No waiting!)
+    overlay.onclick = () => {
+      clearTimeout(hideTimer);
+      overlay.classList.add('hidden');
+      overlay.onclick = null;
+    };
   }
 
   showMysteryRoulette(data) {
@@ -13257,14 +13520,26 @@ class UIEngine {
       ctx.restore();
     };
 
-    // Spin animation with physics
+    // Spin animation with physics (scaled by game speed)
     let currentAngle = 0;
-    const targetSpin = Math.PI * 2 * (5 + Math.random() * 3);
-    const duration = 2800;
+    const targetSpin = Math.PI * 2 * (4 + Math.random() * 2);
+    const speed = window.GAME_SPEED || 1;
+    const duration = Math.max(700, Math.round(2400 / speed));
+    const postWait = Math.max(350, Math.round(1800 / speed));
     const startT = performance.now();
     let lastTickAngle = 0;
+    let modalTimer = null;
+    let isFinished = false;
+
+    // Instant close on click / tap anywhere on modal
+    modal.onclick = () => {
+      if (modalTimer) clearTimeout(modalTimer);
+      modal.classList.add('hidden');
+      modal.onclick = null;
+    };
 
     const animateSpin = (now) => {
+      if (isFinished || modal.classList.contains('hidden')) return;
       const elapsed = now - startT;
       const progress = Math.min(1, elapsed / duration);
       // Cubic ease out
@@ -13277,7 +13552,7 @@ class UIEngine {
         lastTickAngle = currentAngle;
         if (pointer) {
           pointer.style.transform = 'translateX(-50%) rotate(-18deg)';
-          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 45);
+          setTimeout(() => { if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)'; }, 40);
         }
         AudioPlayer.playWheelTick();
       }
@@ -13286,6 +13561,7 @@ class UIEngine {
         requestAnimationFrame(animateSpin);
       } else {
         // Spin finished
+        isFinished = true;
         AudioPlayer.playStarFanfare();
         const wonDict = {
           tr: 'Büyük Ödül Kazandın!',
@@ -13297,9 +13573,10 @@ class UIEngine {
         const wonText = wonDict[lang] || wonDict.tr;
         resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
-        setTimeout(() => {
+        modalTimer = setTimeout(() => {
           modal.classList.add('hidden');
-        }, 2200);
+          modal.onclick = null;
+        }, postWait);
       }
     };
 

@@ -9,9 +9,9 @@ const MAP_THEMES = {
     id: 'istanbul',
     name: 'İstanbul - Boğazın İncisi',
     desc: 'Tarihi yarımada, Galata Kulesi, Boğaz Köprüsü ve Ayasofya!',
-    bgColor: '#0F172A',
-    islandBase: '#FEF3C7',
-    roadBase: '#E2E8F0',
+    bgColor: '#0B0F19',
+    islandBase: '#1E293B',
+    roadBase: '#334155',
     roadBorder: '#0284C7',
     landmark: { name: 'Kız Kulesi & Vapur', x: 880, y: 520, icon: '🏰' }
   },
@@ -19,9 +19,9 @@ const MAP_THEMES = {
     id: 'tokyo',
     name: 'Tokyo - Neon Şehri',
     desc: 'Shibuya neonları, Tokyo Kulesi, Skytree ve Torii tapınakları!',
-    bgColor: '#090A1A',
-    islandBase: '#1E1B4B',
-    roadBase: '#1E293B',
+    bgColor: '#060714',
+    islandBase: '#0F172A',
+    roadBase: '#1E1B4B',
     roadBorder: '#06B6D4',
     landmark: { name: 'Tokyo Kulesi & Tapınak', x: 880, y: 520, icon: '🗼' }
   },
@@ -29,18 +29,18 @@ const MAP_THEMES = {
     id: 'paris',
     name: 'Paris - Işıklar Şehri',
     desc: 'Eyfel Kulesi, Zafer Takı, Sen Nehri ve Louvre Piramidi!',
-    bgColor: '#1E1B4B',
-    islandBase: '#FCE7F3',
-    roadBase: '#FFE4E6',
-    roadBorder: '#EC4899',
+    bgColor: '#090D1A',
+    islandBase: '#14532D',
+    roadBase: '#1E293B',
+    roadBorder: '#38BDF8',
     landmark: { name: 'Eyfel & Louvre', x: 880, y: 520, icon: '🗼' }
   },
   newyork: {
     id: 'newyork',
     name: 'New York - Büyük Elma',
     desc: 'Empire State, Özgürlük Heykeli, Brooklyn Köprüsü ve sarı taksiler!',
-    bgColor: '#111827',
-    islandBase: '#FEF08A',
+    bgColor: '#05070F',
+    islandBase: '#1E293B',
     roadBase: '#334155',
     roadBorder: '#F59E0B',
     landmark: { name: 'Özgürlük Heykeli', x: 880, y: 520, icon: '🗽' }
@@ -414,6 +414,11 @@ class BoardRenderer {
     // Apply high-DPI
     ctx.scale(this.dpr, this.dpr);
 
+    // Deep dark celestial background for entire viewport (No white borders on any screen!)
+    const currentTheme = MAP_THEMES[this.activeTheme] || MAP_THEMES.istanbul;
+    ctx.fillStyle = currentTheme.bgColor || '#0B0F19';
+    ctx.fillRect(0, 0, viewportW, viewportH);
+
     // Apply Center-Origin Camera Projection (Camera stays 100% centered on character on zoom!)
     ctx.translate(viewportW / 2 + this.camera.dragX, viewportH / 2 + this.camera.dragY);
     const totalScale = this.baseScale * this.camera.zoom;
@@ -526,7 +531,7 @@ class BoardRenderer {
     }
 
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, 1100, 760);
+    ctx.fillRect(-2500, -2500, 6000, 6000);
 
     // Twinkling Stars in upper sky
     ctx.save();
@@ -591,50 +596,129 @@ class BoardRenderer {
   }
 
   /* ----------------------------------------------------
-     BASE WATERWAYS & ISLAND TERRAIN CONTOURS
+     BASE WATERWAYS & 3D FLOATING DIORAMA TERRAIN
      ---------------------------------------------------- */
   drawWaterAndTerrain(ctx, theme) {
     const themeKey = theme.aliasOf || this.activeTheme;
+    ctx.save();
 
-    // 1. Water Channel / Ocean Base across the canvas
-    const waterGrad = ctx.createLinearGradient(0, 150, 1100, 760);
+    // 1. Surrounding Atmospheric Ocean / Void Base
+    const oceanGrad = ctx.createRadialGradient(550, 390, 200, 550, 390, 950);
     if (themeKey === 'tokyo') {
-      waterGrad.addColorStop(0, '#090A1A');
-      waterGrad.addColorStop(0.5, '#0F172A');
-      waterGrad.addColorStop(1, '#0284C733');
+      oceanGrad.addColorStop(0, '#090D1E');
+      oceanGrad.addColorStop(0.6, '#050711');
+      oceanGrad.addColorStop(1, '#020308');
     } else if (themeKey === 'paris') {
-      waterGrad.addColorStop(0, '#1E1B4B');
-      waterGrad.addColorStop(0.5, '#0284C7');
-      waterGrad.addColorStop(1, '#0369A1');
+      oceanGrad.addColorStop(0, '#0D1527');
+      oceanGrad.addColorStop(0.6, '#080C18');
+      oceanGrad.addColorStop(1, '#03050B');
     } else if (themeKey === 'newyork') {
-      waterGrad.addColorStop(0, '#0B132B');
-      waterGrad.addColorStop(0.5, '#0369A1');
-      waterGrad.addColorStop(1, '#075985');
+      oceanGrad.addColorStop(0, '#0B132B');
+      oceanGrad.addColorStop(0.6, '#060B18');
+      oceanGrad.addColorStop(1, '#020409');
     } else {
-      waterGrad.addColorStop(0, '#0369A1');
-      waterGrad.addColorStop(0.5, '#0284C7');
-      waterGrad.addColorStop(1, '#075985');
+      oceanGrad.addColorStop(0, '#0C2340');
+      oceanGrad.addColorStop(0.6, '#081729');
+      oceanGrad.addColorStop(1, '#030810');
+    }
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(-2500, -2500, 6000, 6000);
+
+    // 2. Volumetric Drop Shadow under the Floating Diorama Island
+    ctx.beginPath();
+    ctx.ellipse(550, 440, 540, 310, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fill();
+
+    // 3. 3D Floating Island Cliff Underside (Layered Bedrock Strata)
+    ctx.beginPath();
+    ctx.ellipse(550, 422, 528, 305, 0, 0, Math.PI); // bottom half of lower rim
+    ctx.ellipse(550, 392, 528, 305, 0, Math.PI, 0, true); // bottom half of upper rim reversed
+    ctx.closePath();
+    const cliffGrad = ctx.createLinearGradient(0, 390, 0, 428);
+    cliffGrad.addColorStop(0, '#1E293B');
+    cliffGrad.addColorStop(0.5, '#0F172A');
+    cliffGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = cliffGrad;
+    ctx.fill();
+
+    // Cliff vertical rock strata ribs
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1.5;
+    for (let angle = 0.2; angle < Math.PI - 0.2; angle += 0.14) {
+      const rx = 528 * Math.cos(angle);
+      const ry1 = 392 + 305 * Math.sin(angle);
+      const ry2 = 422 + 305 * Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(550 + rx, ry1);
+      ctx.lineTo(550 + rx, ry2);
+      ctx.stroke();
     }
 
-    // 2. Full-Canvas Outer Coastline Shelf
-    ctx.save();
+    // 4. Coastal Shoreline & Golden Sand Beach Shelf
     ctx.beginPath();
-    ctx.ellipse(550, 395, 535, 320, 0, 0, Math.PI * 2);
-    ctx.fillStyle = (themeKey === 'tokyo') ? '#1E1B4B' : (themeKey === 'newyork' ? '#1E293B' : '#FDE68A');
+    ctx.ellipse(550, 390, 528, 305, 0, 0, Math.PI * 2);
+    const sandGrad = ctx.createLinearGradient(550, 85, 550, 695);
+    if (themeKey === 'tokyo') {
+      sandGrad.addColorStop(0, '#1E1B4B');
+      sandGrad.addColorStop(1, '#312E81');
+    } else {
+      sandGrad.addColorStop(0, '#FDE68A');
+      sandGrad.addColorStop(0.5, '#F59E0B');
+      sandGrad.addColorStop(1, '#D97706');
+    }
+    ctx.fillStyle = sandGrad;
     ctx.fill();
 
-    // 3. Main Island Body (City Plaza & Hills)
+    // Water shoreline foam line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(550, 390, 510, 305, 0, 0, Math.PI * 2);
-    ctx.fillStyle = theme.islandBase;
-    ctx.fill();
-
-    // 4. Subtle Garden / Cobblestone District Insets
-    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(6, 182, 212, 0.16)' : 'rgba(0, 0, 0, 0.04)';
-    ctx.lineWidth = 16;
-    ctx.beginPath();
-    ctx.ellipse(550, 390, 440, 245, 0, 0, Math.PI * 2);
+    ctx.ellipse(550, 390, 529, 306, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    // 5. Main Island Plateau (Lush Green Parklands / City Ground)
+    ctx.beginPath();
+    ctx.ellipse(550, 388, 508, 292, 0, 0, Math.PI * 2);
+    const parkGrad = ctx.createRadialGradient(550, 388, 50, 550, 388, 500);
+    if (themeKey === 'paris') {
+      parkGrad.addColorStop(0, '#166534'); // Rich Parisian garden green
+      parkGrad.addColorStop(0.7, '#14532D');
+      parkGrad.addColorStop(1, '#0F3E22');
+    } else if (themeKey === 'tokyo') {
+      parkGrad.addColorStop(0, '#0F172A');
+      parkGrad.addColorStop(0.7, '#1E1B4B');
+      parkGrad.addColorStop(1, '#090D1A');
+    } else if (themeKey === 'newyork') {
+      parkGrad.addColorStop(0, '#1F2937');
+      parkGrad.addColorStop(0.65, '#166534'); // Central Park lushness
+      parkGrad.addColorStop(1, '#111827');
+    } else {
+      // Istanbul
+      parkGrad.addColorStop(0, '#1E293B');
+      parkGrad.addColorStop(0.65, '#14532D');
+      parkGrad.addColorStop(1, '#0F172A');
+    }
+    ctx.fillStyle = parkGrad;
+    ctx.fill();
+
+    // 6. Inner Cobblestone Promenade Ring
+    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(56, 189, 248, 0.22)' : 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.ellipse(550, 388, 435, 235, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 7. Radial Parisian/City Boulevards connecting center to racetrack
+    ctx.strokeStyle = (themeKey === 'tokyo') ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 10;
+    const radAngles = [0, Math.PI / 4, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 7 * Math.PI / 4];
+    radAngles.forEach(ang => {
+      ctx.beginPath();
+      ctx.moveTo(550 + Math.cos(ang) * 90, 388 + Math.sin(ang) * 55);
+      ctx.lineTo(550 + Math.cos(ang) * 420, 388 + Math.sin(ang) * 225);
+      ctx.stroke();
+    });
 
     ctx.restore();
   }
@@ -992,22 +1076,114 @@ class BoardRenderer {
   drawParisEnvironment(ctx) {
     ctx.save();
 
-    // 1. River Seine (Sen Nehri)
+    // 1. River Seine (Sen Nehri) with Deep Water Flow
     ctx.beginPath();
     ctx.moveTo(350, 60); ctx.bezierCurveTo(440, 220, 360, 440, 600, 720);
     ctx.lineTo(720, 720); ctx.bezierCurveTo(480, 440, 560, 220, 470, 60);
     ctx.closePath();
-    ctx.fillStyle = '#38BDF8'; ctx.fill();
+    const seineGrad = ctx.createLinearGradient(350, 60, 650, 720);
+    seineGrad.addColorStop(0, '#0284C7');
+    seineGrad.addColorStop(0.5, '#0369A1');
+    seineGrad.addColorStop(1, '#075985');
+    ctx.fillStyle = seineGrad;
+    ctx.fill();
 
-    // Arched Pont Neuf Stone Bridge
+    // Seine Water Ripples
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1.5;
+    for (let r = 0; r < 5; r++) {
+      const rx = 440 + Math.sin(this.starPulse + r * 1.4) * 30;
+      const ry = 180 + r * 95;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 20 + r * 3, 0.2 * Math.PI, 0.8 * Math.PI);
+      ctx.stroke();
+    }
+
+    // Cruise Boat (Bateau-Mouche) on Seine
+    const boatX = 490 + Math.sin(this.starPulse * 0.8) * 22;
+    const boatY = 460 + Math.cos(this.starPulse * 0.8) * 18;
+    ctx.save();
+    ctx.translate(boatX, boatY);
+    ctx.rotate(0.32);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-16, 5); ctx.lineTo(16, 5); ctx.lineTo(12, 13); ctx.lineTo(-12, 13); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#0284C7';
+    ctx.fillRect(-10, 1, 20, 4);
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillRect(-7, 2, 3, 2); ctx.fillRect(-1, 2, 3, 2); ctx.fillRect(5, 2, 3, 2);
+    ctx.restore();
+
+    // 2. Arched Pont Neuf Stone Bridge
     ctx.fillStyle = '#E2E8F0';
-    ctx.fillRect(400, 280, 110, 20);
+    ctx.fillRect(400, 280, 110, 22);
     ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 2;
-    ctx.strokeRect(400, 280, 110, 20);
-    ctx.fillStyle = '#38BDF8';
-    ctx.beginPath(); ctx.arc(430, 300, 12, Math.PI, 0); ctx.arc(480, 300, 12, Math.PI, 0); ctx.fill();
+    ctx.strokeRect(400, 280, 110, 22);
+    // Bridge Arch cutouts
+    ctx.fillStyle = '#0369A1';
+    ctx.beginPath(); ctx.arc(430, 302, 12, Math.PI, 0); ctx.arc(480, 302, 12, Math.PI, 0); ctx.fill();
+    // Bridge balustrade details
+    ctx.strokeStyle = '#64748B'; ctx.lineWidth = 1.2;
+    for (let bx = 410; bx <= 500; bx += 10) {
+      ctx.beginPath(); ctx.moveTo(bx, 280); ctx.lineTo(bx, 286); ctx.stroke();
+    }
 
-    // 2. Tour Eiffel (Eiffel Tower) with Rotating Golden Spotlight at x: 240, y: 200
+    // 3. 3D Parisian Haussmann Buildings (Living city quarters)
+    const buildings = [
+      { x: 330, y: 350, w: 32, h: 26 },
+      { x: 375, y: 385, w: 28, h: 24 },
+      { x: 740, y: 330, w: 34, h: 28 },
+      { x: 785, y: 365, w: 30, h: 26 },
+      { x: 670, y: 380, w: 26, h: 24 }
+    ];
+    buildings.forEach(b => {
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      // Drop Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(-b.w / 2 + 2, b.h / 2, b.w, 4);
+      // Stone facade
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1;
+      ctx.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      // Blue-grey zinc mansard roof
+      ctx.beginPath();
+      ctx.moveTo(-b.w / 2 - 2, -b.h / 2);
+      ctx.lineTo(-b.w / 2 + 4, -b.h / 2 - 8);
+      ctx.lineTo(b.w / 2 - 4, -b.h / 2 - 8);
+      ctx.lineTo(b.w / 2 + 2, -b.h / 2);
+      ctx.closePath();
+      ctx.fillStyle = '#475569';
+      ctx.fill();
+      // Lit warm windows
+      ctx.fillStyle = '#FEF08A';
+      for (let wx = -b.w / 2 + 5; wx <= b.w / 2 - 8; wx += 8) {
+        for (let wy = -b.h / 2 + 4; wy <= b.h / 2 - 6; wy += 8) {
+          ctx.fillRect(wx, wy, 4, 5);
+        }
+      }
+      ctx.restore();
+    });
+
+    // 4. French Formal Garden Parterres (Champs de Mars) & Fountain
+    ctx.save();
+    ctx.translate(290, 275);
+    // Green hedge borders
+    ctx.strokeStyle = '#15803D'; ctx.lineWidth = 3;
+    ctx.strokeRect(-24, -16, 48, 32);
+    ctx.fillStyle = '#14532D'; ctx.fillRect(-22, -14, 44, 28);
+    // Center Fountain
+    ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fillStyle = '#38BDF8'; ctx.fill();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Fountain water spray
+    const sprayH = 4 + Math.sin(this.starPulse * 4) * 2;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.beginPath(); ctx.arc(0, -sprayH, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // 5. Tour Eiffel (Eiffel Tower) with Rotating Golden Spotlight at x: 240, y: 200
     ctx.save();
     ctx.translate(240, 200);
     // Grand Ground Arch
@@ -1045,11 +1221,11 @@ class BoardRenderer {
     ctx.fill();
     ctx.restore();
 
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Eyfel Kulesi', 0, 65);
     ctx.restore();
 
-    // 3. Arc de Triomphe (Zafer Takı) at x: 700, y: 210
+    // 6. Arc de Triomphe (Zafer Takı) at x: 700, y: 210
     ctx.save();
     ctx.translate(700, 210);
     ctx.fillStyle = '#E7E5E4';
@@ -1057,17 +1233,17 @@ class BoardRenderer {
     ctx.strokeStyle = '#A8A29E'; ctx.lineWidth = 2;
     ctx.strokeRect(-26, -20, 52, 45);
     // Center Arch Vault
-    ctx.fillStyle = '#FCE7F3';
+    ctx.fillStyle = '#1E293B';
     ctx.beginPath();
     ctx.arc(0, 5, 12, Math.PI, 0); ctx.rect(-12, 5, 24, 20); ctx.fill();
     ctx.stroke();
     // Attic cornice frieze
     ctx.fillStyle = '#D6D3D1'; ctx.fillRect(-30, -28, 60, 8);
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Zafer Takı', 0, 40);
     ctx.restore();
 
-    // 4. Louvre Glass Pyramid (Louvre Piramidi) at x: 460, y: 460
+    // 7. Louvre Glass Pyramid (Louvre Piramidi) at x: 460, y: 460
     ctx.save();
     ctx.translate(460, 460);
     ctx.beginPath();
@@ -1079,7 +1255,7 @@ class BoardRenderer {
     ctx.moveTo(-14, 20); ctx.lineTo(0, -18); ctx.lineTo(14, 20);
     ctx.moveTo(-28, 20); ctx.lineTo(0, 2); ctx.lineTo(28, 20);
     ctx.stroke();
-    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#1E293B'; ctx.textAlign = 'center';
+    ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
     ctx.fillText('Louvre Piramidi', 0, 32);
     ctx.restore();
 
@@ -1458,37 +1634,50 @@ class BoardRenderer {
     ctx.shadowBlur = 14;
     ctx.stroke();
 
-    // 3. Overhead Bouncing Turn Tag with Downward Arrow
+    // 3. Elegant Floating 3D Pointer Diamond (Unobtrusive & Never collides with name tags)
     const isMe = (window.GameClient && window.GameClient.player && window.GameClient.player.sessionId === activePlayer.sessionId);
-    const bob = Math.sin(this.starPulse * 4) * 5;
-    ctx.translate(px, py - 68 + bob);
+    const bob = Math.sin(this.starPulse * 4) * 4;
+    ctx.translate(px, py - 64 + bob);
 
-    // Downward arrow pointer
+    // Glowing 3D Diamond Indicator
+    const diamondColor = isMe ? '#10B981' : '#F59E0B';
+    const diamondBorder = isMe ? '#6EE7B7' : '#FDE047';
+
+    ctx.save();
+    ctx.shadowColor = diamondColor;
+    ctx.shadowBlur = 12;
+
+    // Diamond shape
     ctx.beginPath();
-    ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.lineTo(0, 7); ctx.closePath();
-    ctx.fillStyle = isMe ? '#10B981' : '#F59E0B';
+    ctx.moveTo(0, -9);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(0, 9);
+    ctx.lineTo(-8, 0);
+    ctx.closePath();
+    ctx.fillStyle = diamondColor;
     ctx.fill();
-
-    // Tag Box (Polite & friendly phrasing)
-    const tagText = isMe ? '✨ Senin Hamlen ✨' : `⏳ Sıra: ${activePlayer.name}`;
-    ctx.font = '800 11px sans-serif';
-    const textWidth = ctx.measureText(tagText).width;
-    const boxW = Math.max(104, textWidth + 24);
-
-    ctx.beginPath();
-    ctx.roundRect(-boxW / 2, -22, boxW, 22, 11);
-    ctx.fillStyle = isMe ? 'rgba(16, 185, 129, 0.95)' : 'rgba(30, 41, 59, 0.92)';
-    ctx.fill();
-    ctx.strokeStyle = isMe ? '#6EE7B7' : '#F59E0B';
+    ctx.strokeStyle = diamondBorder;
     ctx.lineWidth = 2;
-    ctx.shadowColor = isMe ? '#10B981' : '#F59E0B';
-    ctx.shadowBlur = 10;
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(tagText, 0, -11);
+    // Diamond facet highlight
+    ctx.beginPath();
+    ctx.moveTo(0, -9);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fill();
+
+    // Downward pointer tip
+    ctx.beginPath();
+    ctx.moveTo(-4, 7);
+    ctx.lineTo(4, 7);
+    ctx.lineTo(0, 13);
+    ctx.closePath();
+    ctx.fillStyle = diamondBorder;
+    ctx.fill();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -1809,8 +1998,9 @@ class BoardRenderer {
         const fromPos = this.tileCoords[pState.currentTile] || { x: 110, y: 620 };
         const toPos = this.tileCoords[targetTile] || { x: 110, y: 620 };
 
-        // Advance hop progress smoothly (~380ms per tile step)
-        pState.hopProgress += 0.042;
+        // Advance hop progress smoothly (accelerated by turbo speed & bot multiplier)
+        const speedMultiplier = (window.GAME_SPEED || 1) * (player.isBot ? 1.35 : 1);
+        pState.hopProgress += 0.042 * speedMultiplier;
         const p = Math.min(1, pState.hopProgress);
 
         // Linear ground position interpolation

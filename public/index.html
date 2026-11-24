@@ -249,8 +249,8 @@
       </div>
     </header>
 
-    <!-- Unmissable High-Visibility Turn Alert Banner -->
-    <div id="hud-turn-alert-banner" class="hud-turn-alert-banner">
+    <!-- Unmissable High-Visibility Turn Alert Banner (Disabled for clean minimal HUD) -->
+    <div id="hud-turn-alert-banner" class="hud-turn-alert-banner" style="display:none;">
       <div class="turn-banner-icon" id="turn-banner-icon">🎲</div>
       <div class="turn-banner-text">
         <div class="turn-banner-title" id="turn-banner-title">Parti Yükleniyor...</div>
@@ -296,29 +296,31 @@
 
     <!-- Bottom Floating Mobile Dock -->
     <footer class="game-bottom-dock">
-      <div class="dock-status-bar" id="dock-status-text">
-        Hamle bekleniyor...
-      </div>
+      <div class="dock-status-bar" id="dock-status-text" style="display:none;"></div>
       <div class="dock-buttons-row">
-        <button class="dock-secondary-btn" id="btn-open-inventory">
-          <span>🎒</span> Çantam
+        <button class="dock-secondary-btn" id="btn-open-inventory" title="Çantam">
+          <span>🎒</span> <span class="dock-btn-label">Çantam</span>
           <span class="btn-badge" id="inventory-badge">0</span>
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-trade">
-          <span>🤝</span> Takas
+        <button class="dock-secondary-btn" id="btn-open-trade" title="Takas">
+          <span>🤝</span> <span class="dock-btn-label">Takas</span>
         </button>
 
         <button class="btn-roll-dice pulse-turn" id="btn-roll-dice">
           <span>🎲</span> ZAR AT! (SPACE)
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-chat">
-          <span>🗨️</span> Sohbet
+        <button class="dock-secondary-btn speed-btn" id="btn-toggle-speed" title="Oyun Hızı">
+          <span>⚡</span> <span id="speed-label">1x</span>
         </button>
 
-        <button class="dock-secondary-btn" id="btn-open-emotes">
-          <span>💬</span> İfade
+        <button class="dock-secondary-btn" id="btn-open-chat" title="Sohbet">
+          <span>🗨️</span>
+        </button>
+
+        <button class="dock-secondary-btn" id="btn-open-emotes" title="İfade">
+          <span>💬</span>
         </button>
       </div>
     </footer>

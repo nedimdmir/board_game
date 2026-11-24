@@ -115,6 +115,10 @@ class LocalGameServer {
         room.rollDice(sessionId);
         break;
 
+      case 'set_game_speed':
+        room.gameSpeed = data.speed || 1;
+        break;
+
       case 'buy_item': {
         const player = room.players.find(p => p.sessionId === sessionId);
         const item = SHOP_ITEMS.find(i => i.id === data.itemId);

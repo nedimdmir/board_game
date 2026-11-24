@@ -253,6 +253,7 @@ class Room {
     this.turnTimer = null;
     this.botActionTimeout = null;
     this.isProcessingTurn = false;
+    this.gameSpeed = 1;
   }
 
   addPlayer(sessionId, name, avatar = 'builder', diceSkin = 'default', level = 1, title = 'Acemi Zarcı', ws = null, hat = 'none', customColor = null) {
@@ -471,9 +472,10 @@ class Room {
 
   scheduleBotTurn() {
     clearTimeout(this.botActionTimeout);
+    const spd = this.gameSpeed || 1;
     this.botActionTimeout = setTimeout(() => {
       this.executeBotTurn();
-    }, 1800);
+    }, Math.max(250, Math.round(1600 / spd)));
   }
 
   executeBotTurn() {
@@ -495,9 +497,10 @@ class Room {
     }
 
     // Bot rolls dice after small pause
+    const spd = this.gameSpeed || 1;
     setTimeout(() => {
       this.rollDice(bot.sessionId);
-    }, 900);
+    }, Math.max(180, Math.round(800 / spd)));
   }
 
   rollDice(sessionId) {
@@ -506,6 +509,8 @@ class Room {
     if (!player || player.sessionId !== sessionId || this.state !== 'playing') return;
 
     this.isProcessingTurn = true;
+
+    const spd = this.gameSpeed || 1;
 
     // Check if player is jailed
     if (player.jailedTurns > 0) {
@@ -517,7 +522,7 @@ class Room {
         player.jailedTurns--;
         this.addLog(`⛓️ ${player.name} Kodes cezasını çekiyor, bu turu pas geçti!`);
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 1400);
+        setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
         return;
       }
     }
@@ -547,7 +552,7 @@ class Room {
     // Move player step by step AFTER dice modal finishes and closes completely
     setTimeout(() => {
       this.movePlayerSteps(player, totalRoll);
-    }, 1800);
+    }, Math.max(300, Math.round(1500 / spd)));
   }
 
   movePlayerSteps(player, steps) {
@@ -602,7 +607,8 @@ class Room {
     this.broadcastState();
 
     // Trigger Tile Effect strictly after Monopoly-style hopping completes
-    const hopDurationMs = (Math.abs(steps) * 380) + 500;
+    const spd = this.gameSpeed || 1;
+    const hopDurationMs = Math.max(300, Math.round(((Math.abs(steps) * 380) + 400) / spd));
     setTimeout(() => {
       this.resolveTileEffect(player, newPos);
     }, hopDurationMs);
@@ -616,6 +622,7 @@ class Room {
 
   resolveTileEffect(player, tileIndex) {
     const tile = this.board[tileIndex];
+    const spd = this.gameSpeed || 1;
 
     // Check if there is a Banana Trap set here by another player
     if (this.trapsOnBoard[tileIndex] && this.trapsOnBoard[tileIndex] !== player.id) {
@@ -633,7 +640,7 @@ class Room {
         sound: 'slip'
       });
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 2200);
+      setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
       return;
     }
 
@@ -845,7 +852,7 @@ class Room {
           sound: 'reverse'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1600 / spd)));
         break;
       }
 
@@ -855,12 +862,13 @@ class Room {
 
       default:
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 800);
+        setTimeout(() => this.finishTurn(), Math.max(200, Math.round(700 / spd)));
         break;
     }
   }
 
   triggerMysteryEvent(player) {
+    const spd = this.gameSpeed || 1;
     const events = [
       { name: 'Gökten Altın', fn: () => { player.coins += 12; this.addLog(`🎁 Şans Çarkı: ${player.name} gökten düşen sandıktan +12 Altın kaptı!`); } },
       { name: 'Çifte Şans', fn: () => { player.inventory.push('double_dice'); this.addLog(`🎁 Şans Çarkı: ${player.name} ücretsiz Çift Zar kazandı!`); } },
@@ -891,11 +899,12 @@ class Room {
     setTimeout(() => {
       chosen.fn();
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 1200);
-    }, 1500);
+      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(1000 / spd)));
+    }, Math.max(350, Math.round(1400 / spd)));
   }
 
   triggerShop(player) {
+    const spd = this.gameSpeed || 1;
     // If bot, auto buy useful item if afford
     if (player.isBot) {
       if (player.coins >= 10 && !player.inventory.includes('double_dice')) {
@@ -908,7 +917,7 @@ class Room {
         this.addLog(`🏪 ${player.name} Dükkandan Altın Mıknatısı aldı!`);
       }
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), 1000);
+      setTimeout(() => this.finishTurn(), Math.max(200, Math.round(800 / spd)));
       return;
     }
 
@@ -927,6 +936,7 @@ class Room {
   }
 
   triggerDuel(player) {
+    const spd = this.gameSpeed || 1;
     const rivals = this.players.filter(p => p.id !== player.id);
     if (rivals.length === 0) {
       this.finishTurn();
@@ -952,7 +962,7 @@ class Room {
     this.addLog(`⚔️ Düello! ${duelResult}`);
     this.broadcast('duel_result', { text: duelResult });
     this.broadcastState();
-    setTimeout(() => this.finishTurn(), 1500);
+    setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
   }
 
   useItem(sessionId, itemId, targetPlayerId = null) {
@@ -1438,6 +1448,14 @@ wss.on('connection', (ws) => {
           const room = ROOMS.get(boundRoomId);
           if (room) {
             room.rollDice(boundSessionId);
+          }
+          break;
+        }
+
+        case 'set_game_speed': {
+          const room = ROOMS.get(boundRoomId);
+          if (room) {
+            room.gameSpeed = data.speed || 1;
           }
           break;
         }

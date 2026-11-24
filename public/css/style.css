@@ -921,21 +921,22 @@ input:checked + .slider-round:before {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #F1F5F9;
+  background: #0B0F19;
 }
 
 /* Top Game HUD Bar */
 .game-hud-top {
-  height: 64px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 2px solid #E2E8F0;
+  height: 52px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  color: #FFFFFF;
 }
 
 .hud-left {
@@ -945,13 +946,13 @@ input:checked + .slider-round:before {
 }
 
 .hud-round-pill {
-  background: var(--lego-yellow);
-  color: #78350F;
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.5);
   font-weight: 800;
   font-size: 13px;
   padding: 5px 12px;
   border-radius: 12px;
-  box-shadow: 0 2px 0 #D97706;
 }
 
 .hud-active-turn-box {
@@ -960,14 +961,16 @@ input:checked + .slider-round:before {
   gap: 8px;
   font-size: 14px;
   font-weight: 800;
-  color: #1E293B;
+  color: #F8FAFC;
 }
 
 .hud-turn-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 2px solid var(--lego-blue);
+  border: 2px solid #38BDF8;
+  background: #1E293B;
+}
   background: #F8FAFC;
 }
 
@@ -1011,65 +1014,7 @@ input:checked + .slider-round:before {
    ========================================================================== */
 
 .hud-turn-alert-banner {
-  background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%);
-  color: #FFFFFF;
-  padding: 8px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-bottom: 2px solid #334155;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 9;
-}
-
-.hud-turn-alert-banner.my-turn {
-  background: linear-gradient(90deg, #059669 0%, #10B981 50%, #047857 100%);
-  border-bottom: 3px solid #34D399;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  animation: turnPulseGlow 1.8s infinite ease-in-out;
-}
-
-@keyframes turnPulseGlow {
-  0%, 100% {
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  }
-  50% {
-    box-shadow: 0 4px 28px rgba(16, 185, 129, 0.7);
-  }
-}
-
-.turn-banner-icon {
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: bounceDice 1.2s infinite ease-in-out;
-}
-
-@keyframes bounceDice {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(8deg); }
-}
-
-.turn-banner-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.turn-banner-title {
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  color: #FFFFFF;
-}
-
-.turn-banner-sub {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  display: none !important;
 }
 
 /* 4 Cities Selection Grid in Modal */
@@ -1085,15 +1030,20 @@ input:checked + .slider-round:before {
   margin-top: 2px;
 }
 
-/* Players HUD Carousel (Horizontal bar under top bar) */
+/* Players HUD Carousel (Floating Glass Capsules over canvas) */
 .players-hud-carousel {
+  position: absolute;
+  top: 58px;
+  left: 14px;
   display: flex;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 4px 0;
   overflow-x: auto;
-  background: rgba(248, 250, 252, 0.85);
-  border-bottom: 1px solid #E2E8F0;
+  background: transparent;
+  border-bottom: none;
   scrollbar-width: none;
+  z-index: 8;
+  pointer-events: auto;
 }
 
 .players-hud-carousel::-webkit-scrollbar {
@@ -1102,22 +1052,36 @@ input:checked + .slider-round:before {
 
 .player-hud-card {
   flex-shrink: 0;
-  background: var(--surface-card);
-  border-radius: 14px;
-  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 5px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: 2px solid #CBD5E1;
-  box-shadow: var(--shadow-sm);
+  gap: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #FFFFFF;
   transition: all 0.2s ease;
 }
 
 .player-hud-card.active-turn {
-  border-width: 3px;
+  border-color: #F59E0B;
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
-  background: #EFF6FF;
+}
+
+.player-hud-card .player-hud-name {
+  color: #F8FAFC;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.player-hud-card .hud-stat-pill {
+  color: #FDE047;
+  font-weight: 800;
+  font-size: 12px;
 }
 
 .hud-avatar-box {
@@ -1160,7 +1124,7 @@ input:checked + .slider-round:before {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at center, #FFFFFF 0%, #EFF6FF 100%);
+  background: #0B0F19;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1184,30 +1148,41 @@ input:checked + .slider-round:before {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
-  max-width: 640px;
-  background: var(--surface-card-trans);
-  backdrop-filter: blur(14px);
-  border-radius: var(--radius-lg);
-  padding: 12px 18px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: 2px solid #FFFFFF;
+  max-width: 660px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(18px);
+  border-radius: 36px;
+  padding: 8px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   z-index: 20;
 }
 
 .dock-status-bar {
-  font-size: 13px;
-  color: #334155;
-  text-align: center;
+  display: none !important;
 }
 
 .dock-buttons-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+}
+
+.dock-secondary-btn.speed-btn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 900;
+  min-width: 68px;
+}
+
+.dock-secondary-btn.speed-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #F59E0B;
 }
 
 /* Big Juicy "ZAR AT" Roll Button */
@@ -1848,8 +1823,8 @@ input:checked + .slider-round:before {
 /* Floating Camera Controls on Board Arena */
 .floating-cam-controls {
   position: absolute;
-  top: 18px;
-  left: 18px;
+  bottom: 95px;
+  left: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1857,12 +1832,14 @@ input:checked + .slider-round:before {
 }
 
 .cam-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
-  background: white;
-  border: 2px solid #E2E8F0;
-  box-shadow: var(--shadow-sm);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;

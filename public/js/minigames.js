@@ -465,8 +465,9 @@ class MiniGameManager {
             this.score = 0;
             AudioPlayer.playTrapSound();
           }
-          setTimeout(() => this.end(), 1200);
-        }, 500);
+          const speed = window.GAME_SPEED || 1;
+          setTimeout(() => this.end(), Math.max(250, Math.round(500 / speed)));
+        }, Math.max(150, Math.round(300 / speed)));
       });
     });
 
