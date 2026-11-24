@@ -1,15 +1,15 @@
 # 🎲 PartyCraft: Wonder Board
 
 <p align="center">
-  <img src="assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
+  <img src="./assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://img.shields.io/static/v1?label=Languages&message=EN%20%7C%20TR%20%7C%20DE%20%7C%20ES%20%7C%20FR&color=0284c7"><img src="https://img.shields.io/static/v1?label=Languages&message=EN%20%7C%20TR%20%7C%20DE%20%7C%20ES%20%7C%20FR&color=0284c7" alt="Languages"></a>
-  <a href="https://img.shields.io/static/v1?label=Architecture&message=Single-File%20(index.php%20%2F%20index.html)&color=10b981"><img src="https://img.shields.io/static/v1?label=Architecture&message=Single-File%20(index.php%20%2F%20index.html)&color=10b981" alt="Single-File"></a>
-  <a href="https://img.shields.io/static/v1?label=Dependencies&message=Zero%20NPM%20%2F%20Vanilla%20JS&color=059669"><img src="https://img.shields.io/static/v1?label=Dependencies&message=Zero%20NPM%20%2F%20Vanilla%20JS&color=059669" alt="Zero Dependencies"></a>
-  <a href="https://img.shields.io/static/v1?label=Platform&message=Web%20%7C%20Mobile%20%7C%20Desktop&color=8b5cf6"><img src="https://img.shields.io/static/v1?label=Platform&message=Web%20%7C%20Mobile%20%7C%20Desktop&color=8b5cf6" alt="Platforms"></a>
-  <a href="https://img.shields.io/static/v1?label=License&message=MIT&color=f59e0b"><img src="https://img.shields.io/static/v1?label=License&message=MIT&color=f59e0b" alt="License"></a>
+  <img src="./assets/badges/badge-languages.svg" alt="Languages">
+  <img src="./assets/badges/badge-singlefile.svg" alt="Single-File">
+  <img src="./assets/badges/badge-dependencies.svg" alt="Zero Dependencies">
+  <img src="./assets/badges/badge-platforms.svg" alt="Platforms">
+  <img src="./assets/badges/badge-license.svg" alt="License">
 </p>
 
 ---
@@ -17,7 +17,7 @@
 **PartyCraft: Wonder Board** is a vibrant, zero-dependency turn-based multiplayer board game celebrating world cities (Istanbul, Tokyo, Paris, and New York) with interactive board tiles, tactical items, and 6 competitive mini-games.
 
 <p align="center">
-  <img src="assets/gameplay-preview.svg" alt="Gameplay Preview" width="100%">
+  <img src="./assets/gameplay-preview.svg" alt="Gameplay Preview" width="100%">
 </p>
 
 ## 🌟 Key Highlights
@@ -38,7 +38,7 @@
   6. 🔨 **Timing Hammer (Power Striker):** Stop the oscillating power gauge at 100% bullseye to ring the bell and win +15 Gold!
 
 <p align="center">
-  <img src="assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
+  <img src="./assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
 </p>
 
 ## 🎒 Tactical Items
