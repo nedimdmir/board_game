@@ -1,120 +1,107 @@
 # 🎲 PartyCraft: Wonder Board (Parti Dünyası)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Language-Türkçe%20%7C%20English-blue.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Architecture-Single--File%20(Zero%20NPM%20Client)-brightgreen.svg" alt="Zero Dependencies">
-  <img src="https://img.shields.io/badge/Backend-PHP%20%7C%20Node.js%20%7C%20Offline%20Engine-orange.svg" alt="Backend Options">
-  <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mobile%20%7C%20Desktop-purple.svg" alt="Platforms">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Diller%20%2F%20Languages-🇹🇷%20TR%20%7C%20🇬🇧%20EN%20%7C%20🇩🇪%20DE%20%7C%20🇪🇸%20ES%20%7C%20🇫🇷%20FR-blue.svg" alt="Languages">
+  <img src="https://img.shields.io/badge/Dağıtım-Tek%20Dosya%20%28Single--File%20index.php%20%2F%20index.html%29-brightgreen.svg" alt="Single File">
+  <img src="https://img.shields.io/badge/Bağımlılıklar-Sıfır%20NPM%20%2F%20Sıfır%20Harici%20Kütüphane-success.svg" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/Platform-Mobil%20%7C%20Tablet%20%7C%20Masaüstü-purple.svg" alt="Platforms">
+  <img src="https://img.shields.io/badge/Lisans-MIT-green.svg" alt="License">
 </p>
 
 <p align="center">
-  <strong>Parti Dünyası</strong>, İstanbul, Tokyo, Paris ve New York sokaklarında arkadaşlarınızla veya akıllı botlarla oynayabileceğiniz, sevimli Lego tarzı görsel tasarıma, canlı harita animasyonlarına ve mini oyunlara sahip <strong>sıra tabanlı çok oyunculu masa oyunudur</strong>.
-  <br>
-  <em>A modern, zero-dependency turn-based multiplayer board game celebrating iconic world cities with procedural animations, tactical cards, minigames, and dual-language (TR/EN) support.</em>
+  <strong>Parti Dünyası</strong>; İstanbul, Tokyo, Paris ve New York sokaklarında arkadaşlarınızla veya akıllı yapay zeka botlarıyla oynayabileceğiniz; sevimli Lego tarzı görsel tasarımı, canlı harita animasyonları, taktik eşyaları ve 6 adet zengin mini oyunu olan <strong>sıra tabanlı çok oyunculu masa oyunudur</strong>.
+  <br><br>
+  <em>A modern, zero-dependency turn-based multiplayer board game celebrating iconic world cities with procedural animations, tactical cards, 6 mini-games, and 5-language international support (TR, EN, DE, ES, FR).</em>
 </p>
 
 ---
 
-## 🌐 Çoklu Dil Desteği / Multi-Language Support (TR / EN)
+## 🌟 Öne Çıkan Özellikler / Key Highlights
 
-Oyun hem **Türkçe 🇹🇷** hem de **İngilizce 🇬🇧** dillerini yerel olarak destekler:
-- Ana menünün en üstündeki **🇹🇷 Türkçe | 🇬🇧 English** hap butonlarına basarak veya **Ayarlar (⚙️)** penceresinden dilediğiniz an tek tıkla dil değiştirebilirsiniz.
-- Sayfa yenilenmesine gerek kalmadan; tüm arayüz, karolar, HUD bildirimleri, çark metinleri, taktik eşyaları ve kurallar anında seçilen dile güncellenir.
-- Dil tercihiniz tarayıcınızın `localStorage` belleğinde otomatik olarak saklanır.
-
-*Seamlessly switch between Turkish and English in real-time with one click from the header or settings menu. Zero page reload required.*
-
----
-
-## 🗺️ Canlı Haritalar ve Şehir Atmosferi (Living World Circuit)
-
-Oyun parkuru geleneksel sert dikdörtgenler yerine, kıvrımlı ve organik **32 karoluk sahil ve meydan rotasından** oluşur:
-
-```
-                          [ 11: Portal ] --- [ 12: Altın ] --- [ 13: Şans ]
-                         /                                                \
-           [ 10: Düello ]                                                   [ 14: Dükkan ]
-          /                                                                         \
-   [ 9: Altın ]             🌊 BOĞAZİÇİ & MARMARA MANZARASI                          [ 15: Kaide ⭐ ]
-       |                                                                                |
-   [ 8: Portal ]            🗼 KIZ KULESİ (Dönen Fener Işığı)                          [ 16: Altın ]
-       |                    🚃 NOSTALJİK KIRMIZI TRAMVAY                                |
-   [ 7: Kaide ⭐ ]          💡 Işıklı Sokak Lambaları & Yıldızlı Gece                  [ 17: Karakol ]
-       |                                                                                |
-   [ 6: Altın ]                                                                    [ 18: Şans ]
-          \                                                                         /
-           [ 5: Dükkan ]                                                    [ 19: Altın ]
-                         \                                                /
-                          [ 0: BAŞLANGIÇ 🏁 ] --- [ 1: Kordon ] --- [ 2: İskele ]
-```
-
-### 🏙️ 4 Farklı Dünya Teması:
-1. **İstanbul:** Kız Kulesi'nin dönen fener ışığı huzmesi, raylarında süzülen Nostaljik Taksim Tramvayı, sıcak sokak lambaları, hilal ay ve Boğaz martıları.
-2. **Tokyo:** Neon ışıklar, Shinto Torii kapısı, süzülen Sakura kiraz yaprakları ve fütüristik gece gökyüzü.
-3. **Paris:** Eyfel Kulesi silueti, Seine nehri köprüleri ve pastel Paris sokak kafeleri.
-4. **New York:** Sarı taksiler, gökdelen siluetleri, Özgürlük Heykeli ve Broadway neon parıltıları.
+- ⚡ **Tek Dosya ile Anında Kurulum (Ultra Zero-Setup):**
+  - PHP sunucular için tek dosya: **`index.php`** (Çok oyunculu arka uç + tam oyun arayüzü tek dosyada!).
+  - Statik / GitHub Pages / Çevrimdışı kullanım için tek dosya: **`index.html`** (Sıfır bağımlılık).
+- 🌐 **5 Farklı Dil Desteği (Multi-Language):**
+  - 🇹🇷 Türkçe, 🇬🇧 English, 🇩🇪 Deutsch, 🇪🇸 Español, 🇫🇷 Français.
+  - Sayfa yenilemeden tek tıkla dil değişimi, kalıcı `localStorage` kaydı.
+- 🎮 **6 Farklı Mini Oyun:**
+  1. 🪙 **Altın Toplama Sepeti (Coin Catcher):** Sağa-sola hareketli sepetle gökten düşen altınları topla (mobil çift tıklama zoom korumalı).
+  2. 🎯 **Refleks Hedefleri (Reflex Pop):** Ekranda aniden beliren hedefleri kaçırmadan en hızlı sürede vur.
+  3. 🎈 **Balon Patlatma (Balloon Mash):** Süre dolmadan ekrandaki balona hızlıca tıklayarak şişir ve patlat.
+  4. 🎁 **Şans Sandıkları (Lucky Chests):** 3 gizemli sandıktan en büyük ödülü saklayanı tahmin et.
+  5. 🧠 **Hafıza Matrisi (Memory Matrix):** Yanıp sönen renkli karo kombinasyonunu aklında tut ve doğru sırayla dokun.
+  6. 🔨 **Güç Çekici & Hassas Zamanlama (Timing Hammer - YENİ!):** Hızlıca salınan güç barını tam merkezdeki %100 hedefte durdur, çanı çaldır!
+- 🎒 **Genişletilmiş Taktik Çantası:**
+  - 🎲 **Çift Zar**, 🚀 **Süper Roket**, 🛡️ **Manyetik Kalkan**, 🧲 **Yıldız Mıknatısı**, 🔄 **Konum Takası**, 👻 **Hayalet Pelerin (YENİ!)**, 🍀 **Şanslı Altın Zar (YENİ!)**.
+- 🗺️ **Canlı Şehir Haritaları (Living World Circuit):**
+  - İstanbul (Kız Kulesi dönen feneri, Taksim Nostaljik Tramvayı, Boğaz martıları), Tokyo (Neon gökdelenler, Sakura yaprakları), Paris (Eyfel Kulesi ve Seine nehri), New York (Gökdelenler ve sarı taksiler).
+- 🎡 **Hassas Mekanik Şans Çarkı:**
+  - Taşmayan altın yataklı SVG ibre, kübik yavaşlama fiziği ve mekanik ses efektleri.
+- 🚪 **Kesintisiz Oyundan Ayrılma & Bot Devralması:**
+  - Oyuncu dilediği an maçı terk edebilir; yapay zeka botu oyun bölünmeden yerini devralır.
 
 ---
 
-## 🎡 Hassas Mekanik Şans Çarkı (Wheel of Fortune)
+## 🌐 Çoklu Dil Desteği / Multi-Language Support
 
-- **Taşmayan Vektörel İbre:** Çarkın üst kenarına kusursuz monte edilmiş, altın yataklı ve yakut uçlu özel SVG ibre. Çark döndükçe sesli mekanik tıkırtı efektiyle dilimlerin üzerinden atlar.
-- **Dinamik Fiziksel Yavaşlama:** Kübik sönümleme (`cubic-ease-out`) fiziği ile gerçekçi bir dönüş deneyimi sunar.
-- **Sürpriz Ödüller:** +15 Altın, 🎲 Çift Zar, 🛡️ Manyetik Kalkan, 🚀 Süper Roket, ⭐ Altın Yıldız ve Hazine Sandığı.
+| Dil / Language | Kod | Durum |
+| :--- | :---: | :---: |
+| 🇹🇷 Türkçe | `tr` | ✅ Tam Destek (Varsayılan) |
+| 🇬🇧 English | `en` | ✅ Full Support |
+| 🇩🇪 Deutsch | `de` | ✅ Vollständige Unterstützung |
+| 🇪🇸 Español | `es` | ✅ Soporte Completo |
+| 🇫🇷 Français | `fr` | ✅ Support Complet |
 
----
-
-## 🚪 İstediğin Zaman Oyundan Ayrılabilme (Seamless Leave & Bot Takeover)
-
-Oyunun akışını bozmadan istediğiniz an maçı terk edebilirsiniz:
-- **Oyun İçi HUD Butonu:** Sağ üst köşedeki **"Odadan Ayrıl"** butonu ile onay penceresi açılır.
-- **Yapay Zeka Devralması (Bot Handover):** Çok oyunculu bir maçtan ayrıldığınızda diğer arkadaşlarınızın oyunu bölünmez; yerinize anında bir yapay zeka botu geçerek maçı sürdürür.
-- **Lobi Yönetimi:** Lobi aşamasında da tek tıkla odadan çıkabilir veya ana menüye dönebilirsiniz.
+> Üst menü çubuğundaki dil butonlarına basarak veya **Ayarlar (⚙️)** penceresinden dilediğiniz an tek tıkla dil değiştirebilirsiniz. Tüm metinler, kurallar, HUD göstergeleri, karo açıklamaları ve çanta eşyaları anında güncellenir.
 
 ---
 
-## 🚀 Kurulum ve Web Sitesine Yükleme (Zero Setup Deployment)
+## 🚀 Web Sitenize Nasıl Yüklersiniz? (Tek Dosya Kurulumu)
 
-Bu oyun, harici hiçbir kütüphane (`npm`, `cdn`, `firebase`, harici veritabanı) gerektirmez.
+Kurulum için karmaşık sunucu komutlarına veya veritabanı ayarlarına **kesinlikle gerek yoktur**.
 
 ```
-📁 Web Sitenizin Kök veya Alt Klasörü (Örn: public_html/oyun/)
-├── 📄 index.html      -> Tüm oyunun (HTML + CSS + JS) toplandığı tek bağımsız dosya (~396 KB)
-├── 📄 api.php          -> Standart paylaşımlı PHP hostinglerde çok oyunculu oda sistemi (Opsiyonel)
+📁 Web Sitenizin Klasörü (Örn: public_html/ veya public_html/oyun/)
+└── 📄 index.php   <-- SADECE BU TEK DOSYAYI YÜKLEMENİZ YETERLİDİR!
 ```
 
-### 1. Yöntem: Standart Web Hosting (cPanel / Apache / Nginx + PHP)
-1. `index.html` ve `api.php` dosyalarını web sitenizin ana dizinine veya dilediğiniz bir klasöre (örn. `site.com/parti/`) yükleyin.
-2. Tarayıcınızda adresi açın (`https://siteniz.com/parti/`).
-3. Çok oyunculu oda kurma, QR kodla davet etme ve arkadaş bağlantıları **otomatik olarak aktifleşir**!
+### 1. Seçenek: PHP Web Hosting (cPanel / Plesk / DirectAdmin / Paylaşımlı Hosting)
+1. Bu depodaki veya ZIP arşivindeki **`index.php`** dosyasını sitenizin ana dizinine (veya `site.com/oyun/` klasörüne) yükleyin.
+2. Tarayıcınızda sitenizi açın (`https://siteniz.com/` veya `https://siteniz.com/oyun/`).
+3. **Bitti!**
+   - Ziyaretçiler siteye girdiğinde tam oyun arayüzü açılır.
+   - Oda oluşturulduğunda sistem otomatik olarak oda kodu, davet bağlantısı ve QR kod üretir.
+   - Tüm çok oyunculu eşzamanlama `index.php` içerisindeki hafif JSON dosya kilitli arka uç tarafından otomatik yönetilir.
 
-### 2. Yöntem: Statik Hosting (GitHub Pages / Netlify / Vercel)
-1. Depodaki `index.html` dosyasını GitHub Pages veya Netlify'a yükleyin.
-2. Oyun sunucusuz **Çevrimdışı Mod**'da 3 akıllı bot ile kusursuzca oynanabilir.
+### 2. Seçenek: Statik Hosting (GitHub Pages / Netlify / Vercel / Cloudflare Pages)
+1. **`index.html`** dosyasını deponuza veya barındırma alanınıza yükleyin.
+2. Oyun sunucuya ihtiyaç duymadan **Bağımsız Çevrimdışı & Bot Modu**'nda çalışır.
 
-### 3. Yöntem: Yerel Node.js Sunucusu
+### 3. Seçenek: Bilgisayarınızda Çift Tıklayarak Oynama
+- `index.html` dosyasına bilgisayarınızda çift tıklayarak herhangi bir internet bağlantısı olmadan hemen botlarla oynayabilirsiniz.
+
+### 4. Seçenek: Node.js Sunucusu (Geliştiriciler İçin)
 ```bash
 # Bağımlılıkları yükleyin
 npm install
 
-# Sunucuyu başlatın (Varsayılan port: 3000)
+# Sunucuyu başlatın (Port: 3000)
 npm start
 ```
 
 ---
 
-## 🎮 Oyun Modları ve Kurallar
+## 🎮 Oyun Modları
 
 | Mod | Açıklama |
 | :--- | :--- |
-| **⚡ Hızlı Oyna** | Beklemeden hemen 3 akıllı yapay zeka botu ile İstanbul haritasında partiye başlar. |
-| **🌐 Arkadaşlarınla Oyna** | Tek tıkla oda kurar, benzersiz oda kodu, davet bağlantısı (`?room=ABCD`) ve taranabilir QR kod üretir. |
-| **🤖 Botlarla Oyna** | İstediğiniz haritayı (İstanbul, Tokyo, Paris, New York) ve tur sayısını (5, 10, 15) seçip pratik yapın. |
+| **⚡ Hızlı Oyna** | Hiç beklemeden anında 3 akıllı yapay zeka botu ile seçili haritada maça başlar. |
+| **🌐 Arkadaşlarınla Oyna** | Tek tıkla oda kurar; benzersiz oda kodu, WhatsApp/Discord davet bağlantısı (`?room=ABCD42`) ve taranabilir QR kod üretir. |
+| **🤖 Botlarla Oyna** | Harita (İstanbul, Tokyo, Paris, New York) ve tur sayısını (5, 10, 15) seçip pratik yapın. |
 
-### 🎯 Oyunun Temel Amacı:
-Belirlenen tur sayısı bitmeden önce en çok **Yıldız (⭐)** ve **Altın (🪙)** toplayan oyuncu partinin şampiyonu olur!
-- **1 Altın Yıldız = 20 Altın** değerindedir ve liderlik sıralamasında en büyük önceliğe sahiptir.
+### 🎯 Temel Amaç ve Kurallar:
+- Belirlenen tur sayısı tamamlanana kadar en çok **Yıldız (⭐)** ve **Altın (🪙)** toplayan oyuncu şampiyon olur!
+- **1 Altın Yıldız = 20 Altın** değerindedir ve sıralamada en büyük önceliğe sahiptir.
 - Başlangıç karosundan her geçişte **+10 Altın** tur primi kazanırsınız.
 - **Yıldız Kaidesi:** Haritada belirli aralıklarla yer alır. 20 Altını olan oyuncu Yıldız'ı satın alır; satın alınan Yıldız haritanın başka bir köşesine ışınlanır!
 
@@ -129,22 +116,25 @@ Belirlenen tur sayısı bitmeden önce en çok **Yıldız (⭐)** ve **Altın (�
 | **Manyetik Kalkan** | 🛡️ | Tuzaklara ve altın çalma hamlelerine karşı 2 tur tam koruma sağlar. |
 | **Yıldız Mıknatısı** | 🧲 | Yıldız kaidesini haritada 3 adım kendinize doğru çeker. |
 | **Takas Işınlanması** | 🔄 | Seçilen bir rakip ile haritadaki konumlarınızı takas eder. |
+| **Hayalet Pelerin** *(Yeni!)* | 👻 | 2 tur boyunca tüm karo tuzaklarından ve cezalardan muaf olursunuz. |
+| **Şanslı Altın Zar** *(Yeni!)* | 🍀 | Sonraki zarınız kesinlikle 6 (çift zarda 12) gelir! |
 
 ---
 
 ## 🕹️ Ekran ve Cihaz Kontrolleri
 
-- **Masaüstü (PC):**
+- **Masaüstü (PC / Mac):**
   - **Zar Atma:** Butona tıklayın veya <kbd>SPACE</kbd> tuşuna basın.
   - **Çanta:** <kbd>I</kbd> tuşu ile envanteri açın.
-  - **Kamera Gezintisi:** Mouse ile haritayı sürükleyin, tekerlek ile yakınlaştırın/uzaklaştırın.
-- **Mobil ve Tablet:**
+  - **Kamera Gezintisi:** Mouse ile haritayı sürükleyin, tekerlek ile yakınlaştırıp uzaklaştırın.
+- **Mobil ve Tablet (iOS / Android):**
   - Parmakla dokunarak kaydırma ve çift parmakla harita yakınlaştırma.
-  - Çift tıklamada istenmeyen tarayıcı zoomunu engelleyen dokunmatik optimizasyonu.
-  - Başparmakla kolay erişilebilir büyük ergonomik kontrol rıhtımı.
+  - Çift tıklamada tarayıcı yakınlaştırmasını önleyen optimize dokunmatik motoru.
+  - Başparmakla kolay erişilebilir ergonomik alt kontrol paneli.
 
 ---
 
-<p align="center">
-  Geliştirici: <strong>Nedim Demir</strong> • Açık Kaynak Topluluk Lisansı (MIT)
-</p>
+## 📜 Lisans & Geliştirici
+
+- **Geliştirici:** Nedim Demir
+- **Lisans:** [MIT Lisansı](LICENSE) - Açık kaynak, dilediğiniz gibi geliştirebilir ve kendi web sitelerinizde yayınlayabilirsiniz.

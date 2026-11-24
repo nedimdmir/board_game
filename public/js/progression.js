@@ -308,12 +308,12 @@ const DICE_SKINS = {
 };
 
 const TITLES = [
-  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', level: 1 },
-  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', level: 3 },
-  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', level: 6 },
-  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', level: 10 },
-  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', level: 15 },
-  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', level: 22 }
+  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', title_de: 'Neuer Entdecker', title_es: 'Explorador Novato', title_fr: 'Explorateur Novice', level: 1 },
+  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', title_de: 'Glücksfuchs', title_es: 'Zorro Afortunado', title_fr: 'Renard Chanceux', level: 3 },
+  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', title_de: 'Würfel-Akrobat', title_es: 'Acróbata del Dado', title_fr: 'Acrobate du Dé', level: 6 },
+  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', title_de: 'Fallenmeister', title_es: 'Domador de Trampas', title_fr: 'Maître des Pièges', level: 10 },
+  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', title_de: 'Sternenjäger', title_es: 'Cazador de Estrellas', title_fr: 'Chasseur d\'Étoiles', level: 15 },
+  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', title_de: 'Party-Legende', title_es: 'Leyenda de la Fiesta', title_fr: 'Légende de la Fête', level: 22 }
 ];
 
 const EMOTE_DEFS = {
@@ -471,10 +471,14 @@ class ProgressionManager {
 
   getDisplayTitle(titleStr) {
     const tStr = titleStr || this.profile.title || 'Acemi Gezgin';
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
-    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr);
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr || t.title_de === tStr || t.title_es === tStr || t.title_fr === tStr);
     if (match) {
-      return isEn ? match.title_en : match.title;
+      if (lang === 'en') return match.title_en;
+      if (lang === 'de') return match.title_de;
+      if (lang === 'es') return match.title_es;
+      if (lang === 'fr') return match.title_fr;
+      return match.title;
     }
     return tStr;
   }

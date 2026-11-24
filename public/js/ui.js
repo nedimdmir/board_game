@@ -684,17 +684,23 @@ class UIEngine {
   }
 
   renderGameHeader(state) {
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const roundLabels = { tr: 'Tur', en: 'Round', de: 'Runde', es: 'Ronda', fr: 'Manche' };
+    const finalLabels = { tr: 'FİNAL TURU!', en: 'FINAL ROUND!', de: 'FINALE RUNDE!', es: '¡RONDA FINAL!', fr: 'MANCHE FINALE !' };
+    const leftLabels = { tr: 'Tur Kaldı', en: 'Rounds Left', de: 'Runden übrig', es: 'Rondas restantes', fr: 'Tours restants' };
+    const yourTurnLabels = { tr: '✨ Sıra Sende!', en: '✨ Your Turn!', de: '✨ Du bist dran!', es: '✨ ¡Tu Turno!', fr: '✨ À votre tour !' };
+    const turnPrefixLabels = { tr: 'Sıra: ', en: 'Turn: ', de: 'Zug: ', es: 'Turno: ', fr: 'Tour : ' };
+
     const current = state.currentRound || 1;
     const total = state.totalRounds || 10;
     const remaining = Math.max(0, total - current);
 
     const roundElem = document.getElementById('hud-round');
-    if (roundElem) roundElem.innerText = `${isEn ? 'Round' : 'Tur'} ${current} / ${total}`;
+    if (roundElem) roundElem.innerText = `${roundLabels[lang] || 'Tur'} ${current} / ${total}`;
 
     const remElem = document.getElementById('hud-round-remaining');
     if (remElem) {
-      remElem.innerText = (remaining === 0 ? (isEn ? 'FINAL ROUND!' : 'FİNAL TURU!') : (isEn ? `${remaining} Rounds Left` : `${remaining} Tur Kaldı`));
+      remElem.innerText = (remaining === 0 ? (finalLabels[lang] || 'FİNAL TURU!') : `${remaining} ${leftLabels[lang] || 'Tur Kaldı'}`);
       remElem.classList.toggle('final-pulse', remaining <= 1);
     }
 
@@ -726,8 +732,8 @@ class UIEngine {
     if (activePlayer) {
       const isMe = (GameClient.player && GameClient.player.sessionId === activePlayer.sessionId);
       const turnLabel = isMe 
-        ? (isEn ? '✨ Your Turn!' : '✨ Sıra Sende!') 
-        : `${isEn ? 'Turn: ' : 'Sıra: '}${activePlayer.name}`;
+        ? (yourTurnLabels[lang] || '✨ Sıra Sende!') 
+        : `${turnPrefixLabels[lang] || 'Sıra: '}${activePlayer.name}`;
       document.getElementById('hud-turn-name').innerText = turnLabel;
       document.getElementById('hud-turn-avatar').style.borderColor = activePlayer.color;
     }
@@ -963,15 +969,29 @@ class UIEngine {
     const modal = document.getElementById('modal-tile-inspector');
     modal.classList.remove('hidden');
 
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const stepsDict = {
+      tr: `${stepsAway} adım mesafede`,
+      en: `${stepsAway} steps away`,
+      de: `${stepsAway} Schritte entfernt`,
+      es: `a ${stepsAway} casillas de distancia`,
+      fr: `à ${stepsAway} cases de distance`
+    };
+    const emptyDict = {
+      tr: 'Şu an bu karoda kimse yok.',
+      en: 'No players on this tile.',
+      de: 'Derzeit keine Spieler auf diesem Feld.',
+      es: 'No hay jugadores en esta casilla.',
+      fr: 'Aucun joueur sur cette case.'
+    };
     document.getElementById('ti-tile-title').innerText = `${index}. ${tile.title}`;
     document.getElementById('ti-tile-desc').innerText = tile.desc;
-    document.getElementById('ti-tile-steps').innerText = isEn ? `${stepsAway} steps away` : `${stepsAway} adım mesafede`;
+    document.getElementById('ti-tile-steps').innerText = stepsDict[lang] || stepsDict.tr;
 
     const playersList = document.getElementById('ti-players-here');
     playersList.innerHTML = '';
     if (playersOnTile.length === 0) {
-      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${isEn ? 'No players on this tile.' : 'Şu an bu karoda kimse yok.'}</span>`;
+      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${emptyDict[lang] || emptyDict.tr}</span>`;
     } else {
       playersOnTile.forEach(p => {
         const pBadge = document.createElement('span');
@@ -1288,12 +1308,31 @@ class UIEngine {
     if (!modal) return;
     modal.classList.remove('hidden');
 
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
-    const atText = isEn ? 'is on Fortune Tile!' : 'Şans Karosunda!';
-    const spinText = isEn ? 'Spinning the wheel...' : 'Çark dönüyor...';
-    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atText}`;
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const atTextDict = {
+      tr: 'Şans Karosunda!',
+      en: 'is on Fortune Tile!',
+      de: 'ist auf dem Glücksfeld!',
+      es: '¡está en la casilla de la suerte!',
+      fr: 'est sur la case chance !'
+    };
+    const spinTextDict = {
+      tr: 'Çark dönüyor...',
+      en: 'Spinning the wheel...',
+      de: 'Das Rad dreht sich...',
+      es: 'La ruleta está girando...',
+      fr: 'La roue tourne...'
+    };
+    const diceLabels = { tr: '🎲 Çift Zar', en: '🎲 2x Dice', de: '🎲 2x Würfel', es: '🎲 2x Dado', fr: '🎲 2x Dés' };
+    const shieldLabels = { tr: '🛡️ Kalkan', en: '🛡️ Shield', de: '🛡️ Schild', es: '🛡️ Escudo', fr: '🛡️ Bouclier' };
+    const rocketLabels = { tr: '🚀 Roket', en: '🚀 Rocket', de: '🚀 Rakete', es: '🚀 Cohete', fr: '🚀 Fusée' };
+    const starLabels = { tr: '⭐ Yıldız', en: '⭐ Star', de: '⭐ Stern', es: '⭐ Estrella', fr: '⭐ Étoile' };
+    const chestLabels = { tr: '🎁 Sandık', en: '🎁 Chest', de: '🎁 Kiste', es: '🎁 Cofre', fr: '🎁 Coffre' };
+    const crownLabels = { tr: '👑 Taç', en: '👑 Crown', de: '👑 Krone', es: '👑 Corona', fr: '👑 Couronne' };
+
+    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atTextDict[lang] || atTextDict.tr}`;
     const resultBox = document.getElementById('mystery-event-result');
-    resultBox.innerText = spinText;
+    resultBox.innerText = spinTextDict[lang] || spinTextDict.tr;
 
     const canvas = document.getElementById('roulette-canvas');
     const pointer = document.getElementById('roulette-pointer');
@@ -1307,13 +1346,13 @@ class UIEngine {
 
     const segments = [
       { text: '+15 🪙', color: '#F59E0B', textColor: '#FFFFFF' },
-      { text: isEn ? '🎲 2x Dice' : '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
-      { text: isEn ? '🛡️ Shield' : '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
-      { text: isEn ? '🚀 Rocket' : '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
+      { text: diceLabels[lang] || diceLabels.tr, color: '#3B82F6', textColor: '#FFFFFF' },
+      { text: shieldLabels[lang] || shieldLabels.tr, color: '#10B981', textColor: '#FFFFFF' },
+      { text: rocketLabels[lang] || rocketLabels.tr, color: '#EC4899', textColor: '#FFFFFF' },
       { text: '+10 🪙', color: '#F97316', textColor: '#FFFFFF' },
-      { text: isEn ? '⭐ Star' : '⭐ Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
-      { text: isEn ? '🎁 Chest' : '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
-      { text: isEn ? '👑 Crown' : '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
+      { text: starLabels[lang] || starLabels.tr, color: '#EAB308', textColor: '#FFFFFF' },
+      { text: chestLabels[lang] || chestLabels.tr, color: '#8B5CF6', textColor: '#FFFFFF' },
+      { text: crownLabels[lang] || crownLabels.tr, color: '#06B6D4', textColor: '#FFFFFF' }
     ];
 
     const numSegs = segments.length;
@@ -1399,7 +1438,14 @@ class UIEngine {
       } else {
         // Spin finished
         AudioPlayer.playStarFanfare();
-        const wonText = isEn ? 'Big Prize Won!' : 'Büyük Ödül Kazandın!';
+        const wonDict = {
+          tr: 'Büyük Ödül Kazandın!',
+          en: 'Big Prize Won!',
+          de: 'Großer Preis gewonnen!',
+          es: '¡Ganaste el Gran Premio!',
+          fr: 'Grand Prix remporté !'
+        };
+        const wonText = wonDict[lang] || wonDict.tr;
         resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
         setTimeout(() => {
@@ -1411,6 +1457,72 @@ class UIEngine {
     requestAnimationFrame(animateSpin);
   }
 
+  getItemInfo(itemId, lang) {
+    const itemTranslations = {
+      double_dice: {
+        tr: { name: 'Çift Zar', desc: 'Bir sonraki turda 2 zar birden atarsın (2-12 adım).' },
+        en: { name: 'Double Dice', desc: 'Roll 2 dice at once on your next turn (2-12 steps).' },
+        de: { name: 'Doppelwürfel', desc: 'Würfle im nächsten Zug mit 2 Würfeln (2-12 Felder).' },
+        es: { name: 'Dado Doble', desc: 'Tira 2 dados a la vez en tu próximo turno (2-12 casillas).' },
+        fr: { name: 'Double Dé', desc: 'Lancez 2 dés à la fois lors de votre prochain tour (2-12 cases).' }
+      },
+      rocket: {
+        tr: { name: 'Süper Roket', desc: 'Hedefine doğru direkt 7 adım uçar!' },
+        en: { name: 'Super Rocket', desc: 'Blast forward 7 steps towards your goal!' },
+        de: { name: 'Super-Rakete', desc: 'Fliege 7 Felder direkt nach vorne!' },
+        es: { name: 'Súper Cohete', desc: '¡Vuela 7 casillas hacia adelante!' },
+        fr: { name: 'Super Fusée', desc: 'Foncez de 7 cases directement vers l\'avant !' }
+      },
+      shield: {
+        tr: { name: 'Manyetik Kalkan', desc: 'Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.' },
+        en: { name: 'Magnetic Shield', desc: 'Protects against traps and coin steals for 2 turns.' },
+        de: { name: 'Magnetschild', desc: 'Schützt 2 Runden vor Fallen und Münzdiebstahl.' },
+        es: { name: 'Escudo Magnético', desc: 'Protege contra trampas y robos durante 2 turnos.' },
+        fr: { name: 'Bouclier Magnétique', desc: 'Protège contre les pièges et les vols pendant 2 tours.' }
+      },
+      magnet: {
+        tr: { name: 'Altın Mıknatısı', desc: 'Bütün rakiplerden 4\'er altın çeker!' },
+        en: { name: 'Gold Magnet', desc: 'Draws 4 coins from every opponent!' },
+        de: { name: 'Goldmagnet', desc: 'Zieht 4 Münzen von jedem Gegner ab!' },
+        es: { name: 'Imán de Oro', desc: '¡Roba 4 monedas a cada oponente!' },
+        fr: { name: 'Aimant à Pièces', desc: 'Aspire 4 pièces de chaque adversaire !' }
+      },
+      banana: {
+        tr: { name: 'Muz Kabuğu', desc: 'Bulunduğun karoya tuzak kur; üstüne basan 3 adım geri kayar!' },
+        en: { name: 'Banana Peel', desc: 'Lay a slippery trap; rivals slip back 3 steps!' },
+        de: { name: 'Bananenschale', desc: 'Platziere eine Falle; wer drauftritt, rutscht 3 Felder zurück!' },
+        es: { name: 'Piel de Plátano', desc: 'Pon una trampa; ¡los rivales resbalan 3 casillas atrás!' },
+        fr: { name: 'Peau de Banane', desc: 'Posez un piège ; les rivaux glissent de 3 cases en arrière !' }
+      },
+      swap_wand: {
+        tr: { name: 'Takas Asası', desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!' },
+        en: { name: 'Warp Wand', desc: 'Swap board positions with an opponent of your choice!' },
+        de: { name: 'Tauschstab', desc: 'Tausche deine Position mit einem beliebigen Gegner!' },
+        es: { name: 'Varita de Canje', desc: '¡Intercambia casillas con el oponente que elijas!' },
+        fr: { name: 'Baguette d\'Échange', desc: 'Échangez votre place sur le plateau avec un rival !' }
+      },
+      ghost_cloak: {
+        tr: { name: 'Hayalet Pelerin', desc: '2 tur boyunca hiçbir tuzaktan veya cezadan etkilenmezsin!' },
+        en: { name: 'Ghost Cloak', desc: 'Bypass all traps, police and penalties for 2 turns!' },
+        de: { name: 'Geisterumhang', desc: 'Ignoriere 2 Runden lang alle Fallen und Strafen!' },
+        es: { name: 'Capa Fantasma', desc: '¡Inmune a trampas, multas y cárcel por 2 turnos!' },
+        fr: { name: 'Cape Fantôme', desc: 'Traversez pièges et pénalités indemne pendant 2 tours !' }
+      },
+      lucky_die: {
+        tr: { name: 'Şanslı Altın Zar', desc: 'Sıradaki zarda 1-6 arasında istediğin sayıyı sen seçersin!' },
+        en: { name: 'Lucky Gold Die', desc: 'Pick your exact roll from 1 to 6 on your next turn!' },
+        de: { name: 'Glückswürfel', desc: 'Wähle deine exakte Augenzahl (1-6) beim nächsten Wurf!' },
+        es: { name: 'Dado Dorado de la Suerte', desc: '¡Elige tu número exacto del 1 al 6 en el próximo tiro!' },
+        fr: { name: 'Dé d\'Or Porte-Bonheur', desc: 'Choisissez votre score exact de 1 à 6 au prochain lancer !' }
+      }
+    };
+    const curLang = lang || (window.i18n ? window.i18n.getLang() : 'tr');
+    if (itemTranslations[itemId] && itemTranslations[itemId][curLang]) {
+      return itemTranslations[itemId][curLang];
+    }
+    return { name: itemId, desc: '' };
+  }
+
   openShopModal(items, isCurrentPlayer) {
     const modal = document.getElementById('modal-shop');
     modal.classList.remove('hidden');
@@ -1418,19 +1530,23 @@ class UIEngine {
     const list = document.getElementById('shop-items-grid');
     list.innerHTML = '';
 
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const goldSuffix = { tr: 'Altın', en: 'Coins', de: 'Münzen', es: 'Monedas', fr: 'Pièces' };
+
     const myPlayer = GameClient.state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId);
     const myCoins = myPlayer ? myPlayer.coins : 0;
 
     items.forEach(item => {
       const canAfford = myCoins >= item.cost;
+      const trans = this.getItemInfo(item.id, lang);
       const card = document.createElement('div');
       card.className = `shop-item-card ${!canAfford ? 'disabled' : ''}`;
       card.innerHTML = `
         <div class="shop-item-icon">${getIcon(item.icon, '🎁')}</div>
-        <div class="shop-item-name">${item.name}</div>
-        <div class="shop-item-desc">${item.desc}</div>
+        <div class="shop-item-name">${trans.name || item.name}</div>
+        <div class="shop-item-desc">${trans.desc || item.desc}</div>
         <button class="shop-buy-btn" ${(!canAfford || !isCurrentPlayer) ? 'disabled' : ''}>
-          🪙 ${item.cost} Altın
+          🪙 ${item.cost} ${goldSuffix[lang] || 'Altın'}
         </button>
       `;
 
@@ -1457,25 +1573,36 @@ class UIEngine {
     const list = document.getElementById('inventory-items-grid');
     list.innerHTML = '';
 
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const emptyMsgDict = {
+      tr: 'Çantan şu an boş! Dükkandan ya da şans kutularından eşya topla.',
+      en: 'Your bag is empty! Collect items from the shop or fortune tiles.',
+      de: 'Dein Inventar ist leer! Sammle Gegenstände im Laden oder auf Glücksfeldern.',
+      es: '¡Tu mochila está vacía! Consigue objetos en la tienda o casillas de suerte.',
+      fr: 'Votre sac est vide ! Obtenez des objets à la boutique ou sur les cases chance.'
+    };
+    const useBtnDict = { tr: 'Kullan', en: 'Use', de: 'Nutzen', es: 'Usar', fr: 'Utiliser' };
+
     const state = GameClient.state;
     const myPlayer = state ? state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId) : null;
     const activePlayer = state ? state.players[state.turnIndex] : null;
     const isMyTurn = (myPlayer && activePlayer && myPlayer.id === activePlayer.id);
 
     if (!myPlayer || myPlayer.inventory.length === 0) {
-      list.innerHTML = '<div class="empty-inv-msg">Çantan şu an boş! Dükkandan ya da şans kutularından eşya topla.</div>';
+      list.innerHTML = `<div class="empty-inv-msg">${emptyMsgDict[lang] || emptyMsgDict.tr}</div>`;
     } else {
       myPlayer.inventory.forEach(itemId => {
         const itemDef = SHOP_ITEMS.find(i => i.id === itemId) || { name: itemId, icon: 'dices', desc: 'Özel eşya' };
+        const trans = this.getItemInfo(itemId, lang);
         const card = document.createElement('div');
         card.className = 'inventory-item-card';
         card.innerHTML = `
           <div class="inv-icon">${getIcon(itemDef.icon, '🎁')}</div>
           <div class="inv-info">
-            <div class="inv-name">${itemDef.name}</div>
-            <div class="inv-desc">${itemDef.desc}</div>
+            <div class="inv-name">${trans.name || itemDef.name}</div>
+            <div class="inv-desc">${trans.desc || itemDef.desc}</div>
           </div>
-          <button class="inv-use-btn" ${!isMyTurn ? 'disabled' : ''}>Kullan</button>
+          <button class="inv-use-btn" ${!isMyTurn ? 'disabled' : ''}>${useBtnDict[lang] || 'Kullan'}</button>
         `;
 
         card.querySelector('.inv-use-btn').onclick = () => {

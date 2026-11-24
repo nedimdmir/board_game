@@ -10,6 +10,7 @@ class ClientEngine {
     this.ws = null;
     this.connected = false;
     this.backendType = 'offline'; // 'php', 'ws', 'offline'
+    this.apiEndpoint = 'api.php';
     this.isStandalone = true;
     this.roomId = null;
     this.player = null; // My player object
@@ -37,30 +38,41 @@ class ClientEngine {
       return;
     }
 
-    // 2. Try checking PHP Backend (api.php)
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1800);
-      const res = await fetch('api.php?action=health', {
-        signal: controller.signal,
-        cache: 'no-store'
-      });
-      clearTimeout(timeoutId);
+    // 2. Try checking PHP Backend (probing api.php, index.php, or current endpoint)
+    const endpointsToProbe = ['api.php', 'index.php'];
+    if (window.location.pathname.endsWith('.php')) {
+      endpointsToProbe.unshift(window.location.pathname);
+    } else {
+      endpointsToProbe.push('?action=health');
+    }
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.status === 'ok') {
-          console.log('✅ PHP Çok Oyunculu Arka Ucu aktif ve çalışıyor! Depolama:', data.storage);
-          this.backendType = 'php';
-          this.isStandalone = false;
-          this.connected = true;
-          if (pill) pill.className = 'server-status-pill online';
-          if (pillText) pillText.innerText = '🟢 Çevrimiçi Çok Oyunculu Mod Aktif (api.php)';
-          return;
+    for (const ep of endpointsToProbe) {
+      try {
+        const url = ep.includes('?') ? ep : `${ep}?action=health`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1600);
+        const res = await fetch(url, {
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.status === 'ok') {
+            console.log('✅ PHP Çok Oyunculu Arka Ucu aktif! Uç nokta:', ep);
+            this.apiEndpoint = ep.split('?')[0] || 'index.php';
+            this.backendType = 'php';
+            this.isStandalone = false;
+            this.connected = true;
+            if (pill) pill.className = 'server-status-pill online';
+            if (pillText) pillText.innerText = '🟢 Çevrimiçi Çok Oyunculu Mod Aktif';
+            return;
+          }
         }
+      } catch (e) {
+        // Continue to next probe
       }
-    } catch (e) {
-      // PHP not available on this host (e.g. GitHub Pages or static host)
     }
 
     // 3. Fallback to offline standalone LocalServer
@@ -98,10 +110,17 @@ class ClientEngine {
   // API & Communication Layer
   // ---------------------------------------------------------------------------
 
+  getApiUrl(actionParams) {
+    const ep = this.apiEndpoint || 'api.php';
+    const glue = ep.includes('?') ? '&' : '?';
+    return `${ep}${glue}action=${actionParams}`;
+  }
+
   async apiPost(action, payload = {}) {
     try {
       const sessId = this.player ? this.player.sessionId : (PlayerProgression.profile ? PlayerProgression.profile.sessionId : 's_guest');
-      const res = await fetch(`api.php?action=${action}`, {
+      const targetUrl = this.getApiUrl(action);
+      const res = await fetch(targetUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +148,8 @@ class ClientEngine {
       if (!this.roomId || this.backendType !== 'php') return;
       try {
         const sessId = this.player ? this.player.sessionId : PlayerProgression.profile.sessionId;
-        const res = await fetch(`api.php?action=get_state&roomId=${encodeURIComponent(this.roomId)}&sessionId=${encodeURIComponent(sessId)}`, {
+        const targetUrl = this.getApiUrl(`get_state&roomId=${encodeURIComponent(this.roomId)}&sessionId=${encodeURIComponent(sessId)}`);
+        const res = await fetch(targetUrl, {
           cache: 'no-store'
         });
         if (res.ok) {

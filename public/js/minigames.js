@@ -35,6 +35,9 @@ class MiniGameManager {
       case 'memory_matrix':
         this.runMemoryMatrix(minigameData);
         break;
+      case 'timing_hammer':
+        this.runTimingHammer(minigameData);
+        break;
       default:
         this.runCoinCatch(minigameData);
         break;
@@ -581,6 +584,180 @@ class MiniGameManager {
       AudioPlayer.playCountdown(timeLeft <= 3);
 
       if (timeLeft <= 0) {
+        this.end();
+      }
+    }, 1000);
+  }
+
+  runTimingHammer(data) {
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const titles = {
+      tr: 'Güç Çekici & Hassas Zamanlama',
+      en: 'Timing Hammer & Power Striker',
+      de: 'Krafthammer & Präzision',
+      es: 'Martillo de Fuerza y Precisión',
+      fr: 'Marteau de Force & Précision'
+    };
+    const descs = {
+      tr: 'Gösterge tam tepedeki %100 altın zili gösterdiğinde VUR! (3 Vuruş Hakkın Var)',
+      en: 'Hit when the power meter reaches the 100% Golden Bell! (3 Hits)',
+      de: 'Triff, wenn die Anzeige die 100% Goldene Glocke erreicht! (3 Schläge)',
+      es: '¡Golpea cuando el medidor llegue al 100% de la Campana Dorada! (3 Golpes)',
+      fr: 'Frappez quand la jauge atteint la Cloche Dorée 100% ! (3 Coups)'
+    };
+    const hitBtnLabels = {
+      tr: '🔨 VUR! (TIKLA)',
+      en: '🔨 HIT! (TAP)',
+      de: '🔨 SCHLAGEN! (TIPPEN)',
+      es: '🔨 ¡GOLPEAR! (TOCAR)',
+      fr: '🔨 FRAPPER ! (CLIQUER)'
+    };
+    const attemptsLabels = {
+      tr: 'Kalan Vuruş',
+      en: 'Hits Left',
+      de: 'Schläge übrig',
+      es: 'Intentos restantes',
+      fr: 'Coups restants'
+    };
+
+    let timeLeft = 12;
+    let attemptsLeft = 3;
+    let animId = null;
+    let currentPower = 0;
+    let direction = 1;
+    let speed = 2.4;
+    let canHit = true;
+
+    this.container.innerHTML = `
+      <div class="minigame-card text-center" style="max-width: 440px;">
+        <div class="mg-stakes-badge">🏆 1.ye +15 🪙 & Eşya!   💀 Sonuncuya -5 🪙 Ceza!</div>
+        <h2>🔨 ${titles[lang] || titles.tr}</h2>
+        <p>${descs[lang] || descs.tr}</p>
+        <div class="minigame-stats">
+          <div class="badge-time">⏱️ <span id="th-timer">${timeLeft}</span>s</div>
+          <div class="badge-score">🎯 <span id="th-attempts">${attemptsLeft}</span> ${attemptsLabels[lang] || attemptsLabels.tr}</div>
+          <div class="badge-score">🪙 Skor: <span id="th-score">0</span></div>
+        </div>
+
+        <div class="hammer-striker-wrapper" style="margin: 16px auto; width: 100%; max-width: 340px; background: #0F172A; border-radius: 16px; padding: 14px; box-sizing: border-box; border: 3px solid #334155; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+          <!-- Top Bell -->
+          <div class="striker-bell" id="striker-bell" style="font-size: 32px; filter: drop-shadow(0 2px 6px rgba(234,179,8,0.5)); transition: transform 0.15s ease;">🔔 100</div>
+          
+          <!-- Track & Bar -->
+          <div class="striker-track" style="position: relative; height: 32px; background: #1E293B; border-radius: 12px; margin: 12px 0; overflow: hidden; border: 2px solid #475569;">
+            <div id="striker-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3B82F6 0%, #10B981 60%, #F59E0B 85%, #EF4444 95%, #FACC15 100%); transition: none; border-radius: 10px;"></div>
+            <div style="position: absolute; right: 0; top: 0; width: 8%; height: 100%; background: rgba(254, 240, 138, 0.4); border-left: 2px dashed #FEF08A;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #94A3B8; padding: 0 4px;">
+            <span>0%</span>
+            <span>50%</span>
+            <span>85%</span>
+            <span style="color: #FACC15;">🎯 100% ZİL</span>
+          </div>
+
+          <!-- Impact Message -->
+          <div id="th-feedback" style="min-height: 28px; margin-top: 10px; font-weight: 900; font-size: 16px; color: #F8FAFC;">
+            Zamanı yakala ve vur!
+          </div>
+        </div>
+
+        <button class="mash-btn" id="btn-hammer-hit" style="width: 100%; max-width: 320px; font-size: 20px; padding: 14px; background: #EF4444; color: white; border: none; border-radius: 16px; box-shadow: 0 6px 0 #B91C1C; cursor: pointer; touch-action: manipulation; user-select: none;">
+          ${hitBtnLabels[lang] || hitBtnLabels.tr}
+        </button>
+      </div>
+    `;
+
+    const fillElem = document.getElementById('striker-fill');
+    const bellElem = document.getElementById('striker-bell');
+    const scoreElem = document.getElementById('th-score');
+    const attemptsElem = document.getElementById('th-attempts');
+    const feedbackElem = document.getElementById('th-feedback');
+    const timerElem = document.getElementById('th-timer');
+    const hitBtn = document.getElementById('btn-hammer-hit');
+
+    // Oscillation loop
+    const loop = () => {
+      if (this.gameFinished) return;
+      currentPower += direction * speed;
+      if (currentPower >= 100) {
+        currentPower = 100;
+        direction = -1;
+      } else if (currentPower <= 0) {
+        currentPower = 0;
+        direction = 1;
+      }
+      if (fillElem) fillElem.style.width = `${currentPower}%`;
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
+
+    const onHit = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!canHit || this.gameFinished || attemptsLeft <= 0) return;
+      canHit = false;
+
+      let hitScore = 0;
+      let text = '';
+      if (currentPower >= 96) {
+        hitScore = 50;
+        text = '🔔 DİNG DİNG! 100 PUANLIK MÜKEMMEL VURUŞ! (+50)';
+        AudioPlayer.playStarFanfare();
+        if (bellElem) {
+          bellElem.style.transform = 'scale(1.4) rotate(15deg)';
+          setTimeout(() => { if (bellElem) bellElem.style.transform = 'scale(1)'; }, 300);
+        }
+      } else if (currentPower >= 85) {
+        hitScore = 35;
+        text = '💥 GÜÇLÜ VURUŞ! Harika zamanlama! (+35)';
+        AudioPlayer.playCoinSound();
+      } else if (currentPower >= 60) {
+        hitScore = 20;
+        text = '⚡ Fena Değil! (+20)';
+        AudioPlayer.playClick();
+      } else {
+        hitScore = 10;
+        text = '💨 Zayıf Vuruş! (+10)';
+        AudioPlayer.playClick();
+      }
+
+      this.score += hitScore;
+      scoreElem.innerText = this.score;
+      feedbackElem.innerText = text;
+      attemptsLeft--;
+      attemptsElem.innerText = attemptsLeft;
+
+      if (attemptsLeft <= 0) {
+        setTimeout(() => {
+          if (animId) cancelAnimationFrame(animId);
+          this.end();
+        }, 1100);
+      } else {
+        speed += 0.8;
+        setTimeout(() => {
+          canHit = true;
+          if (feedbackElem) feedbackElem.innerText = 'Sıradaki vuruşa hazırlan!';
+        }, 700);
+      }
+    };
+
+    hitBtn.addEventListener('pointerdown', onHit);
+
+    const keyHandler = (e) => {
+      if (e.code === 'Space') {
+        onHit(e);
+      }
+    };
+    window.addEventListener('keydown', keyHandler);
+
+    this.timerInterval = setInterval(() => {
+      timeLeft--;
+      if (timerElem) timerElem.innerText = timeLeft;
+      AudioPlayer.playCountdown(timeLeft <= 3);
+
+      if (timeLeft <= 0) {
+        window.removeEventListener('keydown', keyHandler);
+        if (animId) cancelAnimationFrame(animId);
         this.end();
       }
     }, 1000);

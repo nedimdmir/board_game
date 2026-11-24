@@ -121,7 +121,9 @@ const SHOP_ITEMS = [
   { id: 'shield', name: 'Manyetik Kalkan', cost: 8, desc: 'Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.', icon: 'shield' },
   { id: 'magnet', name: 'Altın Mıknatısı', cost: 10, desc: 'Bütün rakiplerden 4\'er altın çeker!', icon: 'magnet' },
   { id: 'banana', name: 'Muz Kabuğu', cost: 5, desc: 'Bulunduğun karoya tuzak kur; üstüne basan 3 adım geri kayar!', icon: 'banana' },
-  { id: 'swap_wand', name: 'Takas Asası', cost: 15, desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!', icon: 'refresh-cw' }
+  { id: 'swap_wand', name: 'Takas Asası', cost: 15, desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!', icon: 'refresh-cw' },
+  { id: 'ghost_cloak', name: 'Hayalet Pelerin', cost: 9, desc: '2 tur boyunca hiçbir tuzaktan veya cezadan etkilenmezsin!', icon: 'shield' },
+  { id: 'lucky_die', name: 'Şanslı Altın Zar', cost: 14, desc: 'Sıradaki zarda 1-6 arasında istediğin sayıyı sen seçersin!', icon: 'dices' }
 ];
 
 class BoardRenderer {

@@ -233,5 +233,39 @@ fs.writeFileSync('parti-dunyasi-tek-dosya.html', singleHtml, 'utf8');
 fs.writeFileSync('oyun.html', singleHtml, 'utf8');
 fs.writeFileSync('index.html', singleHtml, 'utf8');
 
-console.log('SUCCESS: Generated "parti-dunyasi-tek-dosya.html", "oyun.html", and root "index.html" successfully!');
-console.log('File size:', (Buffer.byteLength(singleHtml) / 1024).toFixed(1), 'KB');
+// Build All-In-One index.php (Multiplayer PHP Backend + Full Web Frontend in ONE single file)
+const apiPhpRaw = fs.readFileSync('api.php', 'utf8');
+const cleanApiPhp = apiPhpRaw.replace(/^\s*<\?php\s*/, '');
+
+const allInOnePhp = `<?php
+/**
+ * PartyCraft: Wonder Board - All-In-One Edition
+ * 
+ * 🎮 TEK DOSYA SUNUCU + OYUN SÜRÜMÜ (All-in-One Single File Edition)
+ * Bu tek dosyayı (index.php) PHP destekleyen herhangi bir web hostinge yükleyip hemen oynayabilirsiniz.
+ * Harici veritabanı, npm, composer veya ek dosya gerekmez!
+ * 
+ * - Tarayıcıdan açıldığında: Tam HTML5/CSS/Vanilla JS oyun arayüzünü sunar.
+ * - Çok oyunculu oda, zar, hamle ve mini oyun isteklerinde: JSON dosya tabanlı PHP arka ucunu çalıştırır.
+ */
+
+$isApiRequest = (
+    isset($_GET['action']) || 
+    isset($_POST['action']) || 
+    (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') || 
+    (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS')
+);
+
+if ($isApiRequest) {
+${cleanApiPhp}
+    exit;
+}
+?>
+${singleHtml}
+`;
+
+fs.writeFileSync('index.php', allInOnePhp, 'utf8');
+
+console.log('SUCCESS: Generated "parti-dunyasi-tek-dosya.html", "oyun.html", root "index.html", and All-in-One "index.php" successfully!');
+console.log('index.html size:', (Buffer.byteLength(singleHtml) / 1024).toFixed(1), 'KB');
+console.log('index.php (All-In-One) size:', (Buffer.byteLength(allInOnePhp) / 1024).toFixed(1), 'KB');

@@ -2895,8 +2895,11 @@ input:checked + .slider-round:before {
       
       <!-- Top Language Selector Bar -->
       <div class="lang-selector-bar">
-        <button type="button" class="lang-btn active" data-lang="tr">🇹🇷 Türkçe</button>
-        <button type="button" class="lang-btn" data-lang="en">🇬🇧 English</button>
+        <button type="button" class="lang-btn active" data-lang="tr">🇹🇷 TR</button>
+        <button type="button" class="lang-btn" data-lang="en">🇬🇧 EN</button>
+        <button type="button" class="lang-btn" data-lang="de">🇩🇪 DE</button>
+        <button type="button" class="lang-btn" data-lang="es">🇪🇸 ES</button>
+        <button type="button" class="lang-btn" data-lang="fr">🇫🇷 FR</button>
       </div>
 
       <!-- Hero Header -->
@@ -3598,6 +3601,9 @@ input:checked + .slider-round:before {
           <div class="settings-lang-toggle">
             <button type="button" class="lang-pill-btn active" data-lang="tr">🇹🇷 TR</button>
             <button type="button" class="lang-pill-btn" data-lang="en">🇬🇧 EN</button>
+            <button type="button" class="lang-pill-btn" data-lang="de">🇩🇪 DE</button>
+            <button type="button" class="lang-pill-btn" data-lang="es">🇪🇸 ES</button>
+            <button type="button" class="lang-pill-btn" data-lang="fr">🇫🇷 FR</button>
           </div>
         </div>
 
@@ -3844,7 +3850,8 @@ function getIcon(name, fallback = '') {
 /* =================== 1.5. I18N (MULTI-LANGUAGE) =================== */
 // ============================================================================
 // PartyCraft: Wonder Board - Internationalization (i18n) Engine
-// Supports Turkish (tr) and English (en) with live dynamic switching & persistence
+// Supports: Turkish (tr), English (en), German (de), Spanish (es), French (fr)
+// Dynamic live switching without page reload & automatic localStorage persistence
 // ============================================================================
 
 const I18N_DATA = {
@@ -3952,6 +3959,7 @@ const I18N_DATA = {
     title_board: 'Karelerin Efendisi',
     title_party: 'Parti Efsanesi'
   },
+
   en: {
     hero_badge: '🎲 Multiplayer World Tour Board Game',
     hero_title: 'Party<span>Craft</span>',
@@ -4055,15 +4063,332 @@ const I18N_DATA = {
     title_star: 'Star Hunter',
     title_board: 'Master of Tiles',
     title_party: 'Party Legend'
+  },
+
+  de: {
+    hero_badge: '🎲 Mehrspieler-Weltreise-Brettspiel',
+    hero_title: 'Party<span>Craft</span>',
+    hero_subtitle: 'Würfle, rase und feiere in den Straßen von Istanbul, Tokio, Paris und New York!',
+    studio_badge: '✨ GESTALTE DEINE FIGUR',
+    studio_name_label: 'Name:',
+    studio_name_placeholder: 'Name eingeben...',
+    studio_model_label: 'Charaktermodell:',
+    studio_hat_label: 'Hut & Kopfbedeckung:',
+    studio_color_label: 'Körper- & Ringfarbe:',
+    btn_quick_play: 'Schnellspiel',
+    btn_quick_play_desc: 'Starte sofort mit 3 cleveren KI-Bots in Istanbul ohne Wartezeit!',
+    btn_play_friends: 'Mit Freunden spielen',
+    btn_play_friends_desc: 'Erstelle einen Raum mit 1 Klick, lade Freunde per Link oder QR-Code ein!',
+    btn_play_bots: 'Gegen Bots spielen',
+    btn_play_bots_desc: 'Wähle 1 bis 3 Bots und übe offline!',
+    btn_how_to_play: 'Spielanleitung',
+    btn_how_to_play_desc: 'Spielregeln, Felder und Taktiken',
+    btn_settings: 'Einstellungen',
+    btn_settings_desc: 'Audio, Musik, Sprache und Grafik',
+    room_code_placeholder: 'RAUMCODE (Z.B. ABCD)',
+    btn_join_room: 'Raum beitreten',
+    server_status_checking: 'Serverstatus: Verbindung wird geprüft...',
+    server_status_php: 'Serverstatus: PHP-Mehrspieler online bereit',
+    server_status_node: 'Serverstatus: Node.js WebSocket online bereit',
+    server_status_offline: 'Serverstatus: Offline-Modus (Bots & Lokales Spiel)',
+
+    // Lobby
+    lobby_room_title: 'Raumcode:',
+    lobby_players_title: 'Spieler',
+    lobby_share_title: 'Freunde einladen (Direktlink):',
+    btn_copy_link: '📋 Link kopieren',
+    btn_copied: '✅ Kopiert!',
+    btn_show_qr: '📱 QR-Code anzeigen',
+    btn_add_bot: '🤖 Bot hinzufügen',
+    btn_leave_room: '🚪 Raum verlassen',
+    lobby_city_title: 'Stadt / Kartenthema:',
+    lobby_rounds_title: 'Rundenzahl:',
+    btn_start_game: '🎉 Party starten!',
+    lobby_waiting_host: 'Warten auf den Raumleiter...',
+
+    // HUD & In-game
+    hud_your_turn: 'Du bist dran! Würfle und ziehe vorwärts',
+    hud_turn_prefix: 'Zug: ',
+    hud_turn_waiting: 'Spielerzug',
+    hud_round_prefix: 'Runde: ',
+    btn_roll_dice: '🎲 WÜRFELN',
+    btn_bag: '🎒 Inventar',
+    btn_trade: '🤝 Handeln',
+    btn_chat: '💬 Chat',
+    btn_hud_leave: 'Spiel verlassen',
+
+    // Modals
+    roulette_title: '🎡 Glücksrad!',
+    roulette_spinning: 'Das Rad dreht sich...',
+    roulette_player_at: 'ist auf dem Glücksfeld!',
+    roulette_won: 'Herzlichen Glückwunsch, Großer Preis gewonnen!',
+
+    leave_modal_title: 'Spiel verlassen',
+    leave_modal_desc: 'Möchtest du das Spiel wirklich verlassen und zum Hauptmenü zurückkehren? In Mehrspieler-Räumen übernimmt ein KI-Bot deinen Platz.',
+    btn_leave_confirm: '🚪 Ja, Raum verlassen',
+    btn_leave_cancel: 'Abbrechen / Weiterspielen',
+
+    settings_title: '⚙️ Spieleinstellungen',
+    settings_lang_title: '🌐 Sprache / Language',
+    settings_lang_sub: 'Sprache für Menüs und Spieltexte',
+    settings_sfx_title: '🔊 Soundeffekte',
+    settings_sfx_sub: 'Würfel-, Schritt- und Münzgeräusche',
+    settings_music_title: '🎵 Hintergrundmusik',
+    settings_music_sub: 'Synthetisierter Web-Audio Partysoundtrack',
+    settings_dice_title: '🎲 3D-Würfelanimationen',
+    settings_dice_sub: 'Ausschalten für sofortige Würfelergebnisse',
+    settings_lowpower_title: '⚡ Energiesparmodus',
+    settings_lowpower_sub: 'Schonende Grafik für ältere Mobilgeräte',
+    btn_reset_profile: '🔄 Profil & Fortschritt zurücksetzen',
+    btn_save_settings: 'Einstellungen speichern',
+
+    rules_title: '📖 PartyCraft — Spielanleitung',
+    rules_goal_title: '🎯 Spielziel',
+    rules_goal_body: 'Sammle vor Rundenende die meisten <strong>Sterne (⭐)</strong> und <strong>Münzen (🪙)</strong>! 1 Stern = 20 Münzen und hat oberste Priorität in der Rangliste.',
+    rules_turn_title: '🎲 Zug & Bewegung',
+    rules_turn_body: 'Wenn du an der Reihe bist, drücke <strong>WÜRFELN</strong> oder die Leertaste. Ziehe im Uhrzeigersinn über den Kurs. Jede Runde über Start bringt <strong>+10 Münzen</strong>!',
+    rules_tiles_title: '🗺️ Sonderfelder & Gefahren',
+    rules_items_title: '🎒 Taktische Gegenstände',
+    rules_close_btn: 'Alles klar, zurück zum Spiel!',
+
+    // Tiles
+    tile_start: 'Start (+10 🪙)',
+    tile_coin: 'Münzfeld',
+    tile_star: 'Stern-Podest',
+    tile_mystery: 'Glücksrad',
+    tile_trap: 'Falle',
+    tile_shop: 'Objektladen',
+    tile_bank: 'Zentralbank',
+    tile_jail: 'Gefängnis / Wache',
+    tile_duel: 'Duell-Arena',
+
+    // Titles
+    title_novice: 'Neuer Entdecker',
+    title_dice: 'Würfel-Akrobat',
+    title_star: 'Sternenjäger',
+    title_board: 'Meister der Felder',
+    title_party: 'Party-Legende'
+  },
+
+  es: {
+    hero_badge: '🎲 Juego de Mesa Multijugador Vuelta al Mundo',
+    hero_title: 'Party<span>Craft</span>',
+    hero_subtitle: '¡Tira los dados, compite y festeja por las calles de Estambul, Tokio, París y Nueva York!',
+    studio_badge: '✨ DISEÑA TU PERSONAJE',
+    studio_name_label: 'Nombre:',
+    studio_name_placeholder: 'Escribe tu nombre...',
+    studio_model_label: 'Modelo de Personaje:',
+    studio_hat_label: 'Sombrero / Accesorio:',
+    studio_color_label: 'Color del Cuerpo:',
+    btn_quick_play: 'Partida Rápida',
+    btn_quick_play_desc: '¡Empieza de inmediato con 3 bots inteligentes en Estambul sin esperas!',
+    btn_play_friends: 'Jugar con Amigos',
+    btn_play_friends_desc: '¡Crea una sala en 1 clic, invita amigos por enlace directo o código QR!',
+    btn_play_bots: 'Jugar contra Bots',
+    btn_play_bots_desc: '¡Elige de 1 a 3 bots y practica sin conexión!',
+    btn_how_to_play: 'Cómo Jugar',
+    btn_how_to_play_desc: 'Reglas del juego, casillas y tácticas',
+    btn_settings: 'Ajustes',
+    btn_settings_desc: 'Sonido, música, idioma y gráficos',
+    room_code_placeholder: 'CÓDIGO DE SALA (EJ: ABCD)',
+    btn_join_room: 'Unirse a Sala',
+    server_status_checking: 'Estado del Servidor: Comprobando conexión...',
+    server_status_php: 'Estado del Servidor: Multijugador PHP en línea listo',
+    server_status_node: 'Estado del Servidor: WebSocket Node.js en línea listo',
+    server_status_offline: 'Estado del Servidor: Modo Sin Conexión (Bots y juego local)',
+
+    // Lobby
+    lobby_room_title: 'Código de Sala:',
+    lobby_players_title: 'Jugadores',
+    lobby_share_title: 'Invitar Amigos (Enlace directo):',
+    btn_copy_link: '📋 Copiar Enlace',
+    btn_copied: '✅ ¡Copiado!',
+    btn_show_qr: '📱 Ver Código QR',
+    btn_add_bot: '🤖 Añadir Bot',
+    btn_leave_room: '🚪 Salir de la Sala',
+    lobby_city_title: 'Ciudad / Mapa:',
+    lobby_rounds_title: 'Rondas:',
+    btn_start_game: '🎉 ¡Empezar Fiesta!',
+    lobby_waiting_host: 'Esperando al anfitrión para iniciar...',
+
+    // HUD & In-game
+    hud_your_turn: '¡Es tu turno! Tira el dado y avanza',
+    hud_turn_prefix: 'Turno: ',
+    hud_turn_waiting: 'Turno del Jugador',
+    hud_round_prefix: 'Ronda: ',
+    btn_roll_dice: '🎲 TIRAR DADO',
+    btn_bag: '🎒 Mochila',
+    btn_trade: '🤝 Intercambio',
+    btn_chat: '💬 Chat',
+    btn_hud_leave: 'Salir del Juego',
+
+    // Modals
+    roulette_title: '🎡 ¡Ruleta de la Suerte!',
+    roulette_spinning: 'La ruleta está girando...',
+    roulette_player_at: '¡está en la casilla de la suerte!',
+    roulette_won: '¡Felicidades, ganaste el Gran Premio!',
+
+    leave_modal_title: 'Salir de la Partida',
+    leave_modal_desc: '¿Seguro que deseas salir al menú principal? En partidas multijugador, un bot de IA ocupará tu lugar.',
+    btn_leave_confirm: '🚪 Sí, Salir de la Sala',
+    btn_leave_cancel: 'Cancelar / Seguir Jugando',
+
+    settings_title: '⚙️ Ajustes del Juego',
+    settings_lang_title: '🌐 Idioma / Language',
+    settings_lang_sub: 'Idioma de la interfaz y textos',
+    settings_sfx_title: '🔊 Efectos de Sonido',
+    settings_sfx_sub: 'Dados, pasos, monedas y fanfarrias',
+    settings_music_title: '🎵 Música de Fondo',
+    settings_music_sub: 'Banda sonora sintetizada Web Audio',
+    settings_dice_title: '🎲 Animaciones 3D del Dado',
+    settings_dice_sub: 'Desactiva para resultados instantáneos',
+    settings_lowpower_title: '⚡ Modo Ahorro de Energía',
+    settings_lowpower_sub: 'Gráficos ligeros para móviles antiguos',
+    btn_reset_profile: '🔄 Restablecer Perfil y Datos',
+    btn_save_settings: 'Guardar Ajustes',
+
+    rules_title: '📖 PartyCraft — Cómo Jugar',
+    rules_goal_title: '🎯 Objetivo del Juego',
+    rules_goal_body: '¡Consigue la mayor cantidad de <strong>Estrellas (⭐)</strong> y <strong>Monedas (🪙)</strong> antes de terminar las rondas! 1 Estrella equivale a 20 Monedas y tiene máxima prioridad.',
+    rules_turn_title: '🎲 Turnos y Movimiento',
+    rules_turn_body: 'En tu turno, pulsa <strong>TIRAR DADO</strong> o barra espaciadora. Avanza en sentido horario por el circuito. ¡Cada vuelta por Salida da <strong>+10 Monedas</strong>!',
+    rules_tiles_title: '🗺️ Casillas Especiales y Trampas',
+    rules_items_title: '🎒 Objetos Tácticos',
+    rules_close_btn: '¡Entendido, volver al juego!',
+
+    // Tiles
+    tile_start: 'Salida (+10 🪙)',
+    tile_coin: 'Casilla Moneda',
+    tile_star: 'Pedestal de Estrella',
+    tile_mystery: 'Ruleta de la Suerte',
+    tile_trap: 'Casilla Trampa',
+    tile_shop: 'Tienda de Objetos',
+    tile_bank: 'Banco Central',
+    tile_jail: 'Cárcel / Comisaría',
+    tile_duel: 'Arena de Duelo',
+
+    // Titles
+    title_novice: 'Explorador Novato',
+    title_dice: 'Acróbata del Dado',
+    title_star: 'Cazador de Estrellas',
+    title_board: 'Amo del Tablero',
+    title_party: 'Leyenda de la Fiesta'
+  },
+
+  fr: {
+    hero_badge: '🎲 Jeu de Plateau Multijoueur Tour du Monde',
+    hero_title: 'Party<span>Craft</span>',
+    hero_subtitle: 'Lancez les dés, faites la course et faites la fête dans les rues d\'Istanbul, Tokyo, Paris et New York !',
+    studio_badge: '✨ CRÉEZ VOTRE PERSONNAGE',
+    studio_name_label: 'Nom du Joueur :',
+    studio_name_placeholder: 'Entrez votre nom...',
+    studio_model_label: 'Modèle :',
+    studio_hat_label: 'Chapeau & Coiffe :',
+    studio_color_label: 'Couleur du Corps :',
+    btn_quick_play: 'Partie Rapide',
+    btn_quick_play_desc: 'Rejoignez immédiatement 3 bots IA à Istanbul sans attendre !',
+    btn_play_friends: 'Jouer avec des Amis',
+    btn_play_friends_desc: 'Créez une salle en 1 clic, invitez vos amis par lien direct ou QR code !',
+    btn_play_bots: 'Jouer contre des Bots',
+    btn_play_bots_desc: 'Choisissez de 1 à 3 bots et entraînez-vous hors ligne !',
+    btn_how_to_play: 'Comment Jouer',
+    btn_how_to_play_desc: 'Règles du jeu, cases et tactiques',
+    btn_settings: 'Paramètres',
+    btn_settings_desc: 'Audio, musique, langue et graphismes',
+    room_code_placeholder: 'CODE DE SALLE (EX: ABCD)',
+    btn_join_room: 'Rejoindre la Salle',
+    server_status_checking: 'État du Serveur : Vérification de la connexion...',
+    server_status_php: 'État du Serveur : Multijoueur PHP en ligne prêt',
+    server_status_node: 'État du Serveur : WebSocket Node.js en ligne prêt',
+    server_status_offline: 'État du Serveur : Mode Hors Ligne (Bots & Jeu local)',
+
+    // Lobby
+    lobby_room_title: 'Code de Salle :',
+    lobby_players_title: 'Joueurs',
+    lobby_share_title: 'Inviter des Amis (Lien direct) :',
+    btn_copy_link: '📋 Copier le Lien' ,
+    btn_copied: '✅ Copié !',
+    btn_show_qr: '📱 Afficher le QR Code',
+    btn_add_bot: '🤖 Ajouter un Bot',
+    btn_leave_room: '🚪 Quitter la Salle',
+    lobby_city_title: 'Ville / Thème :',
+    lobby_rounds_title: 'Nombre de Tours :',
+    btn_start_game: '🎉 Lancer la Fête !',
+    lobby_waiting_host: 'En attente de l\'hôte pour démarrer...',
+
+    // HUD & In-game
+    hud_your_turn: 'À vous de jouer ! Lancez le dé et avancez',
+    hud_turn_prefix: 'Tour : ',
+    hud_turn_waiting: 'Tour du Joueur',
+    hud_round_prefix: 'Manche : ',
+    btn_roll_dice: '🎲 LANCER LE DÉ',
+    btn_bag: '🎒 Inventaire',
+    btn_trade: '🤝 Échange',
+    btn_chat: '💬 Chat',
+    btn_hud_leave: 'Quitter la Partie',
+
+    // Modals
+    roulette_title: '🎡 Roue de la Fortune !',
+    roulette_spinning: 'La roue tourne...',
+    roulette_player_at: 'est sur la case chance !',
+    roulette_won: 'Félicitations, Grand Prix remporté !',
+
+    leave_modal_title: 'Quitter la Partie',
+    leave_modal_desc: 'Êtes-vous sûr de vouloir quitter vers le menu principal ? En multijoueur, un bot IA prendra votre place.',
+    btn_leave_confirm: '🚪 Oui, Quitter la Salle',
+    btn_leave_cancel: 'Annuler / Continuer à Jouer',
+
+    settings_title: '⚙️ Paramètres du Jeu',
+    settings_lang_title: '🌐 Langue / Language',
+    settings_lang_sub: 'Langue de l\'interface et des textes',
+    settings_sfx_title: '🔊 Effets Sonores',
+    settings_sfx_sub: 'Dés, pas, pièces et fanfares',
+    settings_music_title: '🎵 Musique de Fond',
+    settings_music_sub: 'Bande-son festive synthétisée Web Audio',
+    settings_dice_title: '🎲 Animations 3D du Dé',
+    settings_dice_sub: 'Désactiver pour des résultats instantanés',
+    settings_lowpower_title: '⚡ Mode Économie d\'Énergie',
+    settings_lowpower_sub: 'Graphismes allégés pour mobiles anciens',
+    btn_reset_profile: '🔄 Réinitialiser le Profil',
+    btn_save_settings: 'Enregistrer les Paramètres',
+
+    rules_title: '📖 PartyCraft — Comment Jouer',
+    rules_goal_title: '🎯 Objectif du Jeu',
+    rules_goal_body: 'Récoltez le plus d\'<strong>Étoiles (⭐)</strong> et de <strong>Pièces (🪙)</strong> avant la fin des manches ! 1 Étoile vaut 20 Pièces et prime au classement.',
+    rules_turn_title: '🎲 Déplacement et Tours',
+    rules_turn_body: 'À votre tour, cliquez sur <strong>LANCER LE DÉ</strong> ou appuyez sur Espace. Avancez dans le sens horaire. Chaque passage par Départ rapporte <strong>+10 Pièces</strong> !',
+    rules_tiles_title: '🗺️ Cases Spéciales & Pièges',
+    rules_items_title: '🎒 Objets Tactiques',
+    rules_close_btn: 'Compris, retour au jeu !',
+
+    // Tiles
+    tile_start: 'Départ (+10 🪙)',
+    tile_coin: 'Case Pièce',
+    tile_star: 'Socle d\'Étoile',
+    tile_mystery: 'Roue de la Fortune',
+    tile_trap: 'Case Piège',
+    tile_shop: 'Boutique d\'Objets',
+    tile_bank: 'Banque Centrale',
+    tile_jail: 'Prison / Commissariat',
+    tile_duel: 'Arène de Duel',
+
+    // Titles
+    title_novice: 'Explorateur Novice',
+    title_dice: 'Acrobate du Dé',
+    title_star: 'Chasseur d\'Étoiles',
+    title_board: 'Maître des Cases',
+    title_party: 'Légende de la Fête'
   }
 };
+
+const SUPPORTED_LANGUAGES = ['tr', 'en', 'de', 'es', 'fr'];
 
 class I18nManager {
   constructor() {
     this.currentLang = 'tr';
     try {
       const saved = localStorage.getItem('partycraft_lang');
-      if (saved && (saved === 'tr' || saved === 'en')) {
+      if (saved && SUPPORTED_LANGUAGES.includes(saved)) {
         this.currentLang = saved;
       }
     } catch (e) {}
@@ -4075,7 +4400,7 @@ class I18nManager {
 
   t(key, fallback = '') {
     const dict = I18N_DATA[this.currentLang] || I18N_DATA.tr;
-    if (dict[key] !== undefined) {
+    if (dict && dict[key] !== undefined) {
       return dict[key];
     }
     const defaultDict = I18N_DATA.tr;
@@ -4083,7 +4408,7 @@ class I18nManager {
   }
 
   setLang(lang) {
-    if (lang !== 'tr' && lang !== 'en') return;
+    if (!SUPPORTED_LANGUAGES.includes(lang)) return;
     this.currentLang = lang;
     try {
       localStorage.setItem('partycraft_lang', lang);
@@ -5096,12 +5421,12 @@ const DICE_SKINS = {
 };
 
 const TITLES = [
-  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', level: 1 },
-  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', level: 3 },
-  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', level: 6 },
-  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', level: 10 },
-  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', level: 15 },
-  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', level: 22 }
+  { id: 't1', title: 'Acemi Gezgin', title_en: 'Novice Explorer', title_de: 'Neuer Entdecker', title_es: 'Explorador Novato', title_fr: 'Explorateur Novice', level: 1 },
+  { id: 't2', title: 'Şanslı Tilki', title_en: 'Lucky Fox', title_de: 'Glücksfuchs', title_es: 'Zorro Afortunado', title_fr: 'Renard Chanceux', level: 3 },
+  { id: 't3', title: 'Zar Cambazı', title_en: 'Dice Acrobat', title_de: 'Würfel-Akrobat', title_es: 'Acróbata del Dado', title_fr: 'Acrobate du Dé', level: 6 },
+  { id: 't4', title: 'Tuzak Bükücü', title_en: 'Trap Bender', title_de: 'Fallenmeister', title_es: 'Domador de Trampas', title_fr: 'Maître des Pièges', level: 10 },
+  { id: 't5', title: 'Yıldız Avcısı', title_en: 'Star Hunter', title_de: 'Sternenjäger', title_es: 'Cazador de Estrellas', title_fr: 'Chasseur d\'Étoiles', level: 15 },
+  { id: 't6', title: 'Parti Efsanesi', title_en: 'Party Legend', title_de: 'Party-Legende', title_es: 'Leyenda de la Fiesta', title_fr: 'Légende de la Fête', level: 22 }
 ];
 
 const EMOTE_DEFS = {
@@ -5259,10 +5584,14 @@ class ProgressionManager {
 
   getDisplayTitle(titleStr) {
     const tStr = titleStr || this.profile.title || 'Acemi Gezgin';
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
-    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr);
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const match = TITLES.find(t => t.title === tStr || t.title_en === tStr || t.title_de === tStr || t.title_es === tStr || t.title_fr === tStr);
     if (match) {
-      return isEn ? match.title_en : match.title;
+      if (lang === 'en') return match.title_en;
+      if (lang === 'de') return match.title_de;
+      if (lang === 'es') return match.title_es;
+      if (lang === 'fr') return match.title_fr;
+      return match.title;
     }
     return tStr;
   }
@@ -5399,7 +5728,9 @@ const SHOP_ITEMS = [
   { id: 'shield', name: 'Manyetik Kalkan', cost: 8, desc: 'Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.', icon: 'shield' },
   { id: 'magnet', name: 'Altın Mıknatısı', cost: 10, desc: 'Bütün rakiplerden 4\'er altın çeker!', icon: 'magnet' },
   { id: 'banana', name: 'Muz Kabuğu', cost: 5, desc: 'Bulunduğun karoya tuzak kur; üstüne basan 3 adım geri kayar!', icon: 'banana' },
-  { id: 'swap_wand', name: 'Takas Asası', cost: 15, desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!', icon: 'refresh-cw' }
+  { id: 'swap_wand', name: 'Takas Asası', cost: 15, desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!', icon: 'refresh-cw' },
+  { id: 'ghost_cloak', name: 'Hayalet Pelerin', cost: 9, desc: '2 tur boyunca hiçbir tuzaktan veya cezadan etkilenmezsin!', icon: 'shield' },
+  { id: 'lucky_die', name: 'Şanslı Altın Zar', cost: 14, desc: 'Sıradaki zarda 1-6 arasında istediğin sayıyı sen seçersin!', icon: 'dices' }
 ];
 
 class BoardRenderer {
@@ -7654,6 +7985,9 @@ class MiniGameManager {
       case 'memory_matrix':
         this.runMemoryMatrix(minigameData);
         break;
+      case 'timing_hammer':
+        this.runTimingHammer(minigameData);
+        break;
       default:
         this.runCoinCatch(minigameData);
         break;
@@ -8200,6 +8534,180 @@ class MiniGameManager {
       AudioPlayer.playCountdown(timeLeft <= 3);
 
       if (timeLeft <= 0) {
+        this.end();
+      }
+    }, 1000);
+  }
+
+  runTimingHammer(data) {
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const titles = {
+      tr: 'Güç Çekici & Hassas Zamanlama',
+      en: 'Timing Hammer & Power Striker',
+      de: 'Krafthammer & Präzision',
+      es: 'Martillo de Fuerza y Precisión',
+      fr: 'Marteau de Force & Précision'
+    };
+    const descs = {
+      tr: 'Gösterge tam tepedeki %100 altın zili gösterdiğinde VUR! (3 Vuruş Hakkın Var)',
+      en: 'Hit when the power meter reaches the 100% Golden Bell! (3 Hits)',
+      de: 'Triff, wenn die Anzeige die 100% Goldene Glocke erreicht! (3 Schläge)',
+      es: '¡Golpea cuando el medidor llegue al 100% de la Campana Dorada! (3 Golpes)',
+      fr: 'Frappez quand la jauge atteint la Cloche Dorée 100% ! (3 Coups)'
+    };
+    const hitBtnLabels = {
+      tr: '🔨 VUR! (TIKLA)',
+      en: '🔨 HIT! (TAP)',
+      de: '🔨 SCHLAGEN! (TIPPEN)',
+      es: '🔨 ¡GOLPEAR! (TOCAR)',
+      fr: '🔨 FRAPPER ! (CLIQUER)'
+    };
+    const attemptsLabels = {
+      tr: 'Kalan Vuruş',
+      en: 'Hits Left',
+      de: 'Schläge übrig',
+      es: 'Intentos restantes',
+      fr: 'Coups restants'
+    };
+
+    let timeLeft = 12;
+    let attemptsLeft = 3;
+    let animId = null;
+    let currentPower = 0;
+    let direction = 1;
+    let speed = 2.4;
+    let canHit = true;
+
+    this.container.innerHTML = `
+      <div class="minigame-card text-center" style="max-width: 440px;">
+        <div class="mg-stakes-badge">🏆 1.ye +15 🪙 & Eşya!   💀 Sonuncuya -5 🪙 Ceza!</div>
+        <h2>🔨 ${titles[lang] || titles.tr}</h2>
+        <p>${descs[lang] || descs.tr}</p>
+        <div class="minigame-stats">
+          <div class="badge-time">⏱️ <span id="th-timer">${timeLeft}</span>s</div>
+          <div class="badge-score">🎯 <span id="th-attempts">${attemptsLeft}</span> ${attemptsLabels[lang] || attemptsLabels.tr}</div>
+          <div class="badge-score">🪙 Skor: <span id="th-score">0</span></div>
+        </div>
+
+        <div class="hammer-striker-wrapper" style="margin: 16px auto; width: 100%; max-width: 340px; background: #0F172A; border-radius: 16px; padding: 14px; box-sizing: border-box; border: 3px solid #334155; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+          <!-- Top Bell -->
+          <div class="striker-bell" id="striker-bell" style="font-size: 32px; filter: drop-shadow(0 2px 6px rgba(234,179,8,0.5)); transition: transform 0.15s ease;">🔔 100</div>
+          
+          <!-- Track & Bar -->
+          <div class="striker-track" style="position: relative; height: 32px; background: #1E293B; border-radius: 12px; margin: 12px 0; overflow: hidden; border: 2px solid #475569;">
+            <div id="striker-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3B82F6 0%, #10B981 60%, #F59E0B 85%, #EF4444 95%, #FACC15 100%); transition: none; border-radius: 10px;"></div>
+            <div style="position: absolute; right: 0; top: 0; width: 8%; height: 100%; background: rgba(254, 240, 138, 0.4); border-left: 2px dashed #FEF08A;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #94A3B8; padding: 0 4px;">
+            <span>0%</span>
+            <span>50%</span>
+            <span>85%</span>
+            <span style="color: #FACC15;">🎯 100% ZİL</span>
+          </div>
+
+          <!-- Impact Message -->
+          <div id="th-feedback" style="min-height: 28px; margin-top: 10px; font-weight: 900; font-size: 16px; color: #F8FAFC;">
+            Zamanı yakala ve vur!
+          </div>
+        </div>
+
+        <button class="mash-btn" id="btn-hammer-hit" style="width: 100%; max-width: 320px; font-size: 20px; padding: 14px; background: #EF4444; color: white; border: none; border-radius: 16px; box-shadow: 0 6px 0 #B91C1C; cursor: pointer; touch-action: manipulation; user-select: none;">
+          ${hitBtnLabels[lang] || hitBtnLabels.tr}
+        </button>
+      </div>
+    `;
+
+    const fillElem = document.getElementById('striker-fill');
+    const bellElem = document.getElementById('striker-bell');
+    const scoreElem = document.getElementById('th-score');
+    const attemptsElem = document.getElementById('th-attempts');
+    const feedbackElem = document.getElementById('th-feedback');
+    const timerElem = document.getElementById('th-timer');
+    const hitBtn = document.getElementById('btn-hammer-hit');
+
+    // Oscillation loop
+    const loop = () => {
+      if (this.gameFinished) return;
+      currentPower += direction * speed;
+      if (currentPower >= 100) {
+        currentPower = 100;
+        direction = -1;
+      } else if (currentPower <= 0) {
+        currentPower = 0;
+        direction = 1;
+      }
+      if (fillElem) fillElem.style.width = `${currentPower}%`;
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
+
+    const onHit = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!canHit || this.gameFinished || attemptsLeft <= 0) return;
+      canHit = false;
+
+      let hitScore = 0;
+      let text = '';
+      if (currentPower >= 96) {
+        hitScore = 50;
+        text = '🔔 DİNG DİNG! 100 PUANLIK MÜKEMMEL VURUŞ! (+50)';
+        AudioPlayer.playStarFanfare();
+        if (bellElem) {
+          bellElem.style.transform = 'scale(1.4) rotate(15deg)';
+          setTimeout(() => { if (bellElem) bellElem.style.transform = 'scale(1)'; }, 300);
+        }
+      } else if (currentPower >= 85) {
+        hitScore = 35;
+        text = '💥 GÜÇLÜ VURUŞ! Harika zamanlama! (+35)';
+        AudioPlayer.playCoinSound();
+      } else if (currentPower >= 60) {
+        hitScore = 20;
+        text = '⚡ Fena Değil! (+20)';
+        AudioPlayer.playClick();
+      } else {
+        hitScore = 10;
+        text = '💨 Zayıf Vuruş! (+10)';
+        AudioPlayer.playClick();
+      }
+
+      this.score += hitScore;
+      scoreElem.innerText = this.score;
+      feedbackElem.innerText = text;
+      attemptsLeft--;
+      attemptsElem.innerText = attemptsLeft;
+
+      if (attemptsLeft <= 0) {
+        setTimeout(() => {
+          if (animId) cancelAnimationFrame(animId);
+          this.end();
+        }, 1100);
+      } else {
+        speed += 0.8;
+        setTimeout(() => {
+          canHit = true;
+          if (feedbackElem) feedbackElem.innerText = 'Sıradaki vuruşa hazırlan!';
+        }, 700);
+      }
+    };
+
+    hitBtn.addEventListener('pointerdown', onHit);
+
+    const keyHandler = (e) => {
+      if (e.code === 'Space') {
+        onHit(e);
+      }
+    };
+    window.addEventListener('keydown', keyHandler);
+
+    this.timerInterval = setInterval(() => {
+      timeLeft--;
+      if (timerElem) timerElem.innerText = timeLeft;
+      AudioPlayer.playCountdown(timeLeft <= 3);
+
+      if (timeLeft <= 0) {
+        window.removeEventListener('keydown', keyHandler);
+        if (animId) cancelAnimationFrame(animId);
         this.end();
       }
     }, 1000);
@@ -9302,7 +9810,8 @@ class LocalRoom {
       { id: 'reflex_pop', title: 'Hızlı Parmak / Refleks', desc: 'Yeşil sinyal geldiğinde ilk tıklayan kazanır!', duration: 10 },
       { id: 'balloon_mash', title: 'Lego Balon Şişirme', desc: 'En hızlı tıkla, balonunu ilk patlatan sen ol!', duration: 12 },
       { id: 'lucky_chests', title: 'Hazine Sandığı Kumarı', desc: '3 gizemli sandıktan birini seç! Ya büyük ödül ya da tuzak!', duration: 11 },
-      { id: 'memory_matrix', title: 'Parti Hafızası & Hızlı Renkler', desc: 'Yanan renk dizisini hafızanda tut ve hatasız tekrarla!', duration: 14 }
+      { id: 'memory_matrix', title: 'Parti Hafızası & Hızlı Renkler', desc: 'Yanan renk dizisini hafızanda tut ve hatasız tekrarla!', duration: 14 },
+      { id: 'timing_hammer', title: 'Güç Çekici & Hassas Zamanlama', desc: 'Tam ortadaki 100 puanlık altın zili tuttur!', duration: 12 }
     ];
 
     const chosenGame = games[Math.floor(Math.random() * games.length)];
@@ -9614,6 +10123,7 @@ class ClientEngine {
     this.ws = null;
     this.connected = false;
     this.backendType = 'offline'; // 'php', 'ws', 'offline'
+    this.apiEndpoint = 'api.php';
     this.isStandalone = true;
     this.roomId = null;
     this.player = null; // My player object
@@ -9641,30 +10151,41 @@ class ClientEngine {
       return;
     }
 
-    // 2. Try checking PHP Backend (api.php)
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1800);
-      const res = await fetch('api.php?action=health', {
-        signal: controller.signal,
-        cache: 'no-store'
-      });
-      clearTimeout(timeoutId);
+    // 2. Try checking PHP Backend (probing api.php, index.php, or current endpoint)
+    const endpointsToProbe = ['api.php', 'index.php'];
+    if (window.location.pathname.endsWith('.php')) {
+      endpointsToProbe.unshift(window.location.pathname);
+    } else {
+      endpointsToProbe.push('?action=health');
+    }
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.status === 'ok') {
-          console.log('✅ PHP Çok Oyunculu Arka Ucu aktif ve çalışıyor! Depolama:', data.storage);
-          this.backendType = 'php';
-          this.isStandalone = false;
-          this.connected = true;
-          if (pill) pill.className = 'server-status-pill online';
-          if (pillText) pillText.innerText = '🟢 Çevrimiçi Çok Oyunculu Mod Aktif (api.php)';
-          return;
+    for (const ep of endpointsToProbe) {
+      try {
+        const url = ep.includes('?') ? ep : `${ep}?action=health`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1600);
+        const res = await fetch(url, {
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.status === 'ok') {
+            console.log('✅ PHP Çok Oyunculu Arka Ucu aktif! Uç nokta:', ep);
+            this.apiEndpoint = ep.split('?')[0] || 'index.php';
+            this.backendType = 'php';
+            this.isStandalone = false;
+            this.connected = true;
+            if (pill) pill.className = 'server-status-pill online';
+            if (pillText) pillText.innerText = '🟢 Çevrimiçi Çok Oyunculu Mod Aktif';
+            return;
+          }
         }
+      } catch (e) {
+        // Continue to next probe
       }
-    } catch (e) {
-      // PHP not available on this host (e.g. GitHub Pages or static host)
     }
 
     // 3. Fallback to offline standalone LocalServer
@@ -9702,10 +10223,17 @@ class ClientEngine {
   // API & Communication Layer
   // ---------------------------------------------------------------------------
 
+  getApiUrl(actionParams) {
+    const ep = this.apiEndpoint || 'api.php';
+    const glue = ep.includes('?') ? '&' : '?';
+    return `${ep}${glue}action=${actionParams}`;
+  }
+
   async apiPost(action, payload = {}) {
     try {
       const sessId = this.player ? this.player.sessionId : (PlayerProgression.profile ? PlayerProgression.profile.sessionId : 's_guest');
-      const res = await fetch(`api.php?action=${action}`, {
+      const targetUrl = this.getApiUrl(action);
+      const res = await fetch(targetUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -9733,7 +10261,8 @@ class ClientEngine {
       if (!this.roomId || this.backendType !== 'php') return;
       try {
         const sessId = this.player ? this.player.sessionId : PlayerProgression.profile.sessionId;
-        const res = await fetch(`api.php?action=get_state&roomId=${encodeURIComponent(this.roomId)}&sessionId=${encodeURIComponent(sessId)}`, {
+        const targetUrl = this.getApiUrl(`get_state&roomId=${encodeURIComponent(this.roomId)}&sessionId=${encodeURIComponent(sessId)}`);
+        const res = await fetch(targetUrl, {
           cache: 'no-store'
         });
         if (res.ok) {
@@ -10792,17 +11321,23 @@ class UIEngine {
   }
 
   renderGameHeader(state) {
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const roundLabels = { tr: 'Tur', en: 'Round', de: 'Runde', es: 'Ronda', fr: 'Manche' };
+    const finalLabels = { tr: 'FİNAL TURU!', en: 'FINAL ROUND!', de: 'FINALE RUNDE!', es: '¡RONDA FINAL!', fr: 'MANCHE FINALE !' };
+    const leftLabels = { tr: 'Tur Kaldı', en: 'Rounds Left', de: 'Runden übrig', es: 'Rondas restantes', fr: 'Tours restants' };
+    const yourTurnLabels = { tr: '✨ Sıra Sende!', en: '✨ Your Turn!', de: '✨ Du bist dran!', es: '✨ ¡Tu Turno!', fr: '✨ À votre tour !' };
+    const turnPrefixLabels = { tr: 'Sıra: ', en: 'Turn: ', de: 'Zug: ', es: 'Turno: ', fr: 'Tour : ' };
+
     const current = state.currentRound || 1;
     const total = state.totalRounds || 10;
     const remaining = Math.max(0, total - current);
 
     const roundElem = document.getElementById('hud-round');
-    if (roundElem) roundElem.innerText = `${isEn ? 'Round' : 'Tur'} ${current} / ${total}`;
+    if (roundElem) roundElem.innerText = `${roundLabels[lang] || 'Tur'} ${current} / ${total}`;
 
     const remElem = document.getElementById('hud-round-remaining');
     if (remElem) {
-      remElem.innerText = (remaining === 0 ? (isEn ? 'FINAL ROUND!' : 'FİNAL TURU!') : (isEn ? `${remaining} Rounds Left` : `${remaining} Tur Kaldı`));
+      remElem.innerText = (remaining === 0 ? (finalLabels[lang] || 'FİNAL TURU!') : `${remaining} ${leftLabels[lang] || 'Tur Kaldı'}`);
       remElem.classList.toggle('final-pulse', remaining <= 1);
     }
 
@@ -10834,8 +11369,8 @@ class UIEngine {
     if (activePlayer) {
       const isMe = (GameClient.player && GameClient.player.sessionId === activePlayer.sessionId);
       const turnLabel = isMe 
-        ? (isEn ? '✨ Your Turn!' : '✨ Sıra Sende!') 
-        : `${isEn ? 'Turn: ' : 'Sıra: '}${activePlayer.name}`;
+        ? (yourTurnLabels[lang] || '✨ Sıra Sende!') 
+        : `${turnPrefixLabels[lang] || 'Sıra: '}${activePlayer.name}`;
       document.getElementById('hud-turn-name').innerText = turnLabel;
       document.getElementById('hud-turn-avatar').style.borderColor = activePlayer.color;
     }
@@ -11071,15 +11606,29 @@ class UIEngine {
     const modal = document.getElementById('modal-tile-inspector');
     modal.classList.remove('hidden');
 
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const stepsDict = {
+      tr: `${stepsAway} adım mesafede`,
+      en: `${stepsAway} steps away`,
+      de: `${stepsAway} Schritte entfernt`,
+      es: `a ${stepsAway} casillas de distancia`,
+      fr: `à ${stepsAway} cases de distance`
+    };
+    const emptyDict = {
+      tr: 'Şu an bu karoda kimse yok.',
+      en: 'No players on this tile.',
+      de: 'Derzeit keine Spieler auf diesem Feld.',
+      es: 'No hay jugadores en esta casilla.',
+      fr: 'Aucun joueur sur cette case.'
+    };
     document.getElementById('ti-tile-title').innerText = `${index}. ${tile.title}`;
     document.getElementById('ti-tile-desc').innerText = tile.desc;
-    document.getElementById('ti-tile-steps').innerText = isEn ? `${stepsAway} steps away` : `${stepsAway} adım mesafede`;
+    document.getElementById('ti-tile-steps').innerText = stepsDict[lang] || stepsDict.tr;
 
     const playersList = document.getElementById('ti-players-here');
     playersList.innerHTML = '';
     if (playersOnTile.length === 0) {
-      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${isEn ? 'No players on this tile.' : 'Şu an bu karoda kimse yok.'}</span>`;
+      playersList.innerHTML = `<span style="color:#94A3B8; font-size:12px;">${emptyDict[lang] || emptyDict.tr}</span>`;
     } else {
       playersOnTile.forEach(p => {
         const pBadge = document.createElement('span');
@@ -11396,12 +11945,31 @@ class UIEngine {
     if (!modal) return;
     modal.classList.remove('hidden');
 
-    const isEn = (window.i18n && window.i18n.getLang() === 'en');
-    const atText = isEn ? 'is on Fortune Tile!' : 'Şans Karosunda!';
-    const spinText = isEn ? 'Spinning the wheel...' : 'Çark dönüyor...';
-    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atText}`;
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const atTextDict = {
+      tr: 'Şans Karosunda!',
+      en: 'is on Fortune Tile!',
+      de: 'ist auf dem Glücksfeld!',
+      es: '¡está en la casilla de la suerte!',
+      fr: 'est sur la case chance !'
+    };
+    const spinTextDict = {
+      tr: 'Çark dönüyor...',
+      en: 'Spinning the wheel...',
+      de: 'Das Rad dreht sich...',
+      es: 'La ruleta está girando...',
+      fr: 'La roue tourne...'
+    };
+    const diceLabels = { tr: '🎲 Çift Zar', en: '🎲 2x Dice', de: '🎲 2x Würfel', es: '🎲 2x Dado', fr: '🎲 2x Dés' };
+    const shieldLabels = { tr: '🛡️ Kalkan', en: '🛡️ Shield', de: '🛡️ Schild', es: '🛡️ Escudo', fr: '🛡️ Bouclier' };
+    const rocketLabels = { tr: '🚀 Roket', en: '🚀 Rocket', de: '🚀 Rakete', es: '🚀 Cohete', fr: '🚀 Fusée' };
+    const starLabels = { tr: '⭐ Yıldız', en: '⭐ Star', de: '⭐ Stern', es: '⭐ Estrella', fr: '⭐ Étoile' };
+    const chestLabels = { tr: '🎁 Sandık', en: '🎁 Chest', de: '🎁 Kiste', es: '🎁 Cofre', fr: '🎁 Coffre' };
+    const crownLabels = { tr: '👑 Taç', en: '👑 Crown', de: '👑 Krone', es: '👑 Corona', fr: '👑 Couronne' };
+
+    document.getElementById('mystery-player-text').innerText = `${data.playerName} ${atTextDict[lang] || atTextDict.tr}`;
     const resultBox = document.getElementById('mystery-event-result');
-    resultBox.innerText = spinText;
+    resultBox.innerText = spinTextDict[lang] || spinTextDict.tr;
 
     const canvas = document.getElementById('roulette-canvas');
     const pointer = document.getElementById('roulette-pointer');
@@ -11415,13 +11983,13 @@ class UIEngine {
 
     const segments = [
       { text: '+15 🪙', color: '#F59E0B', textColor: '#FFFFFF' },
-      { text: isEn ? '🎲 2x Dice' : '🎲 Çift Zar', color: '#3B82F6', textColor: '#FFFFFF' },
-      { text: isEn ? '🛡️ Shield' : '🛡️ Kalkan', color: '#10B981', textColor: '#FFFFFF' },
-      { text: isEn ? '🚀 Rocket' : '🚀 Roket', color: '#EC4899', textColor: '#FFFFFF' },
+      { text: diceLabels[lang] || diceLabels.tr, color: '#3B82F6', textColor: '#FFFFFF' },
+      { text: shieldLabels[lang] || shieldLabels.tr, color: '#10B981', textColor: '#FFFFFF' },
+      { text: rocketLabels[lang] || rocketLabels.tr, color: '#EC4899', textColor: '#FFFFFF' },
       { text: '+10 🪙', color: '#F97316', textColor: '#FFFFFF' },
-      { text: isEn ? '⭐ Star' : '⭐ Yıldız', color: '#EAB308', textColor: '#FFFFFF' },
-      { text: isEn ? '🎁 Chest' : '🎁 Sandık', color: '#8B5CF6', textColor: '#FFFFFF' },
-      { text: isEn ? '👑 Crown' : '👑 Taç', color: '#06B6D4', textColor: '#FFFFFF' }
+      { text: starLabels[lang] || starLabels.tr, color: '#EAB308', textColor: '#FFFFFF' },
+      { text: chestLabels[lang] || chestLabels.tr, color: '#8B5CF6', textColor: '#FFFFFF' },
+      { text: crownLabels[lang] || crownLabels.tr, color: '#06B6D4', textColor: '#FFFFFF' }
     ];
 
     const numSegs = segments.length;
@@ -11507,7 +12075,14 @@ class UIEngine {
       } else {
         // Spin finished
         AudioPlayer.playStarFanfare();
-        const wonText = isEn ? 'Big Prize Won!' : 'Büyük Ödül Kazandın!';
+        const wonDict = {
+          tr: 'Büyük Ödül Kazandın!',
+          en: 'Big Prize Won!',
+          de: 'Großer Preis gewonnen!',
+          es: '¡Ganaste el Gran Premio!',
+          fr: 'Grand Prix remporté !'
+        };
+        const wonText = wonDict[lang] || wonDict.tr;
         resultBox.innerText = `✨ ${data.eventName || wonText}!`;
         this.triggerConfetti();
         setTimeout(() => {
@@ -11519,6 +12094,72 @@ class UIEngine {
     requestAnimationFrame(animateSpin);
   }
 
+  getItemInfo(itemId, lang) {
+    const itemTranslations = {
+      double_dice: {
+        tr: { name: 'Çift Zar', desc: 'Bir sonraki turda 2 zar birden atarsın (2-12 adım).' },
+        en: { name: 'Double Dice', desc: 'Roll 2 dice at once on your next turn (2-12 steps).' },
+        de: { name: 'Doppelwürfel', desc: 'Würfle im nächsten Zug mit 2 Würfeln (2-12 Felder).' },
+        es: { name: 'Dado Doble', desc: 'Tira 2 dados a la vez en tu próximo turno (2-12 casillas).' },
+        fr: { name: 'Double Dé', desc: 'Lancez 2 dés à la fois lors de votre prochain tour (2-12 cases).' }
+      },
+      rocket: {
+        tr: { name: 'Süper Roket', desc: 'Hedefine doğru direkt 7 adım uçar!' },
+        en: { name: 'Super Rocket', desc: 'Blast forward 7 steps towards your goal!' },
+        de: { name: 'Super-Rakete', desc: 'Fliege 7 Felder direkt nach vorne!' },
+        es: { name: 'Súper Cohete', desc: '¡Vuela 7 casillas hacia adelante!' },
+        fr: { name: 'Super Fusée', desc: 'Foncez de 7 cases directement vers l\'avant !' }
+      },
+      shield: {
+        tr: { name: 'Manyetik Kalkan', desc: 'Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.' },
+        en: { name: 'Magnetic Shield', desc: 'Protects against traps and coin steals for 2 turns.' },
+        de: { name: 'Magnetschild', desc: 'Schützt 2 Runden vor Fallen und Münzdiebstahl.' },
+        es: { name: 'Escudo Magnético', desc: 'Protege contra trampas y robos durante 2 turnos.' },
+        fr: { name: 'Bouclier Magnétique', desc: 'Protège contre les pièges et les vols pendant 2 tours.' }
+      },
+      magnet: {
+        tr: { name: 'Altın Mıknatısı', desc: 'Bütün rakiplerden 4\'er altın çeker!' },
+        en: { name: 'Gold Magnet', desc: 'Draws 4 coins from every opponent!' },
+        de: { name: 'Goldmagnet', desc: 'Zieht 4 Münzen von jedem Gegner ab!' },
+        es: { name: 'Imán de Oro', desc: '¡Roba 4 monedas a cada oponente!' },
+        fr: { name: 'Aimant à Pièces', desc: 'Aspire 4 pièces de chaque adversaire !' }
+      },
+      banana: {
+        tr: { name: 'Muz Kabuğu', desc: 'Bulunduğun karoya tuzak kur; üstüne basan 3 adım geri kayar!' },
+        en: { name: 'Banana Peel', desc: 'Lay a slippery trap; rivals slip back 3 steps!' },
+        de: { name: 'Bananenschale', desc: 'Platziere eine Falle; wer drauftritt, rutscht 3 Felder zurück!' },
+        es: { name: 'Piel de Plátano', desc: 'Pon una trampa; ¡los rivales resbalan 3 casillas atrás!' },
+        fr: { name: 'Peau de Banane', desc: 'Posez un piège ; les rivaux glissent de 3 cases en arrière !' }
+      },
+      swap_wand: {
+        tr: { name: 'Takas Asası', desc: 'İstediğin bir rakiple haritadaki yerlerini takas et!' },
+        en: { name: 'Warp Wand', desc: 'Swap board positions with an opponent of your choice!' },
+        de: { name: 'Tauschstab', desc: 'Tausche deine Position mit einem beliebigen Gegner!' },
+        es: { name: 'Varita de Canje', desc: '¡Intercambia casillas con el oponente que elijas!' },
+        fr: { name: 'Baguette d\'Échange', desc: 'Échangez votre place sur le plateau avec un rival !' }
+      },
+      ghost_cloak: {
+        tr: { name: 'Hayalet Pelerin', desc: '2 tur boyunca hiçbir tuzaktan veya cezadan etkilenmezsin!' },
+        en: { name: 'Ghost Cloak', desc: 'Bypass all traps, police and penalties for 2 turns!' },
+        de: { name: 'Geisterumhang', desc: 'Ignoriere 2 Runden lang alle Fallen und Strafen!' },
+        es: { name: 'Capa Fantasma', desc: '¡Inmune a trampas, multas y cárcel por 2 turnos!' },
+        fr: { name: 'Cape Fantôme', desc: 'Traversez pièges et pénalités indemne pendant 2 tours !' }
+      },
+      lucky_die: {
+        tr: { name: 'Şanslı Altın Zar', desc: 'Sıradaki zarda 1-6 arasında istediğin sayıyı sen seçersin!' },
+        en: { name: 'Lucky Gold Die', desc: 'Pick your exact roll from 1 to 6 on your next turn!' },
+        de: { name: 'Glückswürfel', desc: 'Wähle deine exakte Augenzahl (1-6) beim nächsten Wurf!' },
+        es: { name: 'Dado Dorado de la Suerte', desc: '¡Elige tu número exacto del 1 al 6 en el próximo tiro!' },
+        fr: { name: 'Dé d\'Or Porte-Bonheur', desc: 'Choisissez votre score exact de 1 à 6 au prochain lancer !' }
+      }
+    };
+    const curLang = lang || (window.i18n ? window.i18n.getLang() : 'tr');
+    if (itemTranslations[itemId] && itemTranslations[itemId][curLang]) {
+      return itemTranslations[itemId][curLang];
+    }
+    return { name: itemId, desc: '' };
+  }
+
   openShopModal(items, isCurrentPlayer) {
     const modal = document.getElementById('modal-shop');
     modal.classList.remove('hidden');
@@ -11526,19 +12167,23 @@ class UIEngine {
     const list = document.getElementById('shop-items-grid');
     list.innerHTML = '';
 
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const goldSuffix = { tr: 'Altın', en: 'Coins', de: 'Münzen', es: 'Monedas', fr: 'Pièces' };
+
     const myPlayer = GameClient.state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId);
     const myCoins = myPlayer ? myPlayer.coins : 0;
 
     items.forEach(item => {
       const canAfford = myCoins >= item.cost;
+      const trans = this.getItemInfo(item.id, lang);
       const card = document.createElement('div');
       card.className = `shop-item-card ${!canAfford ? 'disabled' : ''}`;
       card.innerHTML = `
         <div class="shop-item-icon">${getIcon(item.icon, '🎁')}</div>
-        <div class="shop-item-name">${item.name}</div>
-        <div class="shop-item-desc">${item.desc}</div>
+        <div class="shop-item-name">${trans.name || item.name}</div>
+        <div class="shop-item-desc">${trans.desc || item.desc}</div>
         <button class="shop-buy-btn" ${(!canAfford || !isCurrentPlayer) ? 'disabled' : ''}>
-          🪙 ${item.cost} Altın
+          🪙 ${item.cost} ${goldSuffix[lang] || 'Altın'}
         </button>
       `;
 
@@ -11565,25 +12210,36 @@ class UIEngine {
     const list = document.getElementById('inventory-items-grid');
     list.innerHTML = '';
 
+    const lang = (window.i18n && window.i18n.getLang()) ? window.i18n.getLang() : 'tr';
+    const emptyMsgDict = {
+      tr: 'Çantan şu an boş! Dükkandan ya da şans kutularından eşya topla.',
+      en: 'Your bag is empty! Collect items from the shop or fortune tiles.',
+      de: 'Dein Inventar ist leer! Sammle Gegenstände im Laden oder auf Glücksfeldern.',
+      es: '¡Tu mochila está vacía! Consigue objetos en la tienda o casillas de suerte.',
+      fr: 'Votre sac est vide ! Obtenez des objets à la boutique ou sur les cases chance.'
+    };
+    const useBtnDict = { tr: 'Kullan', en: 'Use', de: 'Nutzen', es: 'Usar', fr: 'Utiliser' };
+
     const state = GameClient.state;
     const myPlayer = state ? state.players.find(p => GameClient.player && p.sessionId === GameClient.player.sessionId) : null;
     const activePlayer = state ? state.players[state.turnIndex] : null;
     const isMyTurn = (myPlayer && activePlayer && myPlayer.id === activePlayer.id);
 
     if (!myPlayer || myPlayer.inventory.length === 0) {
-      list.innerHTML = '<div class="empty-inv-msg">Çantan şu an boş! Dükkandan ya da şans kutularından eşya topla.</div>';
+      list.innerHTML = `<div class="empty-inv-msg">${emptyMsgDict[lang] || emptyMsgDict.tr}</div>`;
     } else {
       myPlayer.inventory.forEach(itemId => {
         const itemDef = SHOP_ITEMS.find(i => i.id === itemId) || { name: itemId, icon: 'dices', desc: 'Özel eşya' };
+        const trans = this.getItemInfo(itemId, lang);
         const card = document.createElement('div');
         card.className = 'inventory-item-card';
         card.innerHTML = `
           <div class="inv-icon">${getIcon(itemDef.icon, '🎁')}</div>
           <div class="inv-info">
-            <div class="inv-name">${itemDef.name}</div>
-            <div class="inv-desc">${itemDef.desc}</div>
+            <div class="inv-name">${trans.name || itemDef.name}</div>
+            <div class="inv-desc">${trans.desc || itemDef.desc}</div>
           </div>
-          <button class="inv-use-btn" ${!isMyTurn ? 'disabled' : ''}>Kullan</button>
+          <button class="inv-use-btn" ${!isMyTurn ? 'disabled' : ''}>${useBtnDict[lang] || 'Kullan'}</button>
         `;
 
         card.querySelector('.inv-use-btn').onclick = () => {

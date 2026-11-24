@@ -236,7 +236,9 @@ $SHOP_ITEMS = [
     ['id' => 'shield', 'name' => 'Manyetik Kalkan', 'cost' => 8, 'desc' => 'Tuzaklara ve altın çalma hamlelerine karşı 2 tur korur.', 'icon' => 'shield'],
     ['id' => 'magnet', 'name' => 'Altın Mıknatısı', 'cost' => 10, 'desc' => "Bütün rakiplerden 4'er altın çeker!", 'icon' => 'magnet'],
     ['id' => 'banana', 'name' => 'Muz Kabuğu', 'cost' => 5, 'desc' => 'Bulunduğun karoya tuzak kur; üstüne basan 3 adım geri kayar!', 'icon' => 'banana'],
-    ['id' => 'swap_wand', 'name' => 'Takas Asası', 'cost' => 15, 'desc' => 'İstediğin bir rakiple haritadaki yerlerini takas et!', 'icon' => 'refresh-cw']
+    ['id' => 'swap_wand', 'name' => 'Takas Asası', 'cost' => 15, 'desc' => 'İstediğin bir rakiple haritadaki yerlerini takas et!', 'icon' => 'refresh-cw'],
+    ['id' => 'ghost_cloak', 'name' => 'Hayalet Pelerin', 'cost' => 9, 'desc' => '2 tur boyunca hiçbir tuzaktan veya cezadan etkilenmezsin!', 'icon' => 'shield'],
+    ['id' => 'lucky_die', 'name' => 'Şanslı Altın Zar', 'cost' => 14, 'desc' => 'Sıradaki zarda 1-6 arasında istediğin sayıyı sen seçersin!', 'icon' => 'dices']
 ];
 
 // File Locking Room Manager
@@ -581,6 +583,18 @@ if ($action === 'get_state') {
                     if ($room['currentRound'] > $room['totalRounds']) {
                         $room['state'] = 'gameover';
                         addRoomLog($room, "🏆 PARTİ TAMAMLANDI!");
+                    } else {
+                        $minigamePool = [
+                            ['id' => 'coin_catch', 'title' => 'Gökten Altın Yağmuru', 'desc' => 'Düşen altınları sepete topla, bombalardan kaç!', 'duration' => 15],
+                            ['id' => 'reflex_pop', 'title' => 'Hızlı Parmak / Refleks', 'desc' => 'Yeşil sinyal geldiğinde ilk tıklayan kazanır!', 'duration' => 10],
+                            ['id' => 'balloon_mash', 'title' => 'Lego Balon Şişirme', 'desc' => 'En hızlı tıkla, balonunu ilk patlatan sen ol!', 'duration' => 12],
+                            ['id' => 'lucky_chests', 'title' => 'Hazine Sandığı Kumarı', 'desc' => '3 gizemli sandıktan birini seç! Ya büyük ödül ya da tuzak!', 'duration' => 11],
+                            ['id' => 'memory_matrix', 'title' => 'Parti Hafızası & Hızlı Renkler', 'desc' => 'Yanan renk dizisini hafızanda tut ve hatasız tekrarla!', 'duration' => 14],
+                            ['id' => 'timing_hammer', 'title' => 'Güç Çekici & Hassas Zamanlama', 'desc' => 'Tam ortadaki 100 puanlık altın zili tuttur!', 'duration' => 12]
+                        ];
+                        $chosen = $minigamePool[array_rand($minigamePool)];
+                        $room['minigame'] = $chosen;
+                        addRoomLog($room, "🎮 " . ($room['currentRound'] - 1) . ". Tur bitti! Mini-Oyun: {$chosen['title']}");
                     }
                 }
                 $stateChanged = true;
@@ -607,7 +621,8 @@ if ($action === 'get_state') {
         'board' => $room['board'],
         'players' => $room['players'],
         'log' => $room['log'],
-        'lastAction' => $room['lastAction']
+        'lastAction' => $room['lastAction'],
+        'minigame' => isset($room['minigame']) ? $room['minigame'] : null
     ]);
 }
 
@@ -837,6 +852,18 @@ if ($action === 'roll_dice') {
         if ($room['currentRound'] > $room['totalRounds']) {
             $room['state'] = 'gameover';
             addRoomLog($room, "🏆 PARTİ TAMAMLANDI! Tebrikler kazananlar!");
+        } else {
+            $minigamePool = [
+                ['id' => 'coin_catch', 'title' => 'Gökten Altın Yağmuru', 'desc' => 'Düşen altınları sepete topla, bombalardan kaç!', 'duration' => 15],
+                ['id' => 'reflex_pop', 'title' => 'Hızlı Parmak / Refleks', 'desc' => 'Yeşil sinyal geldiğinde ilk tıklayan kazanır!', 'duration' => 10],
+                ['id' => 'balloon_mash', 'title' => 'Lego Balon Şişirme', 'desc' => 'En hızlı tıkla, balonunu ilk patlatan sen ol!', 'duration' => 12],
+                ['id' => 'lucky_chests', 'title' => 'Hazine Sandığı Kumarı', 'desc' => '3 gizemli sandıktan birini seç! Ya büyük ödül ya da tuzak!', 'duration' => 11],
+                ['id' => 'memory_matrix', 'title' => 'Parti Hafızası & Hızlı Renkler', 'desc' => 'Yanan renk dizisini hafızanda tut ve hatasız tekrarla!', 'duration' => 14],
+                ['id' => 'timing_hammer', 'title' => 'Güç Çekici & Hassas Zamanlama', 'desc' => 'Tam ortadaki 100 puanlık altın zili tuttur!', 'duration' => 12]
+            ];
+            $chosen = $minigamePool[array_rand($minigamePool)];
+            $room['minigame'] = $chosen;
+            addRoomLog($room, "🎮 " . ($room['currentRound'] - 1) . ". Tur bitti! Mini-Oyun: {$chosen['title']}");
         }
     }
     $room['turnStartedAt'] = time();
