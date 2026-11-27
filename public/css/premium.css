@@ -384,6 +384,28 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
 .studio-xp-pill { background: var(--card-2); color: var(--ink); }
 .profile-title-text { color: var(--ink); }
 
+/* Quieter home: no badge, no status line; the character card opens on demand */
+.hero-badge,
+.server-status-pill { display: none !important; }
+.studio-header { display: flex; align-items: center; gap: 10px; }
+.studio-header .studio-badge { margin-right: auto; }
+.studio-edit-toggle {
+  border: 1.5px solid var(--card-edge);
+  background: #FFFBF2;
+  color: var(--ink);
+  font: 700 13px var(--font-ui);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.studio-edit-toggle:hover { background: var(--card-2); }
+.char-studio-card:not(.is-editing) .studio-input-group:not(:first-child) { display: none; }
+.char-studio-card:not(.is-editing) .studio-main-row { align-items: center; }
+
+/* Lobby: the selected thumbnail already says which map; the link is behind "Copy link" */
+.lobby-share-url,
+.lobby-map-badge { display: none !important; }
+
 @media (max-width: 900px) {
   .home-layout { grid-template-columns: 1fr; gap: 28px; }
   .home-stage { padding-top: 0; }
@@ -456,7 +478,95 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   border-color: var(--brass) !important;
   box-shadow: 0 0 0 2px rgba(232, 180, 74, 0.35), 0 14px 30px -14px rgba(232, 180, 74, 0.55);
 }
-.player-hud-card.is-me .hud-pname::after { content: ' (sen)'; color: var(--brass-soft); font-weight: 600; font-family: var(--font-ui); }
+.player-hud-card.is-me { box-shadow: inset 3px 0 0 var(--brass), 0 10px 24px -14px rgba(0, 0, 0, 0.8); }
+
+/* Quiet HUD: one status card, slim player cards, nothing duplicated */
+#hud-map-name,
+.hud-active-turn-box,
+.hud-round-sub,
+.hud-badges-row,
+.hud-event-feed,
+#btn-hud-qr,
+.dock-btn-label,
+.dock-status-bar { display: none !important; }
+/* Header is no longer a bar: just floating chips over the map */
+.game-hud-top {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  height: 56px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+.game-hud-top > * { pointer-events: auto; }
+.hud-round-card {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  padding: 7px 14px !important;
+  border-radius: 999px !important;
+  min-width: 0 !important;
+}
+.hud-round-top { display: flex; align-items: center; }
+.hud-round-card .hud-round-beads { margin-top: 0; flex-wrap: nowrap; }
+.hud-city {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--card);
+  line-height: 1;
+}
+.hud-round-title { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--on-felt-muted); white-space: nowrap; }
+.btn-roll-dice { white-space: nowrap; }
+.hud-effects { margin-left: 4px; font-size: 11px; letter-spacing: 1px; }
+.player-hud-card { padding-top: 6px; padding-bottom: 6px; }
+.btn-hud-leave span:last-child { display: none; }
+.floating-cam-controls { opacity: 0.55; transition: opacity 0.2s; }
+.floating-cam-controls:hover, .floating-cam-controls:focus-within { opacity: 1; }
+.cam-btn { width: 32px; height: 32px; font-size: 15px; }
+
+.roll-kbd {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font: 700 11px var(--font-ui);
+  color: rgba(255, 248, 238, 0.85);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  vertical-align: 2px;
+}
+.btn-roll-dice.is-double { background: linear-gradient(180deg, #F8D27A 0%, var(--brass) 60%, #D49B31 100%); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 5px 0 var(--brass-deep), 0 16px 30px -12px rgba(232, 180, 74, 0.6); }
+.btn-roll-dice.is-double .roll-kbd { color: var(--ink); border-color: rgba(43, 29, 18, 0.3); }
+.btn-roll-dice.is-fixed { background: linear-gradient(180deg, #3CC8B7 0%, var(--teal) 60%, #23998B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 5px 0 var(--teal-deep), 0 16px 30px -12px rgba(43, 179, 163, 0.6); }
+
+/* One-line event ticker above the dock */
+.fx-ticker {
+  position: fixed;
+  left: 50%;
+  bottom: 104px;
+  transform: translate(-50%, 8px);
+  z-index: 70;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(30, 21, 48, 0.88);
+  border: 1px solid var(--felt-line);
+  color: var(--on-felt);
+  font: 600 13px var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+}
+.fx-ticker.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
 .btn-hud-leave {
   background: var(--felt-2);
@@ -646,32 +756,23 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   position: fixed;
   left: 0;
   right: 0;
-  top: 42%;
+  top: 24%;
   z-index: 8500;
   pointer-events: none;
   display: flex;
   justify-content: center;
 }
 .fx-turn-sweep-band {
-  padding: 14px 40px;
-  background: linear-gradient(90deg, transparent, rgba(30, 21, 48, 0.92) 18%, rgba(30, 21, 48, 0.92) 82%, transparent);
-  border-top: 1px solid rgba(232, 180, 74, 0.5);
-  border-bottom: 1px solid rgba(232, 180, 74, 0.5);
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: rgba(30, 21, 48, 0.9);
+  border: 1px solid rgba(232, 180, 74, 0.55);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.8);
   font-family: var(--font-display);
-  font-size: clamp(28px, 5vw, 46px);
+  font-size: clamp(22px, 3.4vw, 30px);
   font-weight: 800;
   color: var(--card);
   letter-spacing: -0.01em;
-  width: min(720px, 92vw);
-  text-align: center;
-}
-.fx-turn-sweep-band small {
-  display: block;
-  font-family: var(--font-ui);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--on-felt-muted);
-  letter-spacing: 0;
 }
 
 /* City intro: a title card laid on the table when a match starts */
@@ -731,6 +832,7 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   .btn-roll-dice { font-size: 15px; padding-left: 14px; padding-right: 14px; }
   .hud-right-actions { gap: 6px; }
   #btn-hud-qr { display: none; }
+  .roll-kbd { display: none; }
   .btn-hud-leave span:last-child { display: none; }
   .hud-event-feed { display: none; }
 }
@@ -753,24 +855,6 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
 .hud-rank.rank-1 { background: linear-gradient(180deg, #FBE29A, var(--brass)); }
 .hud-rank.rank-2 { background: linear-gradient(180deg, #F1F3F6, #B9C0CA); }
 .hud-rank.rank-3 { background: linear-gradient(180deg, #F0C29A, #C07A45); }
-.hud-star-meter {
-  margin-top: 4px;
-  height: 4px;
-  width: 100%;
-  min-width: 70px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-.hud-star-meter span {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--brass-deep), var(--brass));
-  transition: width 0.5s var(--ease-out);
-}
-.hud-star-meter.is-ready span { background: linear-gradient(90deg, var(--brass), #FFF0B8); box-shadow: 0 0 8px rgba(232, 180, 74, 0.8); }
-
 /* Round beads */
 .hud-round-beads {
   display: flex;

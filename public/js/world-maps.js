@@ -16,7 +16,9 @@
   const W = 1100;
   const H = 760;
   const PAD = 260;          // scenery drawn around the world rect so panning never shows a void
-  const CACHE_SCALE = 2;    // static layer resolution multiplier (crisp up to ~2x zoom)
+  // Static layer resolution. Phones render the board small, so 1x is plenty there.
+  const CACHE_SCALE = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 700) ? 1 : 1.5;
+  const SPRITE_SCALE = 2;
 
   // ---------------------------------------------------------------------------
   // Geometry helpers
@@ -320,7 +322,7 @@
         const district = (x, y) => Math.sin(x * 0.017) + Math.sin(y * 0.022 + 1.3) + Math.sin((x + y) * 0.009 + 0.4);
         const houses = gridScatter(rand, {
           x0: -PAD + 30, x1: W + PAD - 30, y0: -PAD + 30, y1: H + PAD - 10,
-          step: [19, 16], jitter: 3, streetEvery: 4, skip: 0.18,
+          step: [22, 18], jitter: 3, streetEvery: 4, skip: 0.42,
           isLand: (x, y) => isLand(x, y) && district(x, y) > -0.35, track, clear: 48,
           keepOut: [[330, 500, 70], [300, 335, 40], [850, 380, 60], [590, 132, 80], [250, 560, 58], [760, 250, 62], [850, 470, 50]]
         });
@@ -556,7 +558,7 @@
 
         // Skyscrapers with lit windows and neon signs
         const neon = ['#FF4FA3', '#5EEAD4', '#FDE047', '#A78BFA', '#38BDF8'];
-        const towers = scatter(rand, 230, {
+        const towers = scatter(rand, 150, {
           x0: -PAD + 20, x1: W + PAD - 20, y0: -PAD + 60, y1: H + PAD,
           isLand, track, clear: 56, spacing: 26,
           keepOut: [[550, 250, 70], [305, 420, 100], [880, 330, 50], [140, 640, 70]]
@@ -570,7 +572,7 @@
             side: `rgb(${shade}, ${shade + 2}, ${shade + 22})`,
             top: `rgb(${shade + 22}, ${shade + 24}, ${shade + 52})`
           }, rand, { lit: 0.35, on: b.r > 0.6 ? '#FDE68A' : '#9BE7FF', off: 'rgba(255,255,255,0.05)' });
-          if (b.r > 0.55) {
+          if (b.r > 0.78) {
             const c = neon[Math.floor(b.r * 97) % neon.length];
             ctx.save();
             ctx.shadowColor = c;
@@ -706,6 +708,7 @@
       title: 'Paris',
       subtitle: 'Işık bulvarları',
       outside: '#8C7357',
+      veil: 'rgba(40, 26, 18, 0.24)',
       road: { base: '#E9DCC0', edge: '#9C8660', line: '#B8862B', dash: [2, 7], glow: null },
       control,
       landmark: { x: 360, y: 300, name: 'Eyfel Kulesi', icon: '🗼' },
@@ -785,7 +788,7 @@
         };
         const blocks = gridScatter(rand, {
           x0: -PAD + 20, x1: W + PAD - 20, y0: -PAD + 30, y1: H + PAD,
-          step: [30, 24], jitter: 4, skip: 0.06,
+          step: [32, 26], jitter: 4, skip: 0.45,
           isLand: (x, y) => isLand(x, y) && !onAvenue(x, y), track, clear: 50,
           keepOut: [[360, 250, 90], [550, 360, 62], [770, 290, 82], [360, 320, 70]]
         });
@@ -973,7 +976,7 @@
         }).forEach(t => tree(ctx, t.x, t.y, 5 + t.r * 3, '#3F7A34', '#5E9E48'));
 
         // Skyscrapers with sharp afternoon shadows
-        const towers = scatter(rand, 210, {
+        const towers = scatter(rand, 150, {
           x0: -PAD, x1: W + PAD, y0: -PAD, y1: H + PAD,
           isLand: (x, y) => isLand(x, y) && !inPoly(x, y, park), track, clear: 56, spacing: 24,
           keepOut: [[...rot(-330, 120), 50]]
@@ -1106,29 +1109,100 @@
   // ---------------------------------------------------------------------------
   // Static scenery cache
   // ---------------------------------------------------------------------------
+  // The cache holds everything that never moves: scenery, a dimming veil that
+  // pushes the scenery back behind the track, the road body and the soft edge
+  // fade. Once built it is converted to an ImageBitmap (GPU-resident), and each
+  // frame only the visible part of it is drawn.
   const cache = {};
+  const bitmaps = {};
+  function worldKey(world) {
+    return Object.keys(WORLDS).find(k => WORLDS[k] === world);
+  }
+
+  function traceDense(ctx, dense, dy) {
+    ctx.beginPath();
+    dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + (dy || 0)) : ctx.moveTo(p.x, p.y + (dy || 0))));
+    ctx.closePath();
+  }
+
   function sceneryFor(themeId) {
     const world = worldFor(themeId);
-    const key = Object.keys(WORLDS).find(k => WORLDS[k] === world);
-    if (cache[key]) return cache[key];
+    const key = worldKey(world);
+    if (cache[key]) return bitmaps[key] || cache[key];
     const canvas = document.createElement('canvas');
-    canvas.width = (W + PAD * 2) * CACHE_SCALE;
-    canvas.height = (H + PAD * 2) * CACHE_SCALE;
+    canvas.width = Math.round((W + PAD * 2) * CACHE_SCALE);
+    canvas.height = Math.round((H + PAD * 2) * CACHE_SCALE);
     const ctx = canvas.getContext('2d');
     ctx.scale(CACHE_SCALE, CACHE_SCALE);
     ctx.translate(PAD, PAD);
     world.drawStatic(ctx, world.dense);
+
+    // Veil: quieter scenery so the track, tiles and pawns read first
+    ctx.fillStyle = world.veil || 'rgba(24, 16, 38, 0.22)';
+    ctx.fillRect(-PAD, -PAD, W + PAD * 2, H + PAD * 2);
+
     // Bridge piers wherever the track runs over water
     ctx.fillStyle = 'rgba(40, 30, 25, 0.55)';
     world.dense.forEach((p, i) => {
-      if (i % 3 === 0 && !world.isLand(p.x, p.y)) {
-        ctx.fillRect(p.x - 3, p.y + 10, 6, 14);
-      }
+      if (i % 3 === 0 && !world.isLand(p.x, p.y)) ctx.fillRect(p.x - 3, p.y + 10, 6, 14);
     });
-    // Geography labels
-    (world.labels || []).forEach(([text, x, y]) => label(ctx, text, x, y, { size: 12, weight: 700 }));
+
+    // Road body (the flowing centre line is drawn live)
+    const road = world.road;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    traceDense(ctx, world.dense, 7);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.lineWidth = 34;
+    ctx.stroke();
+    traceDense(ctx, world.dense, 3);
+    ctx.strokeStyle = road.edge;
+    ctx.lineWidth = 32;
+    ctx.stroke();
+    if (road.glow) {
+      ctx.shadowColor = road.glow;
+      ctx.shadowBlur = 16;
+      traceDense(ctx, world.dense);
+      ctx.strokeStyle = road.glow;
+      ctx.lineWidth = 31;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    traceDense(ctx, world.dense);
+    ctx.strokeStyle = road.base;
+    ctx.lineWidth = 28;
+    ctx.stroke();
+    ctx.restore();
+
+    // Soft fade into the surrounding colour at the cache edges
+    const fade = 160;
+    const x0 = -PAD, y0 = -PAD, x1 = W + PAD, y1 = H + PAD;
+    [
+      [x0, y0, x0 + fade, y0, x0, y0, fade, y1 - y0],
+      [x1, y0, x1 - fade, y0, x1 - fade, y0, fade, y1 - y0],
+      [x0, y0, x0, y0 + fade, x0, y0, x1 - x0, fade],
+      [x0, y1, x0, y1 - fade, x0, y1 - fade, x1 - x0, fade]
+    ].forEach(([gx0, gy0, gx1, gy1, rx, ry, rw, rh]) => {
+      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+      g.addColorStop(0, world.outside);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(rx, ry, rw, rh);
+    });
+
     cache[key] = canvas;
+    if (typeof createImageBitmap === 'function') {
+      createImageBitmap(canvas).then(bmp => { bitmaps[key] = bmp; }).catch(() => {});
+    }
     return canvas;
+  }
+
+  // Raw (un-veiled) scenery for menu thumbnails
+  function rawCanvasFor(themeId) {
+    const world = worldFor(themeId);
+    sceneryFor(themeId);
+    return cache[worldKey(world)];
   }
 
   // ---------------------------------------------------------------------------
@@ -1293,162 +1367,164 @@
       this.__worldReady = true;
       this.tileCoords = this.calculateTilePositions();
     }
+    const img = sceneryFor(this.activeTheme);
     ctx.save();
     ctx.fillStyle = world.outside;
     ctx.fillRect(-3000, -3000, 7100, 6800);
-    ctx.drawImage(sceneryFor(this.activeTheme), -PAD, -PAD, W + PAD * 2, H + PAD * 2);
-    // Fade the edges of the cached scenery into the surrounding colour, so a
-    // zoomed-out phone screen never shows a hard rectangle
-    const fade = 160;
-    const x0 = -PAD, y0 = -PAD, x1 = W + PAD, y1 = H + PAD;
-    const edges = [
-      [x0, y0, x0 + fade, y0, x0, y0, fade, y1 - y0],
-      [x1, y0, x1 - fade, y0, x1 - fade, y0, fade, y1 - y0],
-      [x0, y0, x0, y0 + fade, x0, y0, x1 - x0, fade],
-      [x0, y1, x0, y1 - fade, x0, y1 - fade, x1 - x0, fade]
-    ];
-    edges.forEach(([gx0, gy0, gx1, gy1, rx, ry, rw, rh]) => {
-      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-      g.addColorStop(0, world.outside);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(rx, ry, rw, rh);
-    });
-    const t = performance.now() / 1000;
-    if (world.drawDynamic) world.drawDynamic(ctx, t);
+
+    // Draw only the part of the cached scenery that is on screen
+    const m = ctx.getTransform();
+    const inv = m.inverse();
+    const cw = ctx.canvas.width;
+    const ch = ctx.canvas.height;
+    const corners = [[0, 0], [cw, 0], [0, ch], [cw, ch]].map(([x, y]) => ({
+      x: inv.a * x + inv.c * y + inv.e,
+      y: inv.b * x + inv.d * y + inv.f
+    }));
+    let vx0 = Math.min(...corners.map(c => c.x)) - 4;
+    let vy0 = Math.min(...corners.map(c => c.y)) - 4;
+    let vx1 = Math.max(...corners.map(c => c.x)) + 4;
+    let vy1 = Math.max(...corners.map(c => c.y)) + 4;
+    vx0 = Math.max(vx0, -PAD); vy0 = Math.max(vy0, -PAD);
+    vx1 = Math.min(vx1, W + PAD); vy1 = Math.min(vy1, H + PAD);
+    if (vx1 > vx0 && vy1 > vy0) {
+      ctx.drawImage(img,
+        (vx0 + PAD) * CACHE_SCALE, (vy0 + PAD) * CACHE_SCALE, (vx1 - vx0) * CACHE_SCALE, (vy1 - vy0) * CACHE_SCALE,
+        vx0, vy0, vx1 - vx0, vy1 - vy0);
+    }
+
+    if (world.drawDynamic) world.drawDynamic(ctx, performance.now() / 1000);
     ctx.restore();
   };
 
+  // Only the flowing centre line is live; the road body is in the cache
   P.drawPathways = function (ctx) {
     const world = worldFor(this.activeTheme);
-    const road = world.road;
-    const dense = world.dense;
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    const trace = (dy) => {
-      ctx.beginPath();
-      dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + (dy || 0)) : ctx.moveTo(p.x, p.y + (dy || 0))));
-      ctx.closePath();
-    };
-    // Road thickness + shadow
-    trace(7);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 34;
-    ctx.stroke();
-    trace(3);
-    ctx.strokeStyle = road.edge;
-    ctx.lineWidth = 32;
-    ctx.stroke();
-    if (road.glow) {
-      ctx.save();
-      ctx.shadowColor = road.glow;
-      ctx.shadowBlur = 16;
-      trace();
-      ctx.strokeStyle = road.glow;
-      ctx.lineWidth = 31;
-      ctx.stroke();
-      ctx.restore();
-    }
-    trace();
-    ctx.strokeStyle = road.base;
-    ctx.lineWidth = 28;
-    ctx.stroke();
-    // Centre line, flowing forward
-    ctx.setLineDash(road.dash);
+    traceDense(ctx, world.dense);
+    ctx.setLineDash(world.road.dash);
     ctx.lineDashOffset = -(performance.now() / 60) % 100;
-    ctx.strokeStyle = road.line;
+    ctx.strokeStyle = world.road.line;
     ctx.lineWidth = 2.5;
     ctx.stroke();
-    ctx.setLineDash([]);
     ctx.restore();
   };
 
-  P.drawPlatformTile = function (ctx, index, tile, pos, isStarTile, isSelected, hasTrap) {
-    const style = TYPE_STYLE[tile.type] || { color: tile.color || '#3E7BD8' };
-    const r = 25;
-    const depth = 7;
-    const pulse = this.starPulse || 0;
-    ctx.save();
+  // ---------------------------------------------------------------------------
+  // Tile sprites: each kind of space is drawn once, then blitted every frame
+  // ---------------------------------------------------------------------------
+  const TILE_R = 25;
+  const TILE_DEPTH = 7;
+  const SPRITE_W = 64;
+  const SPRITE_H = 56;
+  const spriteCache = {};
 
-    // Active star: brass halo
-    if (isStarTile) {
-      const glow = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, 62 + Math.sin(pulse * 1.5) * 6);
-      glow.addColorStop(0, 'rgba(255, 214, 120, 0.75)');
-      glow.addColorStop(1, 'rgba(255, 214, 120, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(pos.x, pos.y, 70, 0, Math.PI * 2); ctx.fill();
-    }
+  function darken(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.round(((n >> 16) & 255) * (1 - f));
+    const g = Math.round(((n >> 8) & 255) * (1 - f));
+    const b = Math.round((n & 255) * (1 - f));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
 
-    // Shadow and token thickness
+  function tileSprite(tile) {
+    const key = `${tile.type}|${tile.amount || ''}`;
+    if (spriteCache[key]) return spriteCache[key];
+    const style = TYPE_STYLE[tile.type] || { color: '#3E7BD8' };
+    const c = document.createElement('canvas');
+    c.width = SPRITE_W * SPRITE_SCALE;
+    c.height = SPRITE_H * SPRITE_SCALE;
+    const ctx = c.getContext('2d');
+    ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+    const x = SPRITE_W / 2;
+    const y = SPRITE_H / 2 - 4;
+    const r = TILE_R;
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath(); ctx.ellipse(pos.x + 2, pos.y + depth + 5, r + 2, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = this.darkenColor(style.color, 0.45);
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y + depth, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillRect(pos.x - r, pos.y, r * 2, depth);
+    ctx.beginPath(); ctx.ellipse(x + 2, y + TILE_DEPTH + 5, r + 2, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = darken(style.color, 0.45);
+    ctx.beginPath(); ctx.ellipse(x, y + TILE_DEPTH, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(x - r, y, r * 2, TILE_DEPTH);
 
-    // Enamel top face
-    const face = ctx.createLinearGradient(pos.x, pos.y - r, pos.x, pos.y + r);
+    const face = ctx.createLinearGradient(x, y - r, x, y + r);
     face.addColorStop(0, style.color);
-    face.addColorStop(1, this.darkenColor(style.color, 0.22));
+    face.addColorStop(1, darken(style.color, 0.22));
     ctx.fillStyle = face;
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = isStarTile ? '#FFE08A' : (style.hazard ? 'rgba(255, 160, 150, 0.9)' : 'rgba(255, 244, 222, 0.85)');
-    ctx.lineWidth = isStarTile ? 3 : 1.8;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = style.hazard ? 'rgba(255, 160, 150, 0.9)' : 'rgba(255, 244, 222, 0.85)';
+    ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // Hazard: dashed warning ring
     if (style.hazard) {
-      ctx.save();
       ctx.setLineDash([4, 4]);
-      ctx.lineDashOffset = -pulse * 6;
-      ctx.strokeStyle = 'rgba(255, 220, 120, 0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, r - 5, r * 0.66 - 4, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.restore();
-    }
-
-    // Card-stock medallion with the vector icon
-    ctx.fillStyle = '#FFF4DE';
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y - 1, 13.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
-    drawIcon(ctx, tile.type, pos.x, pos.y - 1, tile);
-
-    // Space number
-    ctx.fillStyle = 'rgba(30, 21, 48, 0.88)';
-    ctx.beginPath(); ctx.arc(pos.x - r + 4, pos.y - r * 0.5, 7.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#FFF4DE';
-    ctx.font = "700 8px 'Figtree', sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(index), pos.x - r + 4, pos.y - r * 0.5 + 0.5);
-
-    // Selected ring
-    if (isSelected) {
-      ctx.strokeStyle = '#FFF4DE';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, r + 8, r * 0.66 + 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 220, 120, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.ellipse(x, y, r - 5, r * 0.66 - 4, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Floating star above the active pedestal
+    ctx.fillStyle = '#FFF4DE';
+    ctx.beginPath(); ctx.ellipse(x, y - 1, 13.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+    drawIcon(ctx, tile.type, x, y - 1, tile);
+
+    spriteCache[key] = c;
+    return c;
+  }
+
+  // Pre-rendered halo for the active star pedestal
+  let haloSprite = null;
+  function starHalo() {
+    if (haloSprite) return haloSprite;
+    const size = 150;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(255, 214, 120, 0.75)');
+    g.addColorStop(1, 'rgba(255, 214, 120, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    haloSprite = c;
+    return c;
+  }
+
+  P.drawPlatformTile = function (ctx, index, tile, pos, isStarTile, isSelected, hasTrap) {
+    const pulse = this.starPulse || 0;
     if (isStarTile) {
-      const bob = Math.sin(pulse * 1.5) * 5;
+      const s = 132 + Math.sin(pulse * 1.5) * 10;
+      ctx.drawImage(starHalo(), pos.x - s / 2, pos.y - s / 2, s, s);
+    }
+    ctx.drawImage(tileSprite(tile), pos.x - SPRITE_W / 2, pos.y - SPRITE_H / 2 + 4, SPRITE_W, SPRITE_H);
+
+    if (isStarTile) {
       ctx.save();
-      ctx.shadowColor = 'rgba(255, 200, 80, 0.9)';
-      ctx.shadowBlur = 16;
+      ctx.strokeStyle = '#FFE08A';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, TILE_R, TILE_R * 0.66, 0, 0, Math.PI * 2); ctx.stroke();
+      const bob = Math.sin(pulse * 1.5) * 5;
       starPath(ctx, pos.x, pos.y - 44 + bob, 15);
       ctx.fillStyle = '#E8B44A';
       ctx.fill();
-      ctx.shadowBlur = 0;
       ctx.strokeStyle = '#FFF4DE';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
     }
 
-    // Banana trap marker
+    if (isSelected) {
+      ctx.save();
+      ctx.strokeStyle = '#FFF4DE';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, TILE_R + 8, TILE_R * 0.66 + 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
     if (hasTrap) {
+      ctx.save();
       ctx.fillStyle = '#F6D24A';
       ctx.strokeStyle = '#6B4A12';
       ctx.lineWidth = 1.5;
@@ -1458,16 +1534,48 @@
       ctx.quadraticCurveTo(pos.x + 14, pos.y - 16, pos.x + 8, pos.y - 26);
       ctx.fill();
       ctx.stroke();
+      ctx.restore();
     }
+  };
 
+  // Landmarks are part of the illustration; no floating name plates
+  P.drawLandmark = function () {};
+  // No spotlight beam: the active pawn's name tag already marks whose turn it is
+  P.drawTurnSpotlight = function () {};
+
+  // Possible landing spots for your own roll: quiet brass rings on the next 6 spaces
+  P.drawStepTrajectory = function (ctx) {
+    const state = window.CURRENT_ROOM_STATE;
+    if (!state || state.state !== 'playing' || !state.players) return;
+    const active = state.players[state.turnIndex];
+    const me = window.GameClient && window.GameClient.player;
+    if (!active || !me || active.sessionId !== me.sessionId) return;
+    const n = this.tileCoords.length;
+    const a = 0.35 + (Math.sin((this.starPulse || 0) * 2) + 1) * 0.15;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 224, 138, ${a})`;
+    ctx.lineWidth = 2;
+    for (let s = 1; s <= 6; s++) {
+      const p = this.tileCoords[(active.position + s) % n];
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, TILE_R + 5, TILE_R * 0.66 + 4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
     ctx.restore();
   };
 
-  P.drawLandmark = function (ctx) {
-    const world = worldFor(this.activeTheme);
-    const lm = world.landmark;
-    const bob = Math.sin((this.starPulse || 0) * 1.2) * 2;
-    label(ctx, lm.name, lm.x, lm.y + 26 + bob, { size: 12, bg: 'rgba(30, 21, 48, 0.9)' });
+  // Phones in portrait fit the whole world to the narrow width, which makes the
+  // spaces tiny; start closer there (the camera still follows the active pawn)
+  const origResetCamera = P.resetCamera;
+  P.resetCamera = function () {
+    origResetCamera.call(this);
+    const w = this.canvas ? this.canvas.width / (this.dpr || 1) : window.innerWidth;
+    if (w < 700) this.camera.zoom = 1.75;
+  };
+
+  // Do no drawing work while the board is not on screen
+  const origDraw = P.draw;
+  P.draw = function () {
+    if (document.hidden || !this.canvas || this.canvas.offsetParent === null) return;
+    origDraw.call(this);
   };
 
   // Public: map metadata for the UI (title cards, previews)
@@ -1476,26 +1584,16 @@
       const w = worldFor(themeId);
       return { title: w.title, subtitle: w.subtitle };
     },
-    // Small preview image of a city for menus
+    // Small preview image of a city for menus (track included in the cache)
     preview(themeId, width) {
-      const src = sceneryFor(themeId);
-      const world = worldFor(themeId);
+      const src = rawCanvasFor(themeId);
       const cw = width || 240;
       const ch = Math.round(cw * (H / W));
       const c = document.createElement('canvas');
       c.width = cw * 2;
       c.height = ch * 2;
       const ctx = c.getContext('2d');
-      ctx.scale((cw * 2) / W, (ch * 2) / H);
-      ctx.drawImage(src, PAD * CACHE_SCALE, PAD * CACHE_SCALE, W * CACHE_SCALE, H * CACHE_SCALE, 0, 0, W, H);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      world.dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-      ctx.closePath();
-      ctx.strokeStyle = world.road.base;
-      ctx.lineWidth = 22;
-      ctx.stroke();
+      ctx.drawImage(src, PAD * CACHE_SCALE, PAD * CACHE_SCALE, W * CACHE_SCALE, H * CACHE_SCALE, 0, 0, c.width, c.height);
       c.style.width = `${cw}px`;
       c.style.height = `${ch}px`;
       return c;

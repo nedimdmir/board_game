@@ -4671,6 +4671,28 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
 .studio-xp-pill { background: var(--card-2); color: var(--ink); }
 .profile-title-text { color: var(--ink); }
 
+/* Quieter home: no badge, no status line; the character card opens on demand */
+.hero-badge,
+.server-status-pill { display: none !important; }
+.studio-header { display: flex; align-items: center; gap: 10px; }
+.studio-header .studio-badge { margin-right: auto; }
+.studio-edit-toggle {
+  border: 1.5px solid var(--card-edge);
+  background: #FFFBF2;
+  color: var(--ink);
+  font: 700 13px var(--font-ui);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.studio-edit-toggle:hover { background: var(--card-2); }
+.char-studio-card:not(.is-editing) .studio-input-group:not(:first-child) { display: none; }
+.char-studio-card:not(.is-editing) .studio-main-row { align-items: center; }
+
+/* Lobby: the selected thumbnail already says which map; the link is behind "Copy link" */
+.lobby-share-url,
+.lobby-map-badge { display: none !important; }
+
 @media (max-width: 900px) {
   .home-layout { grid-template-columns: 1fr; gap: 28px; }
   .home-stage { padding-top: 0; }
@@ -4743,7 +4765,95 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   border-color: var(--brass) !important;
   box-shadow: 0 0 0 2px rgba(232, 180, 74, 0.35), 0 14px 30px -14px rgba(232, 180, 74, 0.55);
 }
-.player-hud-card.is-me .hud-pname::after { content: ' (sen)'; color: var(--brass-soft); font-weight: 600; font-family: var(--font-ui); }
+.player-hud-card.is-me { box-shadow: inset 3px 0 0 var(--brass), 0 10px 24px -14px rgba(0, 0, 0, 0.8); }
+
+/* Quiet HUD: one status card, slim player cards, nothing duplicated */
+#hud-map-name,
+.hud-active-turn-box,
+.hud-round-sub,
+.hud-badges-row,
+.hud-event-feed,
+#btn-hud-qr,
+.dock-btn-label,
+.dock-status-bar { display: none !important; }
+/* Header is no longer a bar: just floating chips over the map */
+.game-hud-top {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  height: 56px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+.game-hud-top > * { pointer-events: auto; }
+.hud-round-card {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  padding: 7px 14px !important;
+  border-radius: 999px !important;
+  min-width: 0 !important;
+}
+.hud-round-top { display: flex; align-items: center; }
+.hud-round-card .hud-round-beads { margin-top: 0; flex-wrap: nowrap; }
+.hud-city {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--card);
+  line-height: 1;
+}
+.hud-round-title { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--on-felt-muted); white-space: nowrap; }
+.btn-roll-dice { white-space: nowrap; }
+.hud-effects { margin-left: 4px; font-size: 11px; letter-spacing: 1px; }
+.player-hud-card { padding-top: 6px; padding-bottom: 6px; }
+.btn-hud-leave span:last-child { display: none; }
+.floating-cam-controls { opacity: 0.55; transition: opacity 0.2s; }
+.floating-cam-controls:hover, .floating-cam-controls:focus-within { opacity: 1; }
+.cam-btn { width: 32px; height: 32px; font-size: 15px; }
+
+.roll-kbd {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font: 700 11px var(--font-ui);
+  color: rgba(255, 248, 238, 0.85);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  vertical-align: 2px;
+}
+.btn-roll-dice.is-double { background: linear-gradient(180deg, #F8D27A 0%, var(--brass) 60%, #D49B31 100%); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 5px 0 var(--brass-deep), 0 16px 30px -12px rgba(232, 180, 74, 0.6); }
+.btn-roll-dice.is-double .roll-kbd { color: var(--ink); border-color: rgba(43, 29, 18, 0.3); }
+.btn-roll-dice.is-fixed { background: linear-gradient(180deg, #3CC8B7 0%, var(--teal) 60%, #23998B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 5px 0 var(--teal-deep), 0 16px 30px -12px rgba(43, 179, 163, 0.6); }
+
+/* One-line event ticker above the dock */
+.fx-ticker {
+  position: fixed;
+  left: 50%;
+  bottom: 104px;
+  transform: translate(-50%, 8px);
+  z-index: 70;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(30, 21, 48, 0.88);
+  border: 1px solid var(--felt-line);
+  color: var(--on-felt);
+  font: 600 13px var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+}
+.fx-ticker.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
 .btn-hud-leave {
   background: var(--felt-2);
@@ -4933,32 +5043,23 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   position: fixed;
   left: 0;
   right: 0;
-  top: 42%;
+  top: 24%;
   z-index: 8500;
   pointer-events: none;
   display: flex;
   justify-content: center;
 }
 .fx-turn-sweep-band {
-  padding: 14px 40px;
-  background: linear-gradient(90deg, transparent, rgba(30, 21, 48, 0.92) 18%, rgba(30, 21, 48, 0.92) 82%, transparent);
-  border-top: 1px solid rgba(232, 180, 74, 0.5);
-  border-bottom: 1px solid rgba(232, 180, 74, 0.5);
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: rgba(30, 21, 48, 0.9);
+  border: 1px solid rgba(232, 180, 74, 0.55);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.8);
   font-family: var(--font-display);
-  font-size: clamp(28px, 5vw, 46px);
+  font-size: clamp(22px, 3.4vw, 30px);
   font-weight: 800;
   color: var(--card);
   letter-spacing: -0.01em;
-  width: min(720px, 92vw);
-  text-align: center;
-}
-.fx-turn-sweep-band small {
-  display: block;
-  font-family: var(--font-ui);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--on-felt-muted);
-  letter-spacing: 0;
 }
 
 /* City intro: a title card laid on the table when a match starts */
@@ -5018,6 +5119,7 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
   .btn-roll-dice { font-size: 15px; padding-left: 14px; padding-right: 14px; }
   .hud-right-actions { gap: 6px; }
   #btn-hud-qr { display: none; }
+  .roll-kbd { display: none; }
   .btn-hud-leave span:last-child { display: none; }
   .hud-event-feed { display: none; }
 }
@@ -5040,24 +5142,6 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
 .hud-rank.rank-1 { background: linear-gradient(180deg, #FBE29A, var(--brass)); }
 .hud-rank.rank-2 { background: linear-gradient(180deg, #F1F3F6, #B9C0CA); }
 .hud-rank.rank-3 { background: linear-gradient(180deg, #F0C29A, #C07A45); }
-.hud-star-meter {
-  margin-top: 4px;
-  height: 4px;
-  width: 100%;
-  min-width: 70px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-.hud-star-meter span {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--brass-deep), var(--brass));
-  transition: width 0.5s var(--ease-out);
-}
-.hud-star-meter.is-ready span { background: linear-gradient(90deg, var(--brass), #FFF0B8); box-shadow: 0 0 8px rgba(232, 180, 74, 0.8); }
-
 /* Round beads */
 .hud-round-beads {
   display: flex;
@@ -5226,8 +5310,9 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
       <!-- Interactive Character Studio Card -->
       <div class="char-studio-card">
         <div class="studio-header">
-          <span class="studio-badge" data-i18n="studio_badge">✨ KARAKTERİNİ TASARLA</span>
+          <span class="studio-badge" data-i18n="studio_badge">Karakterin</span>
           <span class="profile-level-badge" id="profile-level">Lv. 1</span>
+          <button type="button" class="studio-edit-toggle" id="btn-studio-edit" aria-expanded="false">Düzenle</button>
         </div>
 
         <div class="studio-main-row">
@@ -5438,7 +5523,7 @@ h1, h2, h3, .modal-title, .hero-title, .room-code-tag, .action-title {
         </button>
 
         <button class="btn-roll-dice pulse-turn" id="btn-roll-dice">
-          <span>🎲</span> ZAR AT! (SPACE)
+          <span>🎲</span> Zar at <kbd class="roll-kbd">Space</kbd>
         </button>
 
         <button class="dock-secondary-btn speed-btn" id="btn-toggle-speed" title="Oyun Hızı">
@@ -7057,7 +7142,7 @@ const I18N_DATA = {
     hero_badge: '🎲 Çok Oyunculu Dünya Turu Masa Oyunu',
     hero_title: 'Parti <span>Dünyası</span>',
     hero_subtitle: 'İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!',
-    studio_badge: '✨ KARAKTERİNİ TASARLA',
+    studio_badge: 'Karakterin',
     studio_name_label: 'Karakter Adın:',
     studio_name_placeholder: 'Adını yaz...',
     studio_model_label: 'Karakter Modeli:',
@@ -7162,7 +7247,7 @@ const I18N_DATA = {
     hero_badge: '🎲 Multiplayer World Tour Board Game',
     hero_title: 'Party<span>Craft</span>',
     hero_subtitle: 'Roll dice, race, and celebrate across the iconic streets of Istanbul, Tokyo, Paris & New York!',
-    studio_badge: '✨ DESIGN YOUR CHARACTER',
+    studio_badge: 'Your character',
     studio_name_label: 'Character Name:',
     studio_name_placeholder: 'Enter your name...',
     studio_model_label: 'Character Model:',
@@ -7267,7 +7352,7 @@ const I18N_DATA = {
     hero_badge: '🎲 Mehrspieler-Weltreise-Brettspiel',
     hero_title: 'Party<span>Craft</span>',
     hero_subtitle: 'Würfle, rase und feiere in den Straßen von Istanbul, Tokio, Paris und New York!',
-    studio_badge: '✨ GESTALTE DEINE FIGUR',
+    studio_badge: 'Deine Figur',
     studio_name_label: 'Name:',
     studio_name_placeholder: 'Name eingeben...',
     studio_model_label: 'Charaktermodell:',
@@ -7372,7 +7457,7 @@ const I18N_DATA = {
     hero_badge: '🎲 Juego de Mesa Multijugador Vuelta al Mundo',
     hero_title: 'Party<span>Craft</span>',
     hero_subtitle: '¡Tira los dados, compite y festeja por las calles de Estambul, Tokio, París y Nueva York!',
-    studio_badge: '✨ DISEÑA TU PERSONAJE',
+    studio_badge: 'Tu personaje',
     studio_name_label: 'Nombre:',
     studio_name_placeholder: 'Escribe tu nombre...',
     studio_model_label: 'Modelo de Personaje:',
@@ -7477,7 +7562,7 @@ const I18N_DATA = {
     hero_badge: '🎲 Jeu de Plateau Multijoueur Tour du Monde',
     hero_title: 'Party<span>Craft</span>',
     hero_subtitle: 'Lancez les dés, faites la course et faites la fête dans les rues d\'Istanbul, Tokyo, Paris et New York !',
-    studio_badge: '✨ CRÉEZ VOTRE PERSONNAGE',
+    studio_badge: 'Votre personnage',
     studio_name_label: 'Nom du Joueur :',
     studio_name_placeholder: 'Entrez votre nom...',
     studio_model_label: 'Modèle :',
@@ -9044,7 +9129,8 @@ class BoardRenderer {
     if (!this.canvas) return;
     const parent = this.canvas.parentElement;
     const rect = parent.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // High-DPI sharpness without lag
+    // High-DPI sharpness without lag: phones (small, very dense screens) gain little above 1.5x
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.5 : 2);
 
     this.dpr = dpr;
     this.canvas.width = Math.round(rect.width * dpr);
@@ -11367,24 +11453,24 @@ class BoardRenderer {
       ctx.beginPath(); ctx.moveTo(9, -37); ctx.quadraticCurveTo(16, -43, 15, -49); ctx.quadraticCurveTo(11, -43, 6, -39); ctx.closePath(); ctx.fill();
     }
 
-    // 7. Dynamic Auto-Sizing Name Tag Pill (Guarantees zero text overflow!)
-    if (isCurrent || !isClustered) {
-      ctx.font = 'bold 9.5px sans-serif';
-      const displayName = player.name.length > 10 ? player.name.substr(0, 9) + '..' : player.name;
-      const tagText = `${displayName} ⭐${player.stars}`;
+    // 7. Name tag — only above the pawn whose turn it is, to keep the board quiet
+    if (isCurrent) {
+      ctx.font = "700 10px 'Figtree', sans-serif";
+      const displayName = player.name.length > 12 ? player.name.substr(0, 11) + '…' : player.name;
+      const tagText = displayName;
       const textWidth = ctx.measureText(tagText).width;
-      const pillWidth = Math.max(76, textWidth + 18);
+      const pillWidth = textWidth + 20;
       const pillHeight = 18;
 
       ctx.beginPath();
       ctx.roundRect(-pillWidth / 2, -56, pillWidth, pillHeight, 9);
-      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.9)';
+      ctx.fillStyle = '#FFF4DE';
       ctx.fill();
-      ctx.strokeStyle = player.color || '#38BDF8';
-      ctx.lineWidth = isCurrent ? 2 : 1.2;
+      ctx.strokeStyle = '#E8B44A';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.fillStyle = isCurrent ? '#854D0E' : '#FFFFFF';
+      ctx.fillStyle = '#2B1D12';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(tagText, 0, -47);
@@ -11416,20 +11502,6 @@ class BoardRenderer {
         ctx.fillText(player.fixedRollNext, buffOffset, -47);
         buffOffset += 18;
       }
-    } else {
-      ctx.beginPath();
-      ctx.arc(0, -45, 10, 0, Math.PI * 2);
-      ctx.fillStyle = player.color;
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(player.name.charAt(0).toUpperCase(), 0, -45);
     }
 
     ctx.restore();
@@ -11469,7 +11541,9 @@ window.BoardRenderer = BoardRenderer;
   const W = 1100;
   const H = 760;
   const PAD = 260;          // scenery drawn around the world rect so panning never shows a void
-  const CACHE_SCALE = 2;    // static layer resolution multiplier (crisp up to ~2x zoom)
+  // Static layer resolution. Phones render the board small, so 1x is plenty there.
+  const CACHE_SCALE = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 700) ? 1 : 1.5;
+  const SPRITE_SCALE = 2;
 
   // ---------------------------------------------------------------------------
   // Geometry helpers
@@ -11773,7 +11847,7 @@ window.BoardRenderer = BoardRenderer;
         const district = (x, y) => Math.sin(x * 0.017) + Math.sin(y * 0.022 + 1.3) + Math.sin((x + y) * 0.009 + 0.4);
         const houses = gridScatter(rand, {
           x0: -PAD + 30, x1: W + PAD - 30, y0: -PAD + 30, y1: H + PAD - 10,
-          step: [19, 16], jitter: 3, streetEvery: 4, skip: 0.18,
+          step: [22, 18], jitter: 3, streetEvery: 4, skip: 0.42,
           isLand: (x, y) => isLand(x, y) && district(x, y) > -0.35, track, clear: 48,
           keepOut: [[330, 500, 70], [300, 335, 40], [850, 380, 60], [590, 132, 80], [250, 560, 58], [760, 250, 62], [850, 470, 50]]
         });
@@ -12009,7 +12083,7 @@ window.BoardRenderer = BoardRenderer;
 
         // Skyscrapers with lit windows and neon signs
         const neon = ['#FF4FA3', '#5EEAD4', '#FDE047', '#A78BFA', '#38BDF8'];
-        const towers = scatter(rand, 230, {
+        const towers = scatter(rand, 150, {
           x0: -PAD + 20, x1: W + PAD - 20, y0: -PAD + 60, y1: H + PAD,
           isLand, track, clear: 56, spacing: 26,
           keepOut: [[550, 250, 70], [305, 420, 100], [880, 330, 50], [140, 640, 70]]
@@ -12023,7 +12097,7 @@ window.BoardRenderer = BoardRenderer;
             side: `rgb(${shade}, ${shade + 2}, ${shade + 22})`,
             top: `rgb(${shade + 22}, ${shade + 24}, ${shade + 52})`
           }, rand, { lit: 0.35, on: b.r > 0.6 ? '#FDE68A' : '#9BE7FF', off: 'rgba(255,255,255,0.05)' });
-          if (b.r > 0.55) {
+          if (b.r > 0.78) {
             const c = neon[Math.floor(b.r * 97) % neon.length];
             ctx.save();
             ctx.shadowColor = c;
@@ -12159,6 +12233,7 @@ window.BoardRenderer = BoardRenderer;
       title: 'Paris',
       subtitle: 'Işık bulvarları',
       outside: '#8C7357',
+      veil: 'rgba(40, 26, 18, 0.24)',
       road: { base: '#E9DCC0', edge: '#9C8660', line: '#B8862B', dash: [2, 7], glow: null },
       control,
       landmark: { x: 360, y: 300, name: 'Eyfel Kulesi', icon: '🗼' },
@@ -12238,7 +12313,7 @@ window.BoardRenderer = BoardRenderer;
         };
         const blocks = gridScatter(rand, {
           x0: -PAD + 20, x1: W + PAD - 20, y0: -PAD + 30, y1: H + PAD,
-          step: [30, 24], jitter: 4, skip: 0.06,
+          step: [32, 26], jitter: 4, skip: 0.45,
           isLand: (x, y) => isLand(x, y) && !onAvenue(x, y), track, clear: 50,
           keepOut: [[360, 250, 90], [550, 360, 62], [770, 290, 82], [360, 320, 70]]
         });
@@ -12426,7 +12501,7 @@ window.BoardRenderer = BoardRenderer;
         }).forEach(t => tree(ctx, t.x, t.y, 5 + t.r * 3, '#3F7A34', '#5E9E48'));
 
         // Skyscrapers with sharp afternoon shadows
-        const towers = scatter(rand, 210, {
+        const towers = scatter(rand, 150, {
           x0: -PAD, x1: W + PAD, y0: -PAD, y1: H + PAD,
           isLand: (x, y) => isLand(x, y) && !inPoly(x, y, park), track, clear: 56, spacing: 24,
           keepOut: [[...rot(-330, 120), 50]]
@@ -12559,29 +12634,100 @@ window.BoardRenderer = BoardRenderer;
   // ---------------------------------------------------------------------------
   // Static scenery cache
   // ---------------------------------------------------------------------------
+  // The cache holds everything that never moves: scenery, a dimming veil that
+  // pushes the scenery back behind the track, the road body and the soft edge
+  // fade. Once built it is converted to an ImageBitmap (GPU-resident), and each
+  // frame only the visible part of it is drawn.
   const cache = {};
+  const bitmaps = {};
+  function worldKey(world) {
+    return Object.keys(WORLDS).find(k => WORLDS[k] === world);
+  }
+
+  function traceDense(ctx, dense, dy) {
+    ctx.beginPath();
+    dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + (dy || 0)) : ctx.moveTo(p.x, p.y + (dy || 0))));
+    ctx.closePath();
+  }
+
   function sceneryFor(themeId) {
     const world = worldFor(themeId);
-    const key = Object.keys(WORLDS).find(k => WORLDS[k] === world);
-    if (cache[key]) return cache[key];
+    const key = worldKey(world);
+    if (cache[key]) return bitmaps[key] || cache[key];
     const canvas = document.createElement('canvas');
-    canvas.width = (W + PAD * 2) * CACHE_SCALE;
-    canvas.height = (H + PAD * 2) * CACHE_SCALE;
+    canvas.width = Math.round((W + PAD * 2) * CACHE_SCALE);
+    canvas.height = Math.round((H + PAD * 2) * CACHE_SCALE);
     const ctx = canvas.getContext('2d');
     ctx.scale(CACHE_SCALE, CACHE_SCALE);
     ctx.translate(PAD, PAD);
     world.drawStatic(ctx, world.dense);
+
+    // Veil: quieter scenery so the track, tiles and pawns read first
+    ctx.fillStyle = world.veil || 'rgba(24, 16, 38, 0.22)';
+    ctx.fillRect(-PAD, -PAD, W + PAD * 2, H + PAD * 2);
+
     // Bridge piers wherever the track runs over water
     ctx.fillStyle = 'rgba(40, 30, 25, 0.55)';
     world.dense.forEach((p, i) => {
-      if (i % 3 === 0 && !world.isLand(p.x, p.y)) {
-        ctx.fillRect(p.x - 3, p.y + 10, 6, 14);
-      }
+      if (i % 3 === 0 && !world.isLand(p.x, p.y)) ctx.fillRect(p.x - 3, p.y + 10, 6, 14);
     });
-    // Geography labels
-    (world.labels || []).forEach(([text, x, y]) => label(ctx, text, x, y, { size: 12, weight: 700 }));
+
+    // Road body (the flowing centre line is drawn live)
+    const road = world.road;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    traceDense(ctx, world.dense, 7);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.lineWidth = 34;
+    ctx.stroke();
+    traceDense(ctx, world.dense, 3);
+    ctx.strokeStyle = road.edge;
+    ctx.lineWidth = 32;
+    ctx.stroke();
+    if (road.glow) {
+      ctx.shadowColor = road.glow;
+      ctx.shadowBlur = 16;
+      traceDense(ctx, world.dense);
+      ctx.strokeStyle = road.glow;
+      ctx.lineWidth = 31;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    traceDense(ctx, world.dense);
+    ctx.strokeStyle = road.base;
+    ctx.lineWidth = 28;
+    ctx.stroke();
+    ctx.restore();
+
+    // Soft fade into the surrounding colour at the cache edges
+    const fade = 160;
+    const x0 = -PAD, y0 = -PAD, x1 = W + PAD, y1 = H + PAD;
+    [
+      [x0, y0, x0 + fade, y0, x0, y0, fade, y1 - y0],
+      [x1, y0, x1 - fade, y0, x1 - fade, y0, fade, y1 - y0],
+      [x0, y0, x0, y0 + fade, x0, y0, x1 - x0, fade],
+      [x0, y1, x0, y1 - fade, x0, y1 - fade, x1 - x0, fade]
+    ].forEach(([gx0, gy0, gx1, gy1, rx, ry, rw, rh]) => {
+      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+      g.addColorStop(0, world.outside);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(rx, ry, rw, rh);
+    });
+
     cache[key] = canvas;
+    if (typeof createImageBitmap === 'function') {
+      createImageBitmap(canvas).then(bmp => { bitmaps[key] = bmp; }).catch(() => {});
+    }
     return canvas;
+  }
+
+  // Raw (un-veiled) scenery for menu thumbnails
+  function rawCanvasFor(themeId) {
+    const world = worldFor(themeId);
+    sceneryFor(themeId);
+    return cache[worldKey(world)];
   }
 
   // ---------------------------------------------------------------------------
@@ -12746,162 +12892,164 @@ window.BoardRenderer = BoardRenderer;
       this.__worldReady = true;
       this.tileCoords = this.calculateTilePositions();
     }
+    const img = sceneryFor(this.activeTheme);
     ctx.save();
     ctx.fillStyle = world.outside;
     ctx.fillRect(-3000, -3000, 7100, 6800);
-    ctx.drawImage(sceneryFor(this.activeTheme), -PAD, -PAD, W + PAD * 2, H + PAD * 2);
-    // Fade the edges of the cached scenery into the surrounding colour, so a
-    // zoomed-out phone screen never shows a hard rectangle
-    const fade = 160;
-    const x0 = -PAD, y0 = -PAD, x1 = W + PAD, y1 = H + PAD;
-    const edges = [
-      [x0, y0, x0 + fade, y0, x0, y0, fade, y1 - y0],
-      [x1, y0, x1 - fade, y0, x1 - fade, y0, fade, y1 - y0],
-      [x0, y0, x0, y0 + fade, x0, y0, x1 - x0, fade],
-      [x0, y1, x0, y1 - fade, x0, y1 - fade, x1 - x0, fade]
-    ];
-    edges.forEach(([gx0, gy0, gx1, gy1, rx, ry, rw, rh]) => {
-      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-      g.addColorStop(0, world.outside);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(rx, ry, rw, rh);
-    });
-    const t = performance.now() / 1000;
-    if (world.drawDynamic) world.drawDynamic(ctx, t);
+
+    // Draw only the part of the cached scenery that is on screen
+    const m = ctx.getTransform();
+    const inv = m.inverse();
+    const cw = ctx.canvas.width;
+    const ch = ctx.canvas.height;
+    const corners = [[0, 0], [cw, 0], [0, ch], [cw, ch]].map(([x, y]) => ({
+      x: inv.a * x + inv.c * y + inv.e,
+      y: inv.b * x + inv.d * y + inv.f
+    }));
+    let vx0 = Math.min(...corners.map(c => c.x)) - 4;
+    let vy0 = Math.min(...corners.map(c => c.y)) - 4;
+    let vx1 = Math.max(...corners.map(c => c.x)) + 4;
+    let vy1 = Math.max(...corners.map(c => c.y)) + 4;
+    vx0 = Math.max(vx0, -PAD); vy0 = Math.max(vy0, -PAD);
+    vx1 = Math.min(vx1, W + PAD); vy1 = Math.min(vy1, H + PAD);
+    if (vx1 > vx0 && vy1 > vy0) {
+      ctx.drawImage(img,
+        (vx0 + PAD) * CACHE_SCALE, (vy0 + PAD) * CACHE_SCALE, (vx1 - vx0) * CACHE_SCALE, (vy1 - vy0) * CACHE_SCALE,
+        vx0, vy0, vx1 - vx0, vy1 - vy0);
+    }
+
+    if (world.drawDynamic) world.drawDynamic(ctx, performance.now() / 1000);
     ctx.restore();
   };
 
+  // Only the flowing centre line is live; the road body is in the cache
   P.drawPathways = function (ctx) {
     const world = worldFor(this.activeTheme);
-    const road = world.road;
-    const dense = world.dense;
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    const trace = (dy) => {
-      ctx.beginPath();
-      dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y + (dy || 0)) : ctx.moveTo(p.x, p.y + (dy || 0))));
-      ctx.closePath();
-    };
-    // Road thickness + shadow
-    trace(7);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 34;
-    ctx.stroke();
-    trace(3);
-    ctx.strokeStyle = road.edge;
-    ctx.lineWidth = 32;
-    ctx.stroke();
-    if (road.glow) {
-      ctx.save();
-      ctx.shadowColor = road.glow;
-      ctx.shadowBlur = 16;
-      trace();
-      ctx.strokeStyle = road.glow;
-      ctx.lineWidth = 31;
-      ctx.stroke();
-      ctx.restore();
-    }
-    trace();
-    ctx.strokeStyle = road.base;
-    ctx.lineWidth = 28;
-    ctx.stroke();
-    // Centre line, flowing forward
-    ctx.setLineDash(road.dash);
+    traceDense(ctx, world.dense);
+    ctx.setLineDash(world.road.dash);
     ctx.lineDashOffset = -(performance.now() / 60) % 100;
-    ctx.strokeStyle = road.line;
+    ctx.strokeStyle = world.road.line;
     ctx.lineWidth = 2.5;
     ctx.stroke();
-    ctx.setLineDash([]);
     ctx.restore();
   };
 
-  P.drawPlatformTile = function (ctx, index, tile, pos, isStarTile, isSelected, hasTrap) {
-    const style = TYPE_STYLE[tile.type] || { color: tile.color || '#3E7BD8' };
-    const r = 25;
-    const depth = 7;
-    const pulse = this.starPulse || 0;
-    ctx.save();
+  // ---------------------------------------------------------------------------
+  // Tile sprites: each kind of space is drawn once, then blitted every frame
+  // ---------------------------------------------------------------------------
+  const TILE_R = 25;
+  const TILE_DEPTH = 7;
+  const SPRITE_W = 64;
+  const SPRITE_H = 56;
+  const spriteCache = {};
 
-    // Active star: brass halo
-    if (isStarTile) {
-      const glow = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, 62 + Math.sin(pulse * 1.5) * 6);
-      glow.addColorStop(0, 'rgba(255, 214, 120, 0.75)');
-      glow.addColorStop(1, 'rgba(255, 214, 120, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(pos.x, pos.y, 70, 0, Math.PI * 2); ctx.fill();
-    }
+  function darken(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.round(((n >> 16) & 255) * (1 - f));
+    const g = Math.round(((n >> 8) & 255) * (1 - f));
+    const b = Math.round((n & 255) * (1 - f));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
 
-    // Shadow and token thickness
+  function tileSprite(tile) {
+    const key = `${tile.type}|${tile.amount || ''}`;
+    if (spriteCache[key]) return spriteCache[key];
+    const style = TYPE_STYLE[tile.type] || { color: '#3E7BD8' };
+    const c = document.createElement('canvas');
+    c.width = SPRITE_W * SPRITE_SCALE;
+    c.height = SPRITE_H * SPRITE_SCALE;
+    const ctx = c.getContext('2d');
+    ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+    const x = SPRITE_W / 2;
+    const y = SPRITE_H / 2 - 4;
+    const r = TILE_R;
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath(); ctx.ellipse(pos.x + 2, pos.y + depth + 5, r + 2, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = this.darkenColor(style.color, 0.45);
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y + depth, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillRect(pos.x - r, pos.y, r * 2, depth);
+    ctx.beginPath(); ctx.ellipse(x + 2, y + TILE_DEPTH + 5, r + 2, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = darken(style.color, 0.45);
+    ctx.beginPath(); ctx.ellipse(x, y + TILE_DEPTH, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(x - r, y, r * 2, TILE_DEPTH);
 
-    // Enamel top face
-    const face = ctx.createLinearGradient(pos.x, pos.y - r, pos.x, pos.y + r);
+    const face = ctx.createLinearGradient(x, y - r, x, y + r);
     face.addColorStop(0, style.color);
-    face.addColorStop(1, this.darkenColor(style.color, 0.22));
+    face.addColorStop(1, darken(style.color, 0.22));
     ctx.fillStyle = face;
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = isStarTile ? '#FFE08A' : (style.hazard ? 'rgba(255, 160, 150, 0.9)' : 'rgba(255, 244, 222, 0.85)');
-    ctx.lineWidth = isStarTile ? 3 : 1.8;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = style.hazard ? 'rgba(255, 160, 150, 0.9)' : 'rgba(255, 244, 222, 0.85)';
+    ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // Hazard: dashed warning ring
     if (style.hazard) {
-      ctx.save();
       ctx.setLineDash([4, 4]);
-      ctx.lineDashOffset = -pulse * 6;
-      ctx.strokeStyle = 'rgba(255, 220, 120, 0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, r - 5, r * 0.66 - 4, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.restore();
-    }
-
-    // Card-stock medallion with the vector icon
-    ctx.fillStyle = '#FFF4DE';
-    ctx.beginPath(); ctx.ellipse(pos.x, pos.y - 1, 13.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
-    drawIcon(ctx, tile.type, pos.x, pos.y - 1, tile);
-
-    // Space number
-    ctx.fillStyle = 'rgba(30, 21, 48, 0.88)';
-    ctx.beginPath(); ctx.arc(pos.x - r + 4, pos.y - r * 0.5, 7.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#FFF4DE';
-    ctx.font = "700 8px 'Figtree', sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(index), pos.x - r + 4, pos.y - r * 0.5 + 0.5);
-
-    // Selected ring
-    if (isSelected) {
-      ctx.strokeStyle = '#FFF4DE';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, r + 8, r * 0.66 + 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 220, 120, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.ellipse(x, y, r - 5, r * 0.66 - 4, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Floating star above the active pedestal
+    ctx.fillStyle = '#FFF4DE';
+    ctx.beginPath(); ctx.ellipse(x, y - 1, 13.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+    drawIcon(ctx, tile.type, x, y - 1, tile);
+
+    spriteCache[key] = c;
+    return c;
+  }
+
+  // Pre-rendered halo for the active star pedestal
+  let haloSprite = null;
+  function starHalo() {
+    if (haloSprite) return haloSprite;
+    const size = 150;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(255, 214, 120, 0.75)');
+    g.addColorStop(1, 'rgba(255, 214, 120, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    haloSprite = c;
+    return c;
+  }
+
+  P.drawPlatformTile = function (ctx, index, tile, pos, isStarTile, isSelected, hasTrap) {
+    const pulse = this.starPulse || 0;
     if (isStarTile) {
-      const bob = Math.sin(pulse * 1.5) * 5;
+      const s = 132 + Math.sin(pulse * 1.5) * 10;
+      ctx.drawImage(starHalo(), pos.x - s / 2, pos.y - s / 2, s, s);
+    }
+    ctx.drawImage(tileSprite(tile), pos.x - SPRITE_W / 2, pos.y - SPRITE_H / 2 + 4, SPRITE_W, SPRITE_H);
+
+    if (isStarTile) {
       ctx.save();
-      ctx.shadowColor = 'rgba(255, 200, 80, 0.9)';
-      ctx.shadowBlur = 16;
+      ctx.strokeStyle = '#FFE08A';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, TILE_R, TILE_R * 0.66, 0, 0, Math.PI * 2); ctx.stroke();
+      const bob = Math.sin(pulse * 1.5) * 5;
       starPath(ctx, pos.x, pos.y - 44 + bob, 15);
       ctx.fillStyle = '#E8B44A';
       ctx.fill();
-      ctx.shadowBlur = 0;
       ctx.strokeStyle = '#FFF4DE';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
     }
 
-    // Banana trap marker
+    if (isSelected) {
+      ctx.save();
+      ctx.strokeStyle = '#FFF4DE';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, TILE_R + 8, TILE_R * 0.66 + 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
     if (hasTrap) {
+      ctx.save();
       ctx.fillStyle = '#F6D24A';
       ctx.strokeStyle = '#6B4A12';
       ctx.lineWidth = 1.5;
@@ -12911,16 +13059,48 @@ window.BoardRenderer = BoardRenderer;
       ctx.quadraticCurveTo(pos.x + 14, pos.y - 16, pos.x + 8, pos.y - 26);
       ctx.fill();
       ctx.stroke();
+      ctx.restore();
     }
+  };
 
+  // Landmarks are part of the illustration; no floating name plates
+  P.drawLandmark = function () {};
+  // No spotlight beam: the active pawn's name tag already marks whose turn it is
+  P.drawTurnSpotlight = function () {};
+
+  // Possible landing spots for your own roll: quiet brass rings on the next 6 spaces
+  P.drawStepTrajectory = function (ctx) {
+    const state = window.CURRENT_ROOM_STATE;
+    if (!state || state.state !== 'playing' || !state.players) return;
+    const active = state.players[state.turnIndex];
+    const me = window.GameClient && window.GameClient.player;
+    if (!active || !me || active.sessionId !== me.sessionId) return;
+    const n = this.tileCoords.length;
+    const a = 0.35 + (Math.sin((this.starPulse || 0) * 2) + 1) * 0.15;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 224, 138, ${a})`;
+    ctx.lineWidth = 2;
+    for (let s = 1; s <= 6; s++) {
+      const p = this.tileCoords[(active.position + s) % n];
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, TILE_R + 5, TILE_R * 0.66 + 4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
     ctx.restore();
   };
 
-  P.drawLandmark = function (ctx) {
-    const world = worldFor(this.activeTheme);
-    const lm = world.landmark;
-    const bob = Math.sin((this.starPulse || 0) * 1.2) * 2;
-    label(ctx, lm.name, lm.x, lm.y + 26 + bob, { size: 12, bg: 'rgba(30, 21, 48, 0.9)' });
+  // Phones in portrait fit the whole world to the narrow width, which makes the
+  // spaces tiny; start closer there (the camera still follows the active pawn)
+  const origResetCamera = P.resetCamera;
+  P.resetCamera = function () {
+    origResetCamera.call(this);
+    const w = this.canvas ? this.canvas.width / (this.dpr || 1) : window.innerWidth;
+    if (w < 700) this.camera.zoom = 1.75;
+  };
+
+  // Do no drawing work while the board is not on screen
+  const origDraw = P.draw;
+  P.draw = function () {
+    if (document.hidden || !this.canvas || this.canvas.offsetParent === null) return;
+    origDraw.call(this);
   };
 
   // Public: map metadata for the UI (title cards, previews)
@@ -12929,26 +13109,16 @@ window.BoardRenderer = BoardRenderer;
       const w = worldFor(themeId);
       return { title: w.title, subtitle: w.subtitle };
     },
-    // Small preview image of a city for menus
+    // Small preview image of a city for menus (track included in the cache)
     preview(themeId, width) {
-      const src = sceneryFor(themeId);
-      const world = worldFor(themeId);
+      const src = rawCanvasFor(themeId);
       const cw = width || 240;
       const ch = Math.round(cw * (H / W));
       const c = document.createElement('canvas');
       c.width = cw * 2;
       c.height = ch * 2;
       const ctx = c.getContext('2d');
-      ctx.scale((cw * 2) / W, (ch * 2) / H);
-      ctx.drawImage(src, PAD * CACHE_SCALE, PAD * CACHE_SCALE, W * CACHE_SCALE, H * CACHE_SCALE, 0, 0, W, H);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      world.dense.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-      ctx.closePath();
-      ctx.strokeStyle = world.road.base;
-      ctx.lineWidth = 22;
-      ctx.stroke();
+      ctx.drawImage(src, PAD * CACHE_SCALE, PAD * CACHE_SCALE, W * CACHE_SCALE, H * CACHE_SCALE, 0, 0, c.width, c.height);
       c.style.width = `${cw}px`;
       c.style.height = `${ch}px`;
       return c;
@@ -16723,24 +16893,19 @@ class UIEngine {
     if (rollBtn) {
       rollBtn.disabled = !isMyTurn;
       rollBtn.classList.toggle('pulse-turn', isMyTurn);
-      if (isMyTurn && activePlayer) {
-        if (activePlayer.doubleDiceActive) {
-          rollBtn.innerHTML = '<span>🎲🎲</span> 2X ÇİFT ZAR! (SPACE)';
-          rollBtn.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
-          rollBtn.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.45)';
-        } else if (activePlayer.fixedRollNext) {
-          rollBtn.innerHTML = `<span>🎯</span> KİLİTLİ ZAR: ${activePlayer.fixedRollNext} (SPACE)`;
-          rollBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-          rollBtn.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.45)';
-        } else {
-          rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
-          rollBtn.style.background = '';
-          rollBtn.style.boxShadow = '';
-        }
+      // Short labels; the Space shortcut is shown as a small key cap, the variant as a class
+      const kbd = '<kbd class="roll-kbd">Space</kbd>';
+      rollBtn.style.background = '';
+      rollBtn.style.boxShadow = '';
+      rollBtn.classList.remove('is-double', 'is-fixed');
+      if (isMyTurn && activePlayer && activePlayer.doubleDiceActive) {
+        rollBtn.innerHTML = `<span>🎲🎲</span> Çift zar ${kbd}`;
+        rollBtn.classList.add('is-double');
+      } else if (isMyTurn && activePlayer && activePlayer.fixedRollNext) {
+        rollBtn.innerHTML = `<span>🎯</span> Zar: ${Number(activePlayer.fixedRollNext)} ${kbd}`;
+        rollBtn.classList.add('is-fixed');
       } else {
-        rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
-        rollBtn.style.background = '';
-        rollBtn.style.boxShadow = '';
+        rollBtn.innerHTML = `<span>🎲</span> Zar at ${kbd}`;
       }
     }
 
@@ -18066,6 +18231,8 @@ window.UI = UI;
     if (values.length === 0) values.push(Math.min(6, Math.max(1, data.totalRoll || 1)));
 
     if (window.AudioPlayer) AudioPlayer.playDiceRoll();
+    // The dice own the screen: clear any title card or turn banner still showing
+    document.querySelectorAll('.fx-city-intro, .fx-turn-sweep').forEach(el => el.remove());
     overlay.classList.remove('hidden');
     if (legacy) legacy.hidden = true;
     stage.hidden = false;
@@ -18211,18 +18378,14 @@ window.UI = UI;
     const band = document.createElement('div');
     band.className = 'fx-turn-sweep-band';
     band.textContent = t().yourTurn;
-    const sub = document.createElement('small');
-    sub.textContent = t().yourTurnSub;
-    band.appendChild(sub);
     wrap.appendChild(band);
     document.body.appendChild(wrap);
-    if (!hasGsap || reduceMotion) {
-      setTimeout(() => wrap.remove(), 1400);
-      return;
-    }
+    // Hard upper bound, even if animation frames are throttled
+    setTimeout(() => wrap.remove(), 1600);
+    if (!hasGsap || reduceMotion) return;
     gsap.timeline({ onComplete: () => wrap.remove() })
-      .fromTo(band, { xPercent: -30, opacity: 0, scaleY: 0.6 }, { xPercent: 0, opacity: 1, scaleY: 1, duration: 0.38, ease: 'power3.out' })
-      .to(band, { xPercent: 30, opacity: 0, duration: 0.32, ease: 'power2.in' }, '+=0.75');
+      .fromTo(band, { y: 12, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' })
+      .to(band, { y: -8, opacity: 0, duration: 0.3, ease: 'power2.in' }, '+=0.6');
   }
 
   // ---------------------------------------------------------------------------
@@ -18243,10 +18406,9 @@ window.UI = UI;
     document.body.appendChild(wrap);
     introUntil = Date.now() + 2300;
     const card = wrap.querySelector('.fx-city-intro-card');
-    if (!hasGsap || reduceMotion) {
-      setTimeout(() => wrap.remove(), 1800);
-      return;
-    }
+    // Hard upper bound, even if animation frames are throttled
+    setTimeout(() => wrap.remove(), 2600);
+    if (!hasGsap || reduceMotion) return;
     gsap.timeline({ onComplete: () => wrap.remove() })
       .fromTo(wrap, { opacity: 0 }, { opacity: 1, duration: 0.25 })
       .fromTo(card.querySelector('.fx-city-intro-title'), { y: 30, opacity: 0, letterSpacing: '0.2em' }, { y: 0, opacity: 1, letterSpacing: '-0.03em', duration: 0.7, ease: 'power3.out' }, 0.05)
@@ -18258,7 +18420,14 @@ window.UI = UI;
   // ---------------------------------------------------------------------------
   // HUD enrichment: rank medals, star meters, round beads
   // ---------------------------------------------------------------------------
-  const STAR_PRICE = 20;
+  // Effects worth knowing at a glance; everything else (hats, bot badges) is dropped
+  const EFFECTS = [
+    ['jailedTurns', '🔒', 'Kodes'],
+    ['frozenTurns', '🧊', 'Donmuş'],
+    ['shieldActive', '🛡️', 'Kalkan'],
+    ['ghostCloakActive', '👻', 'Pelerin'],
+    ['reverseNext', '🔄', 'Ters yön']
+  ];
   function enrichHud(state) {
     if (!state || !Array.isArray(state.players)) return;
     const ranked = [...state.players].sort((a, b) => (b.stars - a.stars) || (b.coins - a.coins));
@@ -18268,23 +18437,29 @@ window.UI = UI;
       const rank = document.createElement('span');
       rank.className = `hud-rank rank-${i + 1}`;
       rank.textContent = String(i + 1);
-      rank.title = `${i + 1}.`;
       card.appendChild(rank);
-      const stats = card.querySelector('.hud-player-stats');
-      if (stats) {
-        const meter = document.createElement('div');
-        meter.className = 'hud-star-meter';
-        meter.title = `${Math.min(p.coins, STAR_PRICE)} / ${STAR_PRICE} 🪙 → ⭐`;
-        const fill = document.createElement('span');
-        fill.style.width = `${Math.min(100, Math.round((p.coins / STAR_PRICE) * 100))}%`;
-        if (p.coins >= STAR_PRICE) meter.classList.add('is-ready');
-        meter.appendChild(fill);
-        stats.appendChild(meter);
+      const active = EFFECTS.filter(([k]) => p[k] && p[k] !== 0);
+      const nameEl = card.querySelector('.hud-pname');
+      if (active.length && nameEl) {
+        const fx = document.createElement('span');
+        fx.className = 'hud-effects';
+        fx.textContent = active.map(e => e[1]).join('');
+        fx.title = active.map(e => e[2]).join(', ');
+        nameEl.appendChild(fx);
       }
     });
 
-    // Round beads under the round card
+    // City name + round beads in one compact card
     const roundCard = document.getElementById('hud-round-card');
+    if (roundCard && window.WorldMaps) {
+      let city = roundCard.querySelector('.hud-city');
+      if (!city) {
+        city = document.createElement('span');
+        city.className = 'hud-city';
+        roundCard.prepend(city);
+      }
+      city.textContent = window.WorldMaps.info(state.mapTheme || 'istanbul').title;
+    }
     if (roundCard && state.totalRounds) {
       let beads = roundCard.querySelector('.hud-round-beads');
       if (!beads) {
@@ -18333,6 +18508,35 @@ window.UI = UI;
   let lastPlayers = null;
   let lastTurnKey = null;
 
+  // One-line ticker for the newest game event (replaces the always-open event feed)
+  const seenLog = new Set();
+  let logPrimed = false;
+  let tickerTimer = null;
+  function showTicker(text) {
+    let el = document.getElementById('fx-ticker');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fx-ticker';
+      el.className = 'fx-ticker';
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.classList.add('is-visible');
+    clearTimeout(tickerTimer);
+    tickerTimer = setTimeout(() => el.classList.remove('is-visible'), 3200);
+  }
+  function onLog(log) {
+    if (!Array.isArray(log) || log.length === 0) return;
+    const unseen = log.filter(e => e && e.id && !seenLog.has(e.id));
+    log.forEach(e => e && e.id && seenLog.add(e.id));
+    if (!logPrimed) { logPrimed = true; return; }
+    if (unseen.length === 0) return;
+    // Node keeps newest first, PHP appends: pick the newest of the unseen entries
+    const newest = unseen[0] === log[0] ? unseen[0] : unseen[unseen.length - 1];
+    if (newest && newest.text) showTicker(newest.text);
+  }
+
   function isMe(p) {
     const me = window.GameClient && window.GameClient.player;
     return !!(me && ((p.sessionId && p.sessionId === me.sessionId) || (me.id && p.id === me.id)));
@@ -18355,7 +18559,8 @@ window.UI = UI;
           floatText(card, `+${dStars} ⭐`, 'star', -38);
           burst(originOf(card), isMe(p) ? 1.4 : 0.7);
         }
-        if (dCoins !== 0) {
+        // Coin changes float only over your own card; rivals' coins just update quietly
+        if (dCoins !== 0 && isMe(p)) {
           // When a star was bought the price shows next to it, slightly later
           setTimeout(() => floatText(card, `${dCoins > 0 ? '+' : ''}${dCoins} 🪙`, dCoins < 0 ? 'loss' : null, dStars > 0 ? 42 : 0), dStars > 0 ? 300 : 0);
         }
@@ -18364,6 +18569,7 @@ window.UI = UI;
 
     if (state.state === 'playing' || state.state === 'minigame') {
       enrichHud(state);
+      onLog(state.log);
     }
 
     if (state.state === 'playing') {
@@ -18377,8 +18583,9 @@ window.UI = UI;
           // then re-check: the game may have ended or the turn moved on in the meantime
           setTimeout(() => {
             const live = window.CURRENT_ROOM_STATE;
-            const gameOverOpen = document.getElementById('modal-gameover') && !document.getElementById('modal-gameover').classList.contains('hidden');
-            if (!live || live.state !== 'playing' || gameOverOpen) return;
+            const isOpen = (id) => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); };
+            // Never stack the banner on top of another overlay
+            if (!live || live.state !== 'playing' || isOpen('modal-gameover') || isOpen('dice-roll-overlay') || isOpen('tile-event-overlay') || isOpen('minigame-overlay')) return;
             const now = live.players && live.players[live.turnIndex];
             if (now && isMe(now) && `${live.currentRound}:${live.turnIndex}` === key) yourTurnSweep();
           }, Math.max(450, introUntil - Date.now()));
@@ -18428,13 +18635,16 @@ window.UI = UI;
       UIRef.triggerConfetti = function () { burst({ x: 0.5, y: 0.35 }, 1.5); };
     }
 
+    // Mini-game results: one short line instead of the full ranking string
     if (UIRef.showMiniGameResults) {
-      const origMg = UIRef.showMiniGameResults.bind(UIRef);
       UIRef.showMiniGameResults = function (data) {
-        origMg(data);
+        if (window.AudioPlayer) AudioPlayer.playStarFanfare();
         const winner = data && data.ranked && data.ranked[0];
+        if (!winner) return;
         const me = window.GameClient && window.GameClient.player;
-        if (winner && me && winner.id === me.id) burst({ x: 0.5, y: 0.45 }, 1.6);
+        const mine = me && winner.id === me.id;
+        UIRef.showToast(mine ? '🏆 Mini oyunu sen kazandın!' : `🏆 ${winner.name} mini oyunu kazandı`, 'success');
+        if (mine) burst({ x: 0.5, y: 0.45 }, 1.6);
       };
     }
 
@@ -18448,6 +18658,17 @@ window.UI = UI;
 
     // City thumbnails in the create-room modal (rendered once the page is ready)
     setTimeout(decorateMapButtons, 0);
+
+    // Character card: compact by default, full customiser on demand
+    const editBtn = document.getElementById('btn-studio-edit');
+    const studio = document.querySelector('.char-studio-card');
+    if (editBtn && studio) {
+      editBtn.addEventListener('click', () => {
+        const open = studio.classList.toggle('is-editing');
+        editBtn.textContent = open ? 'Bitti' : 'Düzenle';
+        editBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
 
     // Keyboard access for the div-based action cards on the home screen
     document.addEventListener('keydown', (e) => {
