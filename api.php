@@ -1028,6 +1028,8 @@ if ($action === 'roll_dice') {
 
     sendJson([
         'type' => 'dice_rolled',
+        'playerId' => $shopPlayerId,
+        'playerName' => $room['lastAction']['playerName'],
         'die1' => $die1,
         'die2' => $die2,
         'totalRoll' => $totalRoll,

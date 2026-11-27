@@ -7,6 +7,25 @@ const htmlSrc = fs.readFileSync('public/index.html', 'utf8');
 const boardCss = fs.readFileSync('public/css/board.css', 'utf8');
 const styleCss = fs.readFileSync('public/css/style.css', 'utf8');
 
+// Premium layer: inline the bundled woff2 fonts as data URIs so the single file works offline
+const premiumCss = fs.readFileSync('public/css/premium.css', 'utf8').replace(
+  /url\('\.\.\/fonts\/([a-z0-9-]+\.woff2)'\)/g,
+  (_, file) => `url('data:font/woff2;base64,${fs.readFileSync(path.join('public', 'fonts', file)).toString('base64')}')`
+);
+
+// Vendored libraries (GSAP standard license, canvas-confetti ISC)
+const gsapJs = fs.readFileSync('public/vendor/gsap.min.js', 'utf8');
+const confettiJs = fs.readFileSync('public/vendor/confetti.browser.js', 'utf8');
+const fxJs = fs.readFileSync('public/js/fx.js', 'utf8');
+const worldMapsJs = fs.readFileSync('public/js/world-maps.js', 'utf8');
+
+for (const [name, src] of [['gsap', gsapJs], ['confetti', confettiJs]]) {
+  if (/<\/script/i.test(src)) {
+    console.error(`${name} contains a closing script tag and cannot be inlined safely`);
+    process.exit(1);
+  }
+}
+
 const iconsJs = fs.readFileSync('public/js/icons.js', 'utf8');
 const i18nJs = fs.readFileSync('public/js/i18n.js', 'utf8');
 const qrSvgJs = fs.readFileSync('public/js/qr-svg.js', 'utf8');
@@ -192,22 +211,38 @@ window.LocalServer = new LocalGameServer();
 
 // Build single HTML
 // Replace CSS links with <style>
+// Replacements use a function so "$&", "$'" etc. inside inlined code are never
+// interpreted as String.replace patterns.
 let singleHtml = htmlSrc;
-singleHtml = singleHtml.replace(
-  /<link rel="stylesheet" href="css\/style\.css">[\s\S]*?<link rel="stylesheet" href="css\/board\.css">/,
-  `<style>
+const cssPattern = /<link rel="stylesheet" href="css\/style\.css">[\s\S]*?<link rel="stylesheet" href="css\/premium\.css">/;
+const jsPattern = /<script src="vendor\/gsap\.min\.js"><\/script>[\s\S]*?<script src="js\/fx\.js"><\/script>/;
+if (!cssPattern.test(singleHtml) || !jsPattern.test(singleHtml)) {
+  console.error('public/index.html no longer has the expected stylesheet/script blocks');
+  process.exit(1);
+}
+
+singleHtml = singleHtml.replace(cssPattern, () => `<style>
 /* =================== BOARD CSS =================== */
 ${boardCss}
 
 /* =================== STYLE CSS =================== */
 ${styleCss}
+
+/* =================== PREMIUM "GAME NIGHT TABLE" LAYER =================== */
+${premiumCss}
   </style>`
 );
 
 // Replace script tags with inlined scripts
-singleHtml = singleHtml.replace(
-  /<script src="js\/icons\.js"><\/script>[\s\S]*?<script src="js\/ui\.js"><\/script>/,
-  `<script>
+singleHtml = singleHtml.replace(jsPattern, () => `<script>
+/* =================== 0. VENDOR: GSAP (standard no-charge license) =================== */
+${gsapJs}
+  </script>
+  <script>
+/* =================== 0.5. VENDOR: canvas-confetti (ISC) =================== */
+${confettiJs}
+  </script>
+  <script>
 /* =================== 1. ICONS =================== */
 ${iconsJs}
 
@@ -226,6 +261,9 @@ ${progressionJs}
 /* =================== 5. BOARD MAP RENDERER =================== */
 ${boardMapJs}
 
+/* =================== 5.5. WORLD MAPS (CITY DIORAMAS & TRACKS) =================== */
+${worldMapsJs}
+
 /* =================== 6. MINI GAMES =================== */
 ${minigamesJs}
 
@@ -237,6 +275,9 @@ ${gameClientJs}
 
 /* =================== 9. UI MANAGER =================== */
 ${uiJs}
+
+/* =================== 10. FX LAYER (GAME FEEL) =================== */
+${fxJs}
   </script>`
 );
 
