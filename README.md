@@ -1,140 +1,105 @@
+<h1 align="center">Parti Dünyası</h1>
+
 <p align="center">
-  <img src="assets/hero-banner.svg" alt="PartyCraft: Wonder Board" width="100%">
+  <strong>İstanbul, Tokyo, Paris ve New York'ta geçen, tarayıcıda oynanan parti masa oyunu.</strong><br>
+  Zar at, altın topla, yıldızları kap, mini oyunlarda rakiplerini geç.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Languages-TR%20%E2%80%A2%20EN%20%E2%80%A2%20DE%20%E2%80%A2%20ES%20%E2%80%A2%20FR-0284c7?style=flat-square" alt="Languages">
-  <img src="https://img.shields.io/badge/Architecture-Single--File%20(index.html%20%2B%20api.php)-10b981?style=flat-square" alt="Single-File">
-  <img src="https://img.shields.io/badge/Dependencies-Zero%20NPM%20%2F%20Zero%20DB-f59e0b?style=flat-square" alt="Zero Dependencies">
-  <img src="https://img.shields.io/badge/Platform-Web%20%E2%80%A2%20Mobile%20%E2%80%A2%20Tablet-8b5cf6?style=flat-square" alt="Platforms">
-  <img src="https://img.shields.io/badge/License-MIT-64748b?style=flat-square" alt="License">
+  <a href="https://nedimdmir.github.io/board_game/"><strong>▶ Hemen oyna</strong></a> ·
+  <a href="https://github.com/nedimdmir/board_game/releases/latest">Son sürümü indir</a> ·
+  <a href="#english">English</a>
 </p>
 
 <p align="center">
-  <strong>Dil Seçimi / Select Documentation Language:</strong><br>
-  <a href="#-türkçe-dokümantasyon">🇹🇷 Türkçe</a> •
-  <a href="#-english-documentation">🇬🇧 English</a> •
-  <a href="#-deutsche-kurzanleitung">🇩🇪 Deutsch</a> •
-  <a href="#-guía-rápida-en-español">🇪🇸 Español</a> •
-  <a href="#-guide-rapide-en-français">🇫🇷 Français</a>
+  <img src="assets/screenshots/istanbul.jpg" alt="İstanbul tahtası: Boğaz'ın iki yakasında kurulmuş pist, fiş karolar ve piyonlar" width="100%">
 </p>
 
----
+## Neler var?
 
-<p align="center">
-  <img src="assets/gameplay-preview.svg" alt="PartyCraft Gameplay Showcase" width="100%">
-</p>
+- **Dört şehir, dört ayrı tahta.** Her şehrin kendi pist şekli ve haritası var: Boğaz'ı köprüden geçen İstanbul, neon ışıklı Tokyo, bulvarları yıldız gibi açılan Paris ve Central Park'ı dolaşan New York.
+- **Gerçek bir masa oyunu hissi.** Harita keçe masanın üstünde duran kalın bir tahta; kareler poker fişi gibi, karakterler klasik piyonlar. Zar 3D olarak yuvarlanıyor.
+- **8 taktik eşya.** Çift Zar, Süper Roket, Manyetik Kalkan, Altın Mıknatısı, Muz Kabuğu, Takas Asası, Hayalet Pelerin ve Şanslı Altın Zar.
+- **6 mini oyun.** Her turun sonunda: Altın Yağmuru, Refleks, Balon Şişirme, Hazine Sandıkları, Hafıza Matrisi ve Güç Çekici.
+- **Arkadaşlarla veya botlarla.** Oda kur, kodu ya da QR'ı paylaş; boş koltukları akıllı botlar doldurur. İnternetsiz de oynanır.
+- **5 dil.** Türkçe, İngilizce, Almanca, İspanyolca ve Fransızca; tarayıcının diline göre kendiliğinden açılır.
+- **Kurulum gerektirmez.** Tek bir `index.html` ya da `index.php` dosyası yeterli; veritabanı, npm veya CDN gerekmez.
 
----
+<table>
+  <tr>
+    <td><img src="assets/screenshots/tokyo.jpg" alt="Tokyo tahtası, gece"></td>
+    <td><img src="assets/screenshots/paris.jpg" alt="Paris tahtası, Sen nehri ve Eyfel"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/newyork.jpg" alt="New York tahtası, Central Park çevresinde pist"></td>
+    <td><img src="assets/screenshots/closeup.jpg" alt="Yakın plan: fiş karolar ve piyonlar"></td>
+  </tr>
+</table>
 
-## 🇹🇷 Türkçe Dokümantasyon
+## Nasıl oynanır?
 
-**Parti Dünyası (PartyCraft: Wonder Board)**; İstanbul, Tokyo, Paris ve New York sokaklarında arkadaşlarınızla veya akıllı yapay zeka botlarıyla oynayabileceğiniz; sevimli Lego tarzı görsel tasarımı, canlı harita animasyonları, taktik kartları ve 6 adet zengin mini oyunu olan **sıra tabanlı çok oyunculu masa oyunudur**.
+1. Sıran gelince **Zar at**'a bas (klavyede Boşluk tuşu). Piyonun o kadar kare ilerler.
+2. Durduğun karenin etkisi uygulanır: altın kazanırsın, dükkâna girersin, tuzağa düşersin, düelloya girersin…
+3. Parlayan **yıldız karesinden** geçerken 20 altının varsa bir yıldız alırsın.
+4. Her turun sonunda herkes aynı mini oyunu oynar; ilk sıralar altın ve eşya kazanır.
+5. Son turdan sonra **en çok yıldızı** olan kazanır. Eşitlikte altın sayısı belirler.
 
-### 🌟 Öne Çıkan Özellikler
-- ⚡ **Tek Dosya ile Anında Kurulum (Ultra Zero-Setup):**
-  - PHP sunucular için tek dosya: **`index.php`** (Çok oyunculu arka uç + tam oyun arayüzü tek dosyada!).
-  - Statik / GitHub Pages / Çevrimdışı kullanım için tek dosya: **`index.html`** (Sıfır bağımlılık).
-- 🌐 **Otomatik Dil Algılama (5 Dil Desteği):**
-  - **Amerikan / İngiliz tarayıcı ile girenler oyunu otomatik olarak İngilizce görür!**
-  - Türkçe (🇹🇷), İngilizce (🇬🇧), Almanca (🇩🇪), İspanyolca (🇪🇸) ve Fransızca (🇫🇷) dilleri tam desteklidir.
-  - Sayfa yenilemeden tek tıkla dil değiştirilebilir.
-- 🎮 **6 Heyecan Verici Mini Oyun:**
-  1. 🪙 **Altın Toplama Sepeti (Coin Catcher):** Sağa-sola hareketli sepetle gökten düşen altınları topla (mobil zoom korumalı).
-  2. 🎯 **Refleks Hedefleri (Reflex Pop):** Ekranda aniden beliren hedefleri kaçırmadan en hızlı sürede vur.
-  3. 🎈 **Balon Patlatma (Balloon Mash):** Süre dolmadan ekrandaki balona hızlıca tıklayarak şişir ve patlat.
-  4. 🎁 **Şans Sandıkları (Lucky Chests):** 3 gizemli sandıktan en büyük ödülü saklayanı tahmin et.
-  5. 🧠 **Hafıza Matrisi (Memory Matrix):** Yanıp sönen renkli karo kombinasyonunu aklında tut ve doğru sırayla dokun.
-  6. 🔨 **Güç Çekici & Hassas Zamanlama (Timing Hammer):** Salınan güç barını tam merkezdeki %100 hedefte durdur, çanı çaldır!
+Eşyalarını kendi sıranda, zar atmadan önce **Çantam**'dan kullanırsın.
 
-<p align="center">
-  <img src="assets/minigames-showcase.svg" alt="Mini Games Showcase" width="100%">
-</p>
+## Oyunu yayınlamak
 
-### 🎒 Tamamen Çalışır 8 Taktik Eşyası (Çanta)
-- 🎲 **Çift Zar:** Sonraki turda 2 zar birden atarsınız (2 - 12 adım) ve arayüzde özel çift zar butonu belirir.
-- 🚀 **Süper Roket:** Hedefe doğru direkt olarak 7 adım ileri fırlar.
-- 🛡️ **Manyetik Kalkan:** Tuzaklara ve altın çalma hamlelerine karşı 2 tur tam koruma küresi açar.
-- 🧲 **Altın Mıknatısı:** Tüm rakiplerden anında 4'er altın çeker.
-- 🍌 **Muz Kabuğu:** Bulunulan karoya gizli tuzak kurar; basan rakip 3 adım geriye kayar.
-- 🪄 **Takas Asası:** Seçtiğiniz herhangi bir rakiple haritadaki yerlerinizi anında takas eder.
-- 👻 **Hayalet Pelerin:** 2 tur boyunca oyuncunun etrafında parlayan hayalet aurası oluşturur ve tüm tuzak/cezalardan muaf tutar.
-- 🎯 **Şanslı Altın Zar:** Özel arayüzden 1-6 arasında seçeceğiniz zar değerini sıradaki atışınızda garanti eder!
+| Nereye? | Hangi dosya? | Ne olur? |
+| :-- | :-- | :-- |
+| GitHub Pages, Netlify gibi statik barındırma | `index.html` | Botlarla oynanır, internetsiz de çalışır. |
+| PHP destekli herhangi bir hosting | `index.php` | Çok oyunculu odalar, davet bağlantısı ve QR kod açılır. Tek dosya yeter. |
+| Kendi bilgisayarın | `index.html` | Dosyaya çift tıkla, botlarla oyna. |
 
-### 🚀 Sunucunuza Nasıl Yüklersiniz? (Sadece 1 Dosya!)
-1. Hostinginize (cPanel, Plesk, Apache, Nginx vb.) **SADECE `index.php`** dosyasını yükleyin.
-2. Tarayıcınızda açın (`https://siteniz.com/`).
-3. **Bitti!** Çok oyunculu oda kurma, QR kodla davet etme ve arkadaş bağlantıları otomatik aktifleşir.
+Ayrıntılı rehber: [DEPLOYMENT.md](DEPLOYMENT.md)
 
----
+## Geliştirme
 
-## 🇬🇧 English Documentation
+Kaynak dosyalar `public/` klasöründe. `index.html` ve `index.php` bu dosyalardan üretilir:
 
-**PartyCraft: Wonder Board** is a vibrant, zero-dependency turn-based multiplayer board game celebrating world cities (Istanbul, Tokyo, Paris, and New York) with interactive board tiles, tactical items, and 6 competitive mini-games.
+```bash
+node build-single-file.js
+```
 
-### 🌟 Key Highlights
-- ⚡ **Single-File Zero-Setup Architecture:**
-  - For PHP Web Hosting: Upload **ONLY `index.php`** (serves the entire game UI and handles multiplayer rooms via atomic JSON locking).
-  - For Static / GitHub Pages / Offline: Upload **`index.html`** (runs 100% offline with AI bots).
-- 🌐 **Automatic Geolocation / Locale Language Detection:**
-  - When a user enters the site from the **US, UK, or international locations**, the game **automatically opens in English**!
-  - Supports 5 languages: 🇬🇧 English, 🇹🇷 Turkish, 🇩🇪 German, 🇪🇸 Spanish, and 🇫🇷 French.
-  - Can be switched at any time with one click from the header.
-- 🎮 **6 Competitive Mini-Games:**
-  1. 🪙 **Coin Catcher:** Catch falling gold with a mobile-friendly basket.
-  2. 🎯 **Reflex Pop:** Hit rapidly popping targets before they vanish.
-  3. 🎈 **Balloon Mash:** Rapid-click to inflate and pop the party balloon.
-  4. 🎁 **Lucky Chests:** Pick the chest hiding the grand treasure.
-  5. 🧠 **Memory Matrix:** Remember and repeat the glowing tile sequence.
-  6. 🔨 **Timing Hammer (Power Striker):** Stop the oscillating power gauge at 100% bullseye to ring the bell and win +15 Gold!
+| Dosya | Görevi |
+| :-- | :-- |
+| `public/js/world-maps.js` | Şehir tahtaları, pistler, kareler ve piyonlar |
+| `public/js/fx.js` | 3D zar, konfeti ve arayüz efektleri |
+| `public/css/premium.css` | Oyunun görsel teması |
+| `api.php` | Çok oyunculu oyun sunucusu (PHP) |
+| `server.js` | Çevrimdışı oyun motoru (ve isteğe bağlı Node sunucusu) |
 
-### 🎒 Tactical Items
-- 🎲 **Double Dice:** Roll two dice on your next turn (2 - 12 steps).
-- 🚀 **Super Rocket:** Launch 7 tiles forward instantly.
-- 🛡️ **Magnetic Shield:** Complete protection from traps and coin steals for 2 turns.
-- 🧲 **Star Magnet:** Pull the Star Kaide 3 tiles closer to your pawn.
-- 🔄 **Swap Warp:** Swap board positions with any chosen rival.
-- 👻 **Ghost Cloak:** Immune to all traps, hazards, and penalties for 2 turns.
-- 🍀 **Lucky Die:** Guarantees your next roll is a max 6 (or 12 with Double Dice).
+## Teşekkürler
 
-### 🚀 Quick 1-Minute Deployment
-1. Upload **`index.php`** to your web server (`public_html/` or a subfolder).
-2. Visit `https://your-domain.com/`.
-3. Done! Instant multiplayer room creation, QR code sharing, and invite URLs (`?room=ABCD42`).
+- [GSAP](https://gsap.com) — animasyonlar (standart ücretsiz lisans)
+- [canvas-confetti](https://github.com/catdad/canvas-confetti) — konfeti (ISC)
+- [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) ve [Figtree](https://fonts.google.com/specimen/Figtree) — yazı tipleri (SIL Open Font License)
+
+Lisans metinleri `public/vendor/licenses/` klasöründe.
+
+## Lisans
+
+[MIT](LICENSE) © Nedim Demir
 
 ---
 
-## 🇩🇪 Deutsche Kurzanleitung
+<h2 id="english">English</h2>
 
-**PartyCraft: Wonder Board** ist ein rundenbasiertes Mehrspieler-Brettspiel mit 6 Minispielen, taktischen Gegenständen und 5 Sprachen.
+**Parti Dünyası** (PartyCraft: Wonder Board) is a browser party board game set in İstanbul, Tokyo, Paris and New York. Roll the dice, collect coins, buy stars and beat your rivals in mini-games.
 
-- ⚡ **Einzeldatei-Bereitstellung:** Laden Sie einfach **`index.php`** auf Ihren Webserver hoch. Keine Datenbank und kein npm erforderlich!
-- 🌐 **Automatische Spracherkennung:** Browser auf Deutsch schalten das Spiel automatisch auf Deutsch.
-- 🎮 **6 Minispiele:** Münzfang, Reflex-Ziele, Ballonplatzen, Schatztruhen, Gedächtnismatrix und der neue Kraft-Hammer!
+**[▶ Play now](https://nedimdmir.github.io/board_game/)** · [Download the latest release](https://github.com/nedimdmir/board_game/releases/latest)
 
----
+- **Four cities, four boards**, each with its own track shape and illustrated map, presented as a physical board on a felt table with chip-style spaces and classic pawns.
+- **8 tactical items** and **6 mini-games** played at the end of every round.
+- **Play with friends or bots.** Create a room and share the code or QR; empty seats are filled by bots. Works offline too.
+- **5 languages** (TR, EN, DE, ES, FR), picked automatically from your browser.
+- **Zero setup.** Upload a single `index.html` (static hosting, bots only) or `index.php` (any PHP host, full multiplayer). No database, npm or CDN needed.
 
-## 🇪🇸 Guía Rápida en Español
+**How to play:** roll on your turn, land on a space and take its effect, buy a star for 20 coins when you pass the glowing star space, play the end-of-round mini-game. Most stars after the last round wins; coins break ties.
 
-**PartyCraft: Wonder Board** es un juego de mesa multijugador por turnos ambientado en ciudades del mundo con 6 minijuegos y objetos tácticos.
+**Build:** sources live in `public/`; run `node build-single-file.js` to regenerate `index.html` and `index.php`.
 
-- ⚡ **Instalación en un Solo Archivo:** Sube únicamente **`index.php`** a tu servidor web. ¡Sin base de datos ni configuraciones complejas!
-- 🌐 **Detección Automática de Idioma:** Los navegadores en español cargan la interfaz en español automáticamente.
-- 🎮 **6 Minijuegos:** Atrapa-monedas, Reflejos, Globos, Cofres de la Suerte, Matriz de Memoria y Martillo de Fuerza.
-
----
-
-## 🇫🇷 Guide Rapide en Français
-
-**PartyCraft: Wonder Board** est un jeu de plateau multijoueur au tour par tour avec 6 mini-jeux et des objets tactiques.
-
-- ⚡ **Déploiement en un Seul Fichier:** Téléversez uniquement **`index.php`** sur votre hébergeur web.
-- 🌐 **Détection Automatique de la Langue:** L'interface bascule automatiquement en français si votre navigateur est configuré en français.
-- 🎮 **6 Mini-Jeux:** Attrape-Pièces, Réflexes, Éclate-Ballon, Coffres aux Trésors, Matrice de Mémoire et Marteau Forain!
-
----
-
-## 📜 Lisans / License
-
-- **Developer:** Nedim Demir
-- **License:** [MIT License](LICENSE) - Open source, free to use, modify, and host on your own websites.
+Licensed under [MIT](LICENSE).

@@ -1,23 +1,29 @@
 {
-  "name": "partycraft-wonder-board",
-  "version": "1.0.0",
-  "description": "PartyCraft: Wonder Board - Browser-based Multiplayer Turn-Based Party Board Game",
+  "name": "parti-dunyasi",
+  "version": "2.0.0",
+  "description": "Parti Dünyası (PartyCraft: Wonder Board) — a browser party board game set in İstanbul, Tokyo, Paris and New York",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "node build-single-file.js"
   },
   "keywords": [
     "board-game",
-    "multiplayer",
     "party-game",
-    "lego-party",
-    "mario-party",
+    "browser-game",
+    "html5-game",
+    "multiplayer",
     "turn-based",
-    "websocket",
-    "browser-game"
+    "minigames",
+    "offline"
   ],
-  "author": "Antigravity",
+  "homepage": "https://nedimdmir.github.io/board_game/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nedimdmir/board_game.git"
+  },
+  "author": "Nedim Demir",
   "license": "MIT",
   "dependencies": {
     "express": "^4.21.2",
