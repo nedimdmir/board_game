@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PartyCraft: Wonder Board | Lego Parti & Masa Oyunu</title>
   
-  <!-- Modern Clean Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <!-- Stylesheets -->
+  <meta name="theme-color" content="#1E1530">
+
+  <!-- Stylesheets (fonts are bundled locally in premium.css, so the game works offline) -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/board.css">
+  <link rel="stylesheet" href="css/premium.css">
 </head>
 <body>
 
@@ -31,6 +29,9 @@
         <button type="button" class="lang-btn" data-lang="fr">🇫🇷 FR</button>
       </div>
 
+      <div class="home-layout">
+      <!-- Left: the table — title and the ways to start playing -->
+      <section class="home-stage">
       <!-- Hero Header -->
       <header class="home-hero">
         <div class="hero-badge" data-i18n="hero_badge">🎲 Çok Oyunculu Dünya Turu Masa Oyunu</div>
@@ -38,6 +39,65 @@
         <p class="hero-subtitle" data-i18n="hero_subtitle">İstanbul, Tokyo, Paris ve New York sokaklarında zar at, yarış ve eğlen!</p>
       </header>
 
+      <!-- Main Play Action Cards -->
+      <div class="home-actions-grid">
+        <div class="action-card-btn primary" id="btn-quick-play" role="button" tabindex="0">
+          <div class="action-icon">⚡</div>
+          <div class="action-title" data-i18n="btn_quick_play">Hızlı Oyna</div>
+          <div class="action-desc" data-i18n="btn_quick_play_desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
+        </div>
+
+        <div class="action-card-btn emerald" id="btn-play-friends" role="button" tabindex="0">
+          <div class="action-icon">🌐</div>
+          <div class="action-title" data-i18n="btn_play_friends">Arkadaşlarınla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_friends_desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
+        </div>
+      </div>
+
+      <!-- Join Room Section -->
+      <div class="join-room-card">
+        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (ÖRN: ABCD)" data-i18n-placeholder="room_code_placeholder" maxlength="8">
+        <button class="btn-pill" id="btn-join-room" data-i18n="btn_join_room">Odaya Katıl</button>
+      </div>
+
+      <!-- Secondary entries -->
+      <div class="home-secondary-grid">
+        <div class="action-card-btn" id="btn-play-bots" role="button" tabindex="0">
+          <div class="action-icon">🤖</div>
+          <div class="action-title" data-i18n="btn_play_bots">Botlarla Oyna</div>
+          <div class="action-desc" data-i18n="btn_play_bots_desc">1 ila 3 bot seç ve antrenman yap!</div>
+        </div>
+
+        <div class="action-card-btn" id="btn-how-to-play" role="button" tabindex="0">
+          <div class="action-icon">📖</div>
+          <div class="action-title" data-i18n="btn_how_to_play">Nasıl Oynanır</div>
+          <div class="action-desc" data-i18n="btn_how_to_play_desc">Oyun kuralları, karolar ve taktikler</div>
+        </div>
+
+        <div class="action-card-btn" id="btn-settings" role="button" tabindex="0">
+          <div class="action-icon">⚙️</div>
+          <div class="action-title" data-i18n="btn_settings">Ayarlar</div>
+          <div class="action-desc" data-i18n="btn_settings_desc">Ses, müzik, dil ve grafik ayarları</div>
+        </div>
+      </div>
+
+      <!-- Server Status Badge -->
+      <div id="server-status-pill" class="server-status-pill">
+        <span class="status-dot">●</span> <span id="server-status-text" data-i18n="server_status_checking">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
+      </div>
+
+      <!-- Auxiliary Bar (Wardrobe / Music) -->
+      <div class="home-float-bar">
+        <button class="btn-icon-round" id="btn-open-wardrobe" title="Tüm Gardırop & Ödüller" aria-label="Gardırop">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </button>
+        <button class="btn-icon-round" id="btn-home-music" title="Müzik Aç/Kapat" aria-label="Müzik">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>
+        </button>
+      </div>
+      </section>
+
+      <!-- Right: the player mat (character card) -->
       <!-- Interactive Character Studio Card -->
       <div class="char-studio-card">
         <div class="studio-header">
@@ -93,62 +153,7 @@
         </div>
       </div>
 
-      <!-- Server Status Badge -->
-      <div id="server-status-pill" class="server-status-pill">
-        <span class="status-dot">●</span> <span id="server-status-text" data-i18n="server_status_checking">Sunucu Durumu: Bağlantı kontrol ediliyor...</span>
-      </div>
-
-      <!-- Main Play Action Cards (5 Choices) -->
-      <div class="home-actions-grid">
-        <div class="action-card-btn primary" id="btn-quick-play">
-          <div class="action-icon">⚡</div>
-          <div class="action-title" data-i18n="btn_quick_play">Hızlı Oyna</div>
-          <div class="action-desc" data-i18n="btn_quick_play_desc">Beklemeden hemen 3 akıllı bot ile İstanbul haritasında partiye başla!</div>
-        </div>
-
-        <div class="action-card-btn emerald" id="btn-play-friends">
-          <div class="action-icon">🌐</div>
-          <div class="action-title" data-i18n="btn_play_friends">Arkadaşlarınla Oyna</div>
-          <div class="action-desc" data-i18n="btn_play_friends_desc">Tek tıkla oda kur, davet bağlantısı veya QR kod ile arkadaşlarını çağır!</div>
-        </div>
-      </div>
-
-      <!-- Secondary 3-Card Menu Row -->
-      <div class="home-secondary-grid">
-        <div class="action-card-btn" id="btn-play-bots">
-          <div class="action-icon">🤖</div>
-          <div class="action-title" data-i18n="btn_play_bots">Botlarla Oyna</div>
-          <div class="action-desc" data-i18n="btn_play_bots_desc">1 ila 3 bot seç ve antrenman yap!</div>
-        </div>
-
-        <div class="action-card-btn" id="btn-how-to-play">
-          <div class="action-icon">📖</div>
-          <div class="action-title" data-i18n="btn_how_to_play">Nasıl Oynanır</div>
-          <div class="action-desc" data-i18n="btn_how_to_play_desc">Oyun kuralları, karolar ve taktikler</div>
-        </div>
-
-        <div class="action-card-btn" id="btn-settings">
-          <div class="action-icon">⚙️</div>
-          <div class="action-title" data-i18n="btn_settings">Ayarlar</div>
-          <div class="action-desc" data-i18n="btn_settings_desc">Ses, müzik, dil ve grafik ayarları</div>
-        </div>
-      </div>
-
-      <!-- Join Room Section -->
-      <div class="join-room-card">
-        <input type="text" id="input-room-code" class="join-room-input" placeholder="ODA KODU (ÖRN: ABCD)" data-i18n-placeholder="room_code_placeholder" maxlength="8">
-        <button class="btn-pill" id="btn-join-room" data-i18n="btn_join_room">Odaya Katıl</button>
-      </div>
-
-      <!-- Auxiliary Bar (Wardrobe / Music) -->
-      <div class="home-float-bar">
-        <button class="btn-icon-round" id="btn-open-wardrobe" title="Tüm Gardırop & Ödüller">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        </button>
-        <button class="btn-icon-round" id="btn-home-music" title="Müzik Aç/Kapat">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>
-        </button>
-      </div>
+      </div><!-- /.home-layout -->
 
     </div>
   </div>
@@ -161,9 +166,9 @@
       
       <div class="lobby-header-card">
         <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 13px; font-weight: 800; color: #64748B;">ODA KODU</div>
+          <div class="lobby-eyebrow">Oda kodu</div>
           <div class="room-code-tag" id="lobby-room-code">----</div>
-          <div id="lobby-map-badge" style="font-weight: 800; font-size: 13px; color: #4338CA; margin-top: 2px;">
+          <div id="lobby-map-badge" class="lobby-map-badge">
             🗺️ Harita: İstanbul - Boğazın İncisi
           </div>
           
@@ -176,11 +181,11 @@
 
           <input type="text" id="lobby-share-url" class="lobby-share-url" readonly value="" onclick="this.select()" title="Tıkla ve kopyala">
 
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-            <button class="btn-pill" id="btn-copy-link" style="background: #3B82F6; box-shadow: 0 4px 0 #1D4ED8;">
+          <div class="lobby-actions-row">
+            <button class="btn-pill btn-felt" id="btn-copy-link">
               📋 Bağlantıyı Kopyala
             </button>
-            <button class="btn-pill" id="btn-show-qr" style="background: #6366F1; box-shadow: 0 4px 0 #4F46E5;">
+            <button class="btn-pill btn-felt" id="btn-show-qr">
               📱 QR Kodu Göster
             </button>
           </div>
@@ -188,24 +193,24 @@
 
         <div class="lobby-qr-box" id="lobby-qr-container">
           <div id="lobby-qr-svg"></div>
-          <div style="font-size: 11px; font-weight: 800; color: #64748B; margin-top: 4px; text-align: center;">Telefonunla Tara</div>
+          <div class="lobby-qr-caption">Telefonunla tara</div>
         </div>
       </div>
 
-      <h3 style="font-size: 18px; font-weight: 800; color: #1E293B;">Oyuncular (<span id="lobby-player-count">...</span>/4)</h3>
+      <h3 class="lobby-section-title">Oyuncular (<span id="lobby-player-count">...</span>/4)</h3>
       <div class="lobby-players-grid" id="lobby-players-list">
         <!-- Rendered dynamically -->
       </div>
 
       <div class="lobby-controls-bar">
-        <button class="btn-pill" id="btn-lobby-leave" style="background: #64748B; box-shadow: 0 4px 0 #475569;">
+        <button class="btn-pill btn-felt" id="btn-lobby-leave">
           🚪 Odadan Ayrıl
         </button>
-        <button class="btn-pill" id="btn-lobby-add-bot" style="background: #8B5CF6; box-shadow: 0 4px 0 #6D28D9;">
+        <button class="btn-pill btn-brass" id="btn-lobby-add-bot">
           🤖 Bot Ekle
         </button>
-        <button class="btn-pill" id="btn-lobby-start" style="background: #10B981; box-shadow: 0 4px 0 #059669; font-size: 17px; padding: 14px 28px;">
-          🚀 Partiyi Başlat!
+        <button class="btn-pill btn-teal btn-start" id="btn-lobby-start">
+          🚀 Partiyi Başlat
         </button>
       </div>
 
@@ -334,15 +339,18 @@
   <!-- 3D Tumbling Single Die Roll Animation Modal -->
   <div id="dice-roll-overlay" class="modal-overlay hidden">
     <div class="modal-card dice-roll-modal">
-      <div class="dice-roller-title" id="dice-roller-name">🎲 ZAR ATILIYOR</div>
-      <div class="dice-single-wrapper">
+      <div class="dice-roller-title" id="dice-roller-name">Zar atılıyor</div>
+      <!-- Legacy 2D die (kept for compatibility; hidden when the 3D dice are available) -->
+      <div class="dice-single-wrapper" id="dice-legacy-wrapper">
         <div class="single-dice-box rolling" id="dice-cube-1">
           <div class="dice-pip-face" id="dice-pip-face">
             <span class="pip"></span>
           </div>
         </div>
       </div>
-      <div class="dice-result-badge" id="dice-result-value">Zar dönüyor...</div>
+      <!-- 3D lacquered dice, driven by js/fx.js -->
+      <div class="dice3d-stage" id="dice3d-stage" hidden></div>
+      <div class="dice-result-badge" id="dice-result-value" aria-live="polite">Zar dönüyor...</div>
     </div>
   </div>
 
@@ -850,15 +858,20 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
+  <!-- Vendored libraries (bundled into index.html / index.php by build-single-file.js) -->
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/confetti.browser.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/qr-svg.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/progression.js"></script>
   <script src="js/board-map.js"></script>
+  <script src="js/world-maps.js"></script>
   <script src="js/minigames.js"></script>
   <script src="js/game-client.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/fx.js"></script>
 
   <script>
     // Initialize UI on window load
