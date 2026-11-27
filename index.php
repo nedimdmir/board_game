@@ -11540,10 +11540,20 @@ window.BoardRenderer = BoardRenderer;
 
   const W = 1100;
   const H = 760;
-  const PAD = 260;          // scenery drawn around the world rect so panning never shows a void
+  // The map is a physical board lying on the felt table:
+  //   BM     = printed board margin around the 1100x760 world (frame lives here)
+  //   THICK  = visible board thickness below the top face
+  //   PAD    = cache area around the world (board + thickness + cast shadow)
+  const BM = 44;
+  const THICK = 16;
+  const PAD = BM + 70;
+  const BOARD_RADIUS = 30;
   // Static layer resolution. Phones render the board small, so 1x is plenty there.
-  const CACHE_SCALE = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 700) ? 1 : 1.5;
+  const CACHE_SCALE = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 700) ? 1.25 : 2;
   const SPRITE_SCALE = 2;
+  // Light comes from the top-left everywhere (shadows fall to the bottom-right)
+  const SHADOW_DX = 4;
+  const SHADOW_DY = 4;
 
   // ---------------------------------------------------------------------------
   // Geometry helpers
@@ -11651,10 +11661,25 @@ window.BoardRenderer = BoardRenderer;
   function block(ctx, x, y, w, h, depth, c, rand, windows) {
     const dx = depth * 0.55;
     const dy = -depth * 0.42;
+    // cast shadow toward the bottom-right
+    ctx.fillStyle = 'rgba(15, 10, 20, 0.22)';
+    ctx.beginPath();
+    ctx.moveTo(x + w, y); ctx.lineTo(x + w + h * 0.35, y + h * 0.12); ctx.lineTo(x + h * 0.35, y + h * 0.12 + 2); ctx.lineTo(x, y);
+    ctx.fill();
     polyFill(ctx, [[x + w, y], [x + w + dx, y + dy], [x + w + dx, y + dy - h], [x + w, y - h]], c.side);
     ctx.fillStyle = c.front;
     ctx.fillRect(x, y - h, w, h);
+    // ambient occlusion at the foot of the facade
+    const ao = ctx.createLinearGradient(0, y - Math.min(h, 14), 0, y);
+    ao.addColorStop(0, 'rgba(0,0,0,0)');
+    ao.addColorStop(1, 'rgba(0,0,0,0.22)');
+    ctx.fillStyle = ao;
+    ctx.fillRect(x, y - Math.min(h, 14), w, Math.min(h, 14));
     polyFill(ctx, [[x, y - h], [x + dx, y - h + dy], [x + w + dx, y - h + dy], [x + w, y - h]], c.top);
+    // sunlit roof edge
+    ctx.strokeStyle = 'rgba(255, 245, 225, 0.35)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w, y - h); ctx.stroke();
     if (windows && h > 14) {
       const cols = Math.max(1, Math.floor((w - 4) / 6));
       const rows = Math.max(1, Math.floor((h - 6) / 7));
@@ -11707,19 +11732,55 @@ window.BoardRenderer = BoardRenderer;
     return out.sort((a, b) => a.y - b.y);
   }
 
+  // Lit tree: cast shadow, trunk, dark base canopy, mid canopy, sunlit highlight
   function tree(ctx, x, y, r, c1, c2) {
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillStyle = 'rgba(20, 14, 10, 0.28)';
     ctx.beginPath();
-    ctx.ellipse(x + 3, y + 3, r, r * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + r * 0.6 + SHADOW_DX, y + SHADOW_DY * 0.5, r * 1.05, r * 0.5, 0.35, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#5A3E2B';
+    ctx.fillRect(x - 1, y - r * 0.5, 2, r * 0.55);
+    ctx.fillStyle = shade(c1, -0.22);
+    ctx.beginPath(); ctx.arc(x + r * 0.12, y - r * 0.35, r, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = c1;
-    ctx.beginPath();
-    ctx.arc(x, y - r * 0.4, r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(x - r * 0.05, y - r * 0.55, r * 0.86, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = c2;
+    ctx.beginPath(); ctx.arc(x - r * 0.32, y - r * 0.82, r * 0.46, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255, 250, 220, 0.22)';
+    ctx.beginPath(); ctx.arc(x - r * 0.42, y - r * 0.92, r * 0.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Lighten (+) or darken (-) a #rrggbb colour
+  function shade(hex, f) {
+    if (typeof hex !== 'string' || hex[0] !== '#' || hex.length !== 7) return hex;
+    const n = parseInt(hex.slice(1), 16);
+    const ch = (v) => Math.max(0, Math.min(255, Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f))));
+    return `rgb(${ch((n >> 16) & 255)}, ${ch((n >> 8) & 255)}, ${ch(n & 255)})`;
+  }
+
+  // Small house with a two-plane gabled roof, lit from the top-left
+  function house(ctx, x, y, w, h, wall, roof, rand) {
+    const d = w * 0.5;            // depth of the side wall
+    const dx = d * 0.55, dy = -d * 0.42;
+    // contact shadow
+    ctx.fillStyle = 'rgba(20, 14, 10, 0.3)';
     ctx.beginPath();
-    ctx.arc(x - r * 0.3, y - r * 0.7, r * 0.5, 0, Math.PI * 2);
+    ctx.moveTo(x + w, y); ctx.lineTo(x + w + dx + 6, y + 3); ctx.lineTo(x + 4, y + 4); ctx.lineTo(x, y);
     ctx.fill();
+    // side wall (in shade) and front wall (lit)
+    polyFill(ctx, [[x + w, y], [x + w + dx, y + dy], [x + w + dx, y + dy - h], [x + w, y - h]], shade(wall, -0.24));
+    ctx.fillStyle = wall;
+    ctx.fillRect(x, y - h, w, h);
+    // gable roof: lit plane + shaded plane
+    const ridgeY = y - h - w * 0.42;
+    polyFill(ctx, [[x - 1.5, y - h], [x + w / 2, ridgeY], [x + w / 2 + dx, ridgeY + dy], [x - 1.5 + dx, y - h + dy]], shade(roof, 0.12));
+    polyFill(ctx, [[x + w / 2, ridgeY], [x + w + 1.5, y - h], [x + w + 1.5 + dx, y - h + dy], [x + w / 2 + dx, ridgeY + dy]], shade(roof, -0.18));
+    polyFill(ctx, [[x - 1.5, y - h], [x + w / 2, ridgeY], [x + w + 1.5, y - h]], roof);
+    // window + door
+    ctx.fillStyle = rand() > 0.4 ? 'rgba(255, 214, 140, 0.95)' : 'rgba(60, 50, 60, 0.6)';
+    ctx.fillRect(x + w * 0.18, y - h * 0.72, w * 0.22, h * 0.28);
+    ctx.fillStyle = shade(wall, -0.45);
+    ctx.fillRect(x + w * 0.58, y - h * 0.5, w * 0.2, h * 0.5);
   }
 
   function waterTexture(ctx, rand, x0, y0, x1, y1, color, count) {
@@ -11852,16 +11913,9 @@ window.BoardRenderer = BoardRenderer;
           keepOut: [[330, 500, 70], [300, 335, 40], [850, 380, 60], [590, 132, 80], [250, 560, 58], [760, 250, 62], [850, 470, 50]]
         });
         houses.forEach(h => {
-          const w = 10 + h.r * 8;
-          const hh = 7 + h.r * 6;
-          ctx.fillStyle = 'rgba(0,0,0,0.25)';
-          ctx.fillRect(h.x + 2, h.y - 1, w, 4);
-          ctx.fillStyle = walls[Math.floor(h.r * walls.length)];
-          ctx.fillRect(h.x, h.y - hh, w, hh);
-          ctx.fillStyle = h.r > 0.5 ? '#B5533C' : '#C96A4A';
-          polyFill(ctx, [[h.x - 2, h.y - hh], [h.x + w / 2, h.y - hh - 6], [h.x + w + 2, h.y - hh]], ctx.fillStyle);
-          ctx.fillStyle = 'rgba(255, 220, 140, 0.85)';
-          if (h.r > 0.35) ctx.fillRect(h.x + 3, h.y - hh + 3, 2, 2);
+          const w = 11 + h.r * 6;
+          const hh = 8 + h.r * 5;
+          house(ctx, h.x, h.y, w, hh, walls[Math.floor(h.r * walls.length)], h.r > 0.5 ? '#B5533C' : '#C96A4A', rand);
         });
 
         // Green between the neighbourhoods
@@ -12650,6 +12704,41 @@ window.BoardRenderer = BoardRenderer;
     ctx.closePath();
   }
 
+  // Rounded outline of the board's top face (inset > 0 moves inward, dy shifts down)
+  function boardPath(ctx, inset, dy) {
+    const i = inset || 0;
+    ctx.beginPath();
+    ctx.roundRect(-BM + i, -BM + i + (dy || 0), W + 2 * BM - 2 * i, H + 2 * BM - 2 * i, Math.max(4, BOARD_RADIUS - i));
+  }
+  // The printed map area inside the frame
+  const MAP_INSET = 10;
+  function mapAreaPath(ctx) {
+    ctx.beginPath();
+    ctx.roundRect(-MAP_INSET, -MAP_INSET, W + MAP_INSET * 2, H + MAP_INSET * 2, 14);
+  }
+
+  function compassRose(ctx, x, y, r) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = '#7A5A35';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      ctx.save();
+      ctx.rotate((i * Math.PI) / 2);
+      polyFill(ctx, [[0, -r * 1.05], [r * 0.16, 0], [0, r * 0.08], [-r * 0.16, 0]], i === 0 ? '#C0392B' : '#7A5A35');
+      ctx.restore();
+      ctx.save();
+      ctx.rotate((i * Math.PI) / 2 + Math.PI / 4);
+      polyFill(ctx, [[0, -r * 0.62], [r * 0.1, 0], [-r * 0.1, 0]], '#B8862B');
+      ctx.restore();
+    }
+    ctx.fillStyle = '#EFE2C4';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.12, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   function sceneryFor(themeId) {
     const world = worldFor(themeId);
     const key = worldKey(world);
@@ -12660,10 +12749,44 @@ window.BoardRenderer = BoardRenderer;
     const ctx = canvas.getContext('2d');
     ctx.scale(CACHE_SCALE, CACHE_SCALE);
     ctx.translate(PAD, PAD);
+
+    // 1. Soft cast shadow of the board on the felt
+    ctx.save();
+    ctx.shadowColor = 'rgba(5, 2, 12, 0.6)';
+    ctx.shadowBlur = 46;
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 26;
+    boardPath(ctx, 0, THICK);
+    ctx.fillStyle = '#1A1210';
+    ctx.fill();
+    ctx.restore();
+
+    // 2. Board thickness (laminated edge)
+    boardPath(ctx, 0, THICK);
+    const edge = ctx.createLinearGradient(0, H, 0, H + BM + THICK);
+    edge.addColorStop(0, '#4A3424');
+    edge.addColorStop(1, '#23170F');
+    ctx.fillStyle = edge;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 220, 170, 0.08)';
+    ctx.lineWidth = 1;
+    for (let k = 4; k < THICK; k += 4) {
+      boardPath(ctx, 0, k);
+      ctx.stroke();
+    }
+
+    // 3. Top face: paper base, then the city map inside the frame
+    boardPath(ctx, 0, 0);
+    ctx.fillStyle = '#EFE2C4';
+    ctx.fill();
+
+    ctx.save();
+    mapAreaPath(ctx);
+    ctx.clip();
     world.drawStatic(ctx, world.dense);
 
     // Veil: quieter scenery so the track, tiles and pawns read first
-    ctx.fillStyle = world.veil || 'rgba(24, 16, 38, 0.22)';
+    ctx.fillStyle = world.veil || 'rgba(24, 16, 38, 0.18)';
     ctx.fillRect(-PAD, -PAD, W + PAD * 2, H + PAD * 2);
 
     // Bridge piers wherever the track runs over water
@@ -12674,53 +12797,110 @@ window.BoardRenderer = BoardRenderer;
 
     // Road body (the flowing centre line is drawn live)
     const road = world.road;
-    ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    traceDense(ctx, world.dense, 7);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 34;
+    traceDense(ctx, world.dense, 8);
+    ctx.strokeStyle = 'rgba(10, 6, 14, 0.35)';
+    ctx.lineWidth = 36;
     ctx.stroke();
     traceDense(ctx, world.dense, 3);
     ctx.strokeStyle = road.edge;
-    ctx.lineWidth = 32;
+    ctx.lineWidth = 33;
     ctx.stroke();
     if (road.glow) {
+      ctx.save();
       ctx.shadowColor = road.glow;
       ctx.shadowBlur = 16;
       traceDense(ctx, world.dense);
       ctx.strokeStyle = road.glow;
       ctx.lineWidth = 31;
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.restore();
     }
     traceDense(ctx, world.dense);
     ctx.strokeStyle = road.base;
-    ctx.lineWidth = 28;
+    ctx.lineWidth = 29;
     ctx.stroke();
+    // kerb highlight on the lit side
+    traceDense(ctx, world.dense, -1);
+    ctx.strokeStyle = 'rgba(255, 250, 235, 0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Lighting: warm key light from the top-left, cooler shade bottom-right, soft vignette
+    const light = ctx.createLinearGradient(0, 0, W, H);
+    light.addColorStop(0, 'rgba(255, 236, 200, 0.12)');
+    light.addColorStop(0.5, 'rgba(255, 236, 200, 0)');
+    light.addColorStop(1, 'rgba(12, 6, 24, 0.18)');
+    ctx.fillStyle = light;
+    ctx.fillRect(-MAP_INSET, -MAP_INSET, W + MAP_INSET * 2, H + MAP_INSET * 2);
+    const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, W * 0.72);
+    vig.addColorStop(0, 'rgba(10, 5, 20, 0)');
+    vig.addColorStop(1, 'rgba(10, 5, 20, 0.26)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(-MAP_INSET, -MAP_INSET, W + MAP_INSET * 2, H + MAP_INSET * 2);
     ctx.restore();
 
-    // Soft fade into the surrounding colour at the cache edges
-    const fade = 160;
-    const x0 = -PAD, y0 = -PAD, x1 = W + PAD, y1 = H + PAD;
-    [
-      [x0, y0, x0 + fade, y0, x0, y0, fade, y1 - y0],
-      [x1, y0, x1 - fade, y0, x1 - fade, y0, fade, y1 - y0],
-      [x0, y0, x0, y0 + fade, x0, y0, x1 - x0, fade],
-      [x0, y1, x0, y1 - fade, x0, y1 - fade, x1 - x0, fade]
-    ].forEach(([gx0, gy0, gx1, gy1, rx, ry, rw, rh]) => {
-      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-      g.addColorStop(0, world.outside);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(rx, ry, rw, rh);
+    // 4. Printed frame: neat line around the map, a brass rule, corner ornaments
+    mapAreaPath(ctx);
+    ctx.strokeStyle = '#5E4529';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    boardPath(ctx, 12, 0);
+    ctx.strokeStyle = '#B8862B';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    boardPath(ctx, 17, 0);
+    ctx.strokeStyle = 'rgba(122, 90, 53, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    [[-BM / 2 - 2, -BM / 2 - 2], [W + BM / 2 + 2, -BM / 2 - 2], [-BM / 2 - 2, H + BM / 2 + 2]].forEach(([cx, cy]) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = '#B8862B';
+      ctx.fillRect(-4, -4, 8, 8);
+      ctx.restore();
     });
+    compassRose(ctx, W + BM / 2 + 2, H + BM / 2 + 2, 15);
+
+    // 5. Bevel: a light catch on the top-left edge of the board
+    boardPath(ctx, 0.75, 0);
+    const bevel = ctx.createLinearGradient(-BM, -BM, W, H);
+    bevel.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+    bevel.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
+    bevel.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+    ctx.strokeStyle = bevel;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     cache[key] = canvas;
     if (typeof createImageBitmap === 'function') {
       createImageBitmap(canvas).then(bmp => { bitmaps[key] = bmp; }).catch(() => {});
     }
     return canvas;
+  }
+
+  // Felt table texture shared by every board
+  let feltCanvas = null;
+  function feltTile() {
+    if (feltCanvas) return feltCanvas;
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#1E1530';
+    ctx.fillRect(0, 0, 128, 128);
+    const rand = seeded(7);
+    for (let i = 0; i < 900; i++) {
+      const v = rand();
+      ctx.fillStyle = v > 0.5 ? 'rgba(255, 255, 255, 0.025)' : 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(Math.floor(rand() * 128), Math.floor(rand() * 128), 1, 1 + Math.floor(rand() * 2));
+    }
+    feltCanvas = c;
+    return c;
   }
 
   // Raw (un-veiled) scenery for menu thumbnails
@@ -12774,14 +12954,20 @@ window.BoardRenderer = BoardRenderer;
     switch (type) {
       case 'coin':
       case 'bank': {
+        // Embossed gold coin (no numbers on the board; the tile inspector shows amounts)
+        ctx.fillStyle = '#A97A22';
+        ctx.beginPath(); ctx.arc(0.8, 1, 9, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#E8B44A';
         ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#A97A22'; ctx.lineWidth = 1.6; ctx.stroke();
-        ctx.fillStyle = ink;
-        ctx.font = "800 9px 'Figtree', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(type === 'bank' ? '$' : `+${tile.amount || ''}`, 0, 0.5);
+        ctx.strokeStyle = '#C9952F'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.stroke();
+        if (type === 'bank') {
+          ctx.fillStyle = '#A97A22';
+          ctx.fillRect(-4, -1, 8, 5);
+          polyFill(ctx, [[-5, -1], [0, -5], [5, -1]], '#A97A22');
+        }
+        ctx.fillStyle = 'rgba(255, 250, 225, 0.8)';
+        ctx.beginPath(); ctx.arc(-3, -3.5, 2, 0, Math.PI * 2); ctx.fill();
         break;
       }
       case 'star':
@@ -12894,7 +13080,9 @@ window.BoardRenderer = BoardRenderer;
     }
     const img = sceneryFor(this.activeTheme);
     ctx.save();
-    ctx.fillStyle = world.outside;
+    // The felt table under the board
+    if (!this.__feltPattern) this.__feltPattern = ctx.createPattern(feltTile(), 'repeat');
+    ctx.fillStyle = this.__feltPattern || '#1E1530';
     ctx.fillRect(-3000, -3000, 7100, 6800);
 
     // Draw only the part of the cached scenery that is on screen
@@ -12918,8 +13106,23 @@ window.BoardRenderer = BoardRenderer;
         vx0, vy0, vx1 - vx0, vy1 - vy0);
     }
 
-    if (world.drawDynamic) world.drawDynamic(ctx, performance.now() / 1000);
+    // Moving details live on the printed map only (they slide under the frame)
+    if (world.drawDynamic) {
+      ctx.save();
+      mapAreaPath(ctx);
+      ctx.clip();
+      world.drawDynamic(ctx, performance.now() / 1000);
+      ctx.restore();
+    }
     ctx.restore();
+  };
+
+  // Frame the whole board (with a little felt around it) instead of just the map
+  const origResize = P.resizeCanvas;
+  P.resizeCanvas = function () {
+    this.virtualWidth = W + BM * 2 + 70;
+    this.virtualHeight = H + BM * 2 + THICK + 60;
+    origResize.call(this);
   };
 
   // Only the flowing centre line is live; the road body is in the cache
@@ -12941,9 +13144,10 @@ window.BoardRenderer = BoardRenderer;
   // Tile sprites: each kind of space is drawn once, then blitted every frame
   // ---------------------------------------------------------------------------
   const TILE_R = 25;
-  const TILE_DEPTH = 7;
-  const SPRITE_W = 64;
-  const SPRITE_H = 56;
+  const TILE_RY = TILE_R * 0.74;   // a rounder chip reads less "squashed"
+  const TILE_DEPTH = 9;
+  const SPRITE_W = 66;
+  const SPRITE_H = 64;
   const spriteCache = {};
 
   function darken(hex, f) {
@@ -12964,35 +13168,61 @@ window.BoardRenderer = BoardRenderer;
     const ctx = c.getContext('2d');
     ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
     const x = SPRITE_W / 2;
-    const y = SPRITE_H / 2 - 4;
+    const y = SPRITE_H / 2 - 6;
     const r = TILE_R;
+    const ry = TILE_RY;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath(); ctx.ellipse(x + 2, y + TILE_DEPTH + 5, r + 2, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = darken(style.color, 0.45);
-    ctx.beginPath(); ctx.ellipse(x, y + TILE_DEPTH, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
+    // Contact shadow toward the bottom-right
+    ctx.fillStyle = 'rgba(10, 6, 14, 0.38)';
+    ctx.beginPath(); ctx.ellipse(x + SHADOW_DX, y + TILE_DEPTH + SHADOW_DY, r + 1, ry, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Chip edge (thickness) with the classic striped inserts
+    ctx.fillStyle = darken(style.color, 0.42);
+    ctx.beginPath(); ctx.ellipse(x, y + TILE_DEPTH, r, ry, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillRect(x - r, y, r * 2, TILE_DEPTH);
-
-    const face = ctx.createLinearGradient(x, y - r, x, y + r);
-    face.addColorStop(0, style.color);
-    face.addColorStop(1, darken(style.color, 0.22));
-    ctx.fillStyle = face;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.66, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = style.hazard ? 'rgba(255, 160, 150, 0.9)' : 'rgba(255, 244, 222, 0.85)';
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    if (style.hazard) {
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(255, 220, 120, 0.85)';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.ellipse(x, y, r - 5, r * 0.66 - 4, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255, 244, 222, 0.85)';
+    for (let k = 1; k <= 7; k += 2) {
+      const a = (k / 8) * Math.PI;
+      const ex = x + Math.cos(a) * r;
+      const ey = y + Math.sin(a) * ry;
+      ctx.fillRect(ex - 2, ey + 1.5, 4, TILE_DEPTH - 3);
     }
 
+    // Top face
+    const face = ctx.createLinearGradient(x - r, y - ry, x + r, y + ry);
+    face.addColorStop(0, shade(style.color, 0.14));
+    face.addColorStop(1, darken(style.color, 0.18));
+    ctx.fillStyle = face;
+    ctx.beginPath(); ctx.ellipse(x, y, r, ry, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Inlaid ring of edge spots (hazards get a warning-yellow ring)
+    ctx.save();
+    ctx.setLineDash([5.5, 4.5]);
+    ctx.strokeStyle = style.hazard ? 'rgba(255, 214, 110, 0.95)' : 'rgba(255, 244, 222, 0.9)';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.ellipse(x, y, r - 3.5, ry - 3, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
+    // Card-stock medallion with the vector icon
     ctx.fillStyle = '#FFF4DE';
-    ctx.beginPath(); ctx.ellipse(x, y - 1, 13.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
-    drawIcon(ctx, tile.type, x, y - 1, tile);
+    ctx.beginPath(); ctx.ellipse(x, y, 14, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(43, 29, 18, 0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    drawIcon(ctx, tile.type, x, y, tile);
+
+    // Gloss on the lit side
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(x, y, r, ry, 0, 0, Math.PI * 2); ctx.clip();
+    const gloss = ctx.createLinearGradient(x - r, y - ry, x, y);
+    gloss.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+    gloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gloss;
+    ctx.fillRect(x - r, y - ry, r * 2, ry * 2);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255, 250, 235, 0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(x, y, r, ry, 0, Math.PI * 0.95, Math.PI * 1.75); ctx.stroke();
 
     spriteCache[key] = c;
     return c;
@@ -13022,13 +13252,13 @@ window.BoardRenderer = BoardRenderer;
       const s = 132 + Math.sin(pulse * 1.5) * 10;
       ctx.drawImage(starHalo(), pos.x - s / 2, pos.y - s / 2, s, s);
     }
-    ctx.drawImage(tileSprite(tile), pos.x - SPRITE_W / 2, pos.y - SPRITE_H / 2 + 4, SPRITE_W, SPRITE_H);
+    ctx.drawImage(tileSprite(tile), pos.x - SPRITE_W / 2, pos.y - SPRITE_H / 2 + 6, SPRITE_W, SPRITE_H);
 
     if (isStarTile) {
       ctx.save();
       ctx.strokeStyle = '#FFE08A';
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, TILE_R, TILE_R * 0.66, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y, TILE_R, TILE_RY, 0, 0, Math.PI * 2); ctx.stroke();
       const bob = Math.sin(pulse * 1.5) * 5;
       starPath(ctx, pos.x, pos.y - 44 + bob, 15);
       ctx.fillStyle = '#E8B44A';
@@ -13044,7 +13274,7 @@ window.BoardRenderer = BoardRenderer;
       ctx.strokeStyle = '#FFF4DE';
       ctx.lineWidth = 2.5;
       ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, TILE_R + 8, TILE_R * 0.66 + 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + 2, TILE_R + 8, TILE_RY + 7, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
     }
 
@@ -13082,7 +13312,95 @@ window.BoardRenderer = BoardRenderer;
     ctx.lineWidth = 2;
     for (let s = 1; s <= 6; s++) {
       const p = this.tileCoords[(active.position + s) % n];
-      ctx.beginPath(); ctx.ellipse(p.x, p.y, TILE_R + 5, TILE_R * 0.66 + 4, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, TILE_R + 5, TILE_RY + 4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Pawns: glossy board-game pieces in the player's colour. No labels — the
+  // active pawn gets a brass ring on the ground and a small marker above it.
+  // ---------------------------------------------------------------------------
+  P.renderMinifigToken = function (ctx, player, px, py, floorY, isClustered, sx, sy, hopArcY) {
+    const state = window.CURRENT_ROOM_STATE;
+    const active = state && state.players && state.players[state.turnIndex];
+    const isCurrent = !!active && active.id === player.id;
+    const color = (typeof player.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(player.color)) ? player.color : '#E5484D';
+    const pulse = (Math.sin((this.starPulse || 0) * 3) + 1) / 2;
+    const lift = Math.max(0, -(hopArcY || 0));
+    const fy = floorY + 4;
+
+    ctx.save();
+    // Shadow on the board shrinks while the pawn is in the air
+    const sh = Math.max(0.45, 1 - lift / 48);
+    ctx.fillStyle = `rgba(10, 6, 14, ${0.42 * sh})`;
+    ctx.beginPath(); ctx.ellipse(px + SHADOW_DX + 2, fy + SHADOW_DY * 0.6, 13 * sh, 5.5 * sh, 0, 0, Math.PI * 2); ctx.fill();
+
+    if (isCurrent) {
+      ctx.strokeStyle = `rgba(232, 180, 74, ${0.55 + pulse * 0.4})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(px, fy, 17 + pulse * 3, 7 + pulse * 1.2, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    ctx.translate(px, py + 4);
+    ctx.scale((sx || 1) * (isCurrent ? 1.08 : 0.94), (sy || 1) * (isCurrent ? 1.08 : 0.94));
+
+    const dark = shade(color, -0.38);
+    const light = shade(color, 0.38);
+    const body = ctx.createLinearGradient(-11, 0, 11, 0);
+    body.addColorStop(0, light);
+    body.addColorStop(0.45, color);
+    body.addColorStop(1, dark);
+
+    // Base disc
+    ctx.fillStyle = dark;
+    ctx.beginPath(); ctx.ellipse(0, 0, 12, 4.8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(-12, -4, 24, 4);
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.ellipse(0, -4, 12, 4.8, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Bell-shaped body
+    ctx.beginPath();
+    ctx.moveTo(-9.5, -5);
+    ctx.bezierCurveTo(-9, -14, -3.2, -18, -3.4, -27);
+    ctx.lineTo(3.4, -27);
+    ctx.bezierCurveTo(3.2, -18, 9, -14, 9.5, -5);
+    ctx.closePath();
+    ctx.fillStyle = body;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(20, 10, 14, 0.28)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Collar
+    ctx.fillStyle = shade(color, -0.15);
+    ctx.beginPath(); ctx.ellipse(0, -27.5, 6.5, 2.4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Head with a specular highlight
+    const head = ctx.createRadialGradient(-2.6, -37.5, 1, 0, -34.5, 8.5);
+    head.addColorStop(0, shade(color, 0.6));
+    head.addColorStop(0.5, color);
+    head.addColorStop(1, dark);
+    ctx.fillStyle = head;
+    ctx.beginPath(); ctx.arc(0, -34.5, 7.6, 0, Math.PI * 2); ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.beginPath(); ctx.ellipse(-2.8, -37.4, 2, 1.4, -0.5, 0, Math.PI * 2); ctx.fill();
+    // Body sheen
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.beginPath(); ctx.ellipse(-4.5, -13, 1.6, 6, 0.25, 0, Math.PI * 2); ctx.fill();
+
+    // Turn marker: a small brass chevron bobbing above the head
+    if (isCurrent) {
+      const bob = Math.sin((this.starPulse || 0) * 3) * 2.2;
+      ctx.translate(0, -54 + bob);
+      ctx.beginPath();
+      ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(0, 4); ctx.closePath();
+      ctx.fillStyle = '#E8B44A';
+      ctx.fill();
+      ctx.strokeStyle = '#FFF4DE';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
     ctx.restore();
   };
