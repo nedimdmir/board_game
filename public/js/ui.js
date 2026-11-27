@@ -818,24 +818,19 @@ class UIEngine {
     if (rollBtn) {
       rollBtn.disabled = !isMyTurn;
       rollBtn.classList.toggle('pulse-turn', isMyTurn);
-      if (isMyTurn && activePlayer) {
-        if (activePlayer.doubleDiceActive) {
-          rollBtn.innerHTML = '<span>🎲🎲</span> 2X ÇİFT ZAR! (SPACE)';
-          rollBtn.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
-          rollBtn.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.45)';
-        } else if (activePlayer.fixedRollNext) {
-          rollBtn.innerHTML = `<span>🎯</span> KİLİTLİ ZAR: ${activePlayer.fixedRollNext} (SPACE)`;
-          rollBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-          rollBtn.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.45)';
-        } else {
-          rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
-          rollBtn.style.background = '';
-          rollBtn.style.boxShadow = '';
-        }
+      // Short labels; the Space shortcut is shown as a small key cap, the variant as a class
+      const kbd = '<kbd class="roll-kbd">Space</kbd>';
+      rollBtn.style.background = '';
+      rollBtn.style.boxShadow = '';
+      rollBtn.classList.remove('is-double', 'is-fixed');
+      if (isMyTurn && activePlayer && activePlayer.doubleDiceActive) {
+        rollBtn.innerHTML = `<span>🎲🎲</span> Çift zar ${kbd}`;
+        rollBtn.classList.add('is-double');
+      } else if (isMyTurn && activePlayer && activePlayer.fixedRollNext) {
+        rollBtn.innerHTML = `<span>🎯</span> Zar: ${Number(activePlayer.fixedRollNext)} ${kbd}`;
+        rollBtn.classList.add('is-fixed');
       } else {
-        rollBtn.innerHTML = '<span>🎲</span> ZAR AT! (SPACE)';
-        rollBtn.style.background = '';
-        rollBtn.style.boxShadow = '';
+        rollBtn.innerHTML = `<span>🎲</span> Zar at ${kbd}`;
       }
     }
 

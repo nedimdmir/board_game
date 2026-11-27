@@ -88,6 +88,8 @@
     if (values.length === 0) values.push(Math.min(6, Math.max(1, data.totalRoll || 1)));
 
     if (window.AudioPlayer) AudioPlayer.playDiceRoll();
+    // The dice own the screen: clear any title card or turn banner still showing
+    document.querySelectorAll('.fx-city-intro, .fx-turn-sweep').forEach(el => el.remove());
     overlay.classList.remove('hidden');
     if (legacy) legacy.hidden = true;
     stage.hidden = false;
@@ -233,18 +235,14 @@
     const band = document.createElement('div');
     band.className = 'fx-turn-sweep-band';
     band.textContent = t().yourTurn;
-    const sub = document.createElement('small');
-    sub.textContent = t().yourTurnSub;
-    band.appendChild(sub);
     wrap.appendChild(band);
     document.body.appendChild(wrap);
-    if (!hasGsap || reduceMotion) {
-      setTimeout(() => wrap.remove(), 1400);
-      return;
-    }
+    // Hard upper bound, even if animation frames are throttled
+    setTimeout(() => wrap.remove(), 1600);
+    if (!hasGsap || reduceMotion) return;
     gsap.timeline({ onComplete: () => wrap.remove() })
-      .fromTo(band, { xPercent: -30, opacity: 0, scaleY: 0.6 }, { xPercent: 0, opacity: 1, scaleY: 1, duration: 0.38, ease: 'power3.out' })
-      .to(band, { xPercent: 30, opacity: 0, duration: 0.32, ease: 'power2.in' }, '+=0.75');
+      .fromTo(band, { y: 12, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' })
+      .to(band, { y: -8, opacity: 0, duration: 0.3, ease: 'power2.in' }, '+=0.6');
   }
 
   // ---------------------------------------------------------------------------
@@ -265,10 +263,9 @@
     document.body.appendChild(wrap);
     introUntil = Date.now() + 2300;
     const card = wrap.querySelector('.fx-city-intro-card');
-    if (!hasGsap || reduceMotion) {
-      setTimeout(() => wrap.remove(), 1800);
-      return;
-    }
+    // Hard upper bound, even if animation frames are throttled
+    setTimeout(() => wrap.remove(), 2600);
+    if (!hasGsap || reduceMotion) return;
     gsap.timeline({ onComplete: () => wrap.remove() })
       .fromTo(wrap, { opacity: 0 }, { opacity: 1, duration: 0.25 })
       .fromTo(card.querySelector('.fx-city-intro-title'), { y: 30, opacity: 0, letterSpacing: '0.2em' }, { y: 0, opacity: 1, letterSpacing: '-0.03em', duration: 0.7, ease: 'power3.out' }, 0.05)
@@ -280,7 +277,14 @@
   // ---------------------------------------------------------------------------
   // HUD enrichment: rank medals, star meters, round beads
   // ---------------------------------------------------------------------------
-  const STAR_PRICE = 20;
+  // Effects worth knowing at a glance; everything else (hats, bot badges) is dropped
+  const EFFECTS = [
+    ['jailedTurns', '🔒', 'Kodes'],
+    ['frozenTurns', '🧊', 'Donmuş'],
+    ['shieldActive', '🛡️', 'Kalkan'],
+    ['ghostCloakActive', '👻', 'Pelerin'],
+    ['reverseNext', '🔄', 'Ters yön']
+  ];
   function enrichHud(state) {
     if (!state || !Array.isArray(state.players)) return;
     const ranked = [...state.players].sort((a, b) => (b.stars - a.stars) || (b.coins - a.coins));
@@ -290,23 +294,29 @@
       const rank = document.createElement('span');
       rank.className = `hud-rank rank-${i + 1}`;
       rank.textContent = String(i + 1);
-      rank.title = `${i + 1}.`;
       card.appendChild(rank);
-      const stats = card.querySelector('.hud-player-stats');
-      if (stats) {
-        const meter = document.createElement('div');
-        meter.className = 'hud-star-meter';
-        meter.title = `${Math.min(p.coins, STAR_PRICE)} / ${STAR_PRICE} 🪙 → ⭐`;
-        const fill = document.createElement('span');
-        fill.style.width = `${Math.min(100, Math.round((p.coins / STAR_PRICE) * 100))}%`;
-        if (p.coins >= STAR_PRICE) meter.classList.add('is-ready');
-        meter.appendChild(fill);
-        stats.appendChild(meter);
+      const active = EFFECTS.filter(([k]) => p[k] && p[k] !== 0);
+      const nameEl = card.querySelector('.hud-pname');
+      if (active.length && nameEl) {
+        const fx = document.createElement('span');
+        fx.className = 'hud-effects';
+        fx.textContent = active.map(e => e[1]).join('');
+        fx.title = active.map(e => e[2]).join(', ');
+        nameEl.appendChild(fx);
       }
     });
 
-    // Round beads under the round card
+    // City name + round beads in one compact card
     const roundCard = document.getElementById('hud-round-card');
+    if (roundCard && window.WorldMaps) {
+      let city = roundCard.querySelector('.hud-city');
+      if (!city) {
+        city = document.createElement('span');
+        city.className = 'hud-city';
+        roundCard.prepend(city);
+      }
+      city.textContent = window.WorldMaps.info(state.mapTheme || 'istanbul').title;
+    }
     if (roundCard && state.totalRounds) {
       let beads = roundCard.querySelector('.hud-round-beads');
       if (!beads) {
@@ -355,6 +365,35 @@
   let lastPlayers = null;
   let lastTurnKey = null;
 
+  // One-line ticker for the newest game event (replaces the always-open event feed)
+  const seenLog = new Set();
+  let logPrimed = false;
+  let tickerTimer = null;
+  function showTicker(text) {
+    let el = document.getElementById('fx-ticker');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fx-ticker';
+      el.className = 'fx-ticker';
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.classList.add('is-visible');
+    clearTimeout(tickerTimer);
+    tickerTimer = setTimeout(() => el.classList.remove('is-visible'), 3200);
+  }
+  function onLog(log) {
+    if (!Array.isArray(log) || log.length === 0) return;
+    const unseen = log.filter(e => e && e.id && !seenLog.has(e.id));
+    log.forEach(e => e && e.id && seenLog.add(e.id));
+    if (!logPrimed) { logPrimed = true; return; }
+    if (unseen.length === 0) return;
+    // Node keeps newest first, PHP appends: pick the newest of the unseen entries
+    const newest = unseen[0] === log[0] ? unseen[0] : unseen[unseen.length - 1];
+    if (newest && newest.text) showTicker(newest.text);
+  }
+
   function isMe(p) {
     const me = window.GameClient && window.GameClient.player;
     return !!(me && ((p.sessionId && p.sessionId === me.sessionId) || (me.id && p.id === me.id)));
@@ -377,7 +416,8 @@
           floatText(card, `+${dStars} ⭐`, 'star', -38);
           burst(originOf(card), isMe(p) ? 1.4 : 0.7);
         }
-        if (dCoins !== 0) {
+        // Coin changes float only over your own card; rivals' coins just update quietly
+        if (dCoins !== 0 && isMe(p)) {
           // When a star was bought the price shows next to it, slightly later
           setTimeout(() => floatText(card, `${dCoins > 0 ? '+' : ''}${dCoins} 🪙`, dCoins < 0 ? 'loss' : null, dStars > 0 ? 42 : 0), dStars > 0 ? 300 : 0);
         }
@@ -386,6 +426,7 @@
 
     if (state.state === 'playing' || state.state === 'minigame') {
       enrichHud(state);
+      onLog(state.log);
     }
 
     if (state.state === 'playing') {
@@ -399,8 +440,9 @@
           // then re-check: the game may have ended or the turn moved on in the meantime
           setTimeout(() => {
             const live = window.CURRENT_ROOM_STATE;
-            const gameOverOpen = document.getElementById('modal-gameover') && !document.getElementById('modal-gameover').classList.contains('hidden');
-            if (!live || live.state !== 'playing' || gameOverOpen) return;
+            const isOpen = (id) => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); };
+            // Never stack the banner on top of another overlay
+            if (!live || live.state !== 'playing' || isOpen('modal-gameover') || isOpen('dice-roll-overlay') || isOpen('tile-event-overlay') || isOpen('minigame-overlay')) return;
             const now = live.players && live.players[live.turnIndex];
             if (now && isMe(now) && `${live.currentRound}:${live.turnIndex}` === key) yourTurnSweep();
           }, Math.max(450, introUntil - Date.now()));
@@ -450,13 +492,16 @@
       UIRef.triggerConfetti = function () { burst({ x: 0.5, y: 0.35 }, 1.5); };
     }
 
+    // Mini-game results: one short line instead of the full ranking string
     if (UIRef.showMiniGameResults) {
-      const origMg = UIRef.showMiniGameResults.bind(UIRef);
       UIRef.showMiniGameResults = function (data) {
-        origMg(data);
+        if (window.AudioPlayer) AudioPlayer.playStarFanfare();
         const winner = data && data.ranked && data.ranked[0];
+        if (!winner) return;
         const me = window.GameClient && window.GameClient.player;
-        if (winner && me && winner.id === me.id) burst({ x: 0.5, y: 0.45 }, 1.6);
+        const mine = me && winner.id === me.id;
+        UIRef.showToast(mine ? '🏆 Mini oyunu sen kazandın!' : `🏆 ${winner.name} mini oyunu kazandı`, 'success');
+        if (mine) burst({ x: 0.5, y: 0.45 }, 1.6);
       };
     }
 
@@ -470,6 +515,17 @@
 
     // City thumbnails in the create-room modal (rendered once the page is ready)
     setTimeout(decorateMapButtons, 0);
+
+    // Character card: compact by default, full customiser on demand
+    const editBtn = document.getElementById('btn-studio-edit');
+    const studio = document.querySelector('.char-studio-card');
+    if (editBtn && studio) {
+      editBtn.addEventListener('click', () => {
+        const open = studio.classList.toggle('is-editing');
+        editBtn.textContent = open ? 'Bitti' : 'Düzenle';
+        editBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
 
     // Keyboard access for the div-based action cards on the home screen
     document.addEventListener('keydown', (e) => {

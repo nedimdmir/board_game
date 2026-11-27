@@ -173,7 +173,8 @@ class BoardRenderer {
     if (!this.canvas) return;
     const parent = this.canvas.parentElement;
     const rect = parent.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // High-DPI sharpness without lag
+    // High-DPI sharpness without lag: phones (small, very dense screens) gain little above 1.5x
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.5 : 2);
 
     this.dpr = dpr;
     this.canvas.width = Math.round(rect.width * dpr);
@@ -2496,24 +2497,24 @@ class BoardRenderer {
       ctx.beginPath(); ctx.moveTo(9, -37); ctx.quadraticCurveTo(16, -43, 15, -49); ctx.quadraticCurveTo(11, -43, 6, -39); ctx.closePath(); ctx.fill();
     }
 
-    // 7. Dynamic Auto-Sizing Name Tag Pill (Guarantees zero text overflow!)
-    if (isCurrent || !isClustered) {
-      ctx.font = 'bold 9.5px sans-serif';
-      const displayName = player.name.length > 10 ? player.name.substr(0, 9) + '..' : player.name;
-      const tagText = `${displayName} ⭐${player.stars}`;
+    // 7. Name tag — only above the pawn whose turn it is, to keep the board quiet
+    if (isCurrent) {
+      ctx.font = "700 10px 'Figtree', sans-serif";
+      const displayName = player.name.length > 12 ? player.name.substr(0, 11) + '…' : player.name;
+      const tagText = displayName;
       const textWidth = ctx.measureText(tagText).width;
-      const pillWidth = Math.max(76, textWidth + 18);
+      const pillWidth = textWidth + 20;
       const pillHeight = 18;
 
       ctx.beginPath();
       ctx.roundRect(-pillWidth / 2, -56, pillWidth, pillHeight, 9);
-      ctx.fillStyle = isCurrent ? '#FEF08A' : 'rgba(15, 23, 42, 0.9)';
+      ctx.fillStyle = '#FFF4DE';
       ctx.fill();
-      ctx.strokeStyle = player.color || '#38BDF8';
-      ctx.lineWidth = isCurrent ? 2 : 1.2;
+      ctx.strokeStyle = '#E8B44A';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.fillStyle = isCurrent ? '#854D0E' : '#FFFFFF';
+      ctx.fillStyle = '#2B1D12';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(tagText, 0, -47);
@@ -2545,20 +2546,6 @@ class BoardRenderer {
         ctx.fillText(player.fixedRollNext, buffOffset, -47);
         buffOffset += 18;
       }
-    } else {
-      ctx.beginPath();
-      ctx.arc(0, -45, 10, 0, Math.PI * 2);
-      ctx.fillStyle = player.color;
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(player.name.charAt(0).toUpperCase(), 0, -45);
     }
 
     ctx.restore();
