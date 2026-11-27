@@ -4,10 +4,11 @@ const path = require('path');
 const os = require('os');
 const { WebSocketServer, WebSocket } = require('ws');
 const QRCode = require('qrcode');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 });
 
 const PORT = process.env.PORT || 3000;
 
@@ -31,7 +32,7 @@ function getLocalIpAddresses() {
 
 // Endpoint: QR code generator
 app.get('/api/qr', async (req, res) => {
-  const text = req.query.url || `http://localhost:${PORT}`;
+  const text = String(req.query.url || `http://localhost:${PORT}`).slice(0, 500);
   try {
     const qrSvg = await QRCode.toString(text, { type: 'svg', margin: 1, width: 220 });
     res.type('image/svg+xml').send(qrSvg);
@@ -234,12 +235,42 @@ const SHOP_ITEMS = [
 ];
 
 class Room {
+  // ---------------------------------------------------------------------------
+  // Input sanitizers (static so the single-file build's LocalRoom copy keeps them)
+  // ---------------------------------------------------------------------------
+  static cleanText(value, maxLen, fallback = '') {
+    if (typeof value !== 'string') return fallback;
+    // Strip HTML-significant characters and control characters
+    const cleaned = value.replace(/[<>"'`&\\]/g, '').replace(/[\u0000-\u001F\u007F]/g, '').trim();
+    return cleaned ? Array.from(cleaned).slice(0, maxLen).join('') : fallback;
+  }
+
+  static cleanSlug(value, fallback) {
+    return (typeof value === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(value)) ? value : fallback;
+  }
+
+  static cleanColor(value, fallback = null) {
+    return (typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)) ? value : fallback;
+  }
+
+  static cleanInt(value, min, max, fallback) {
+    const n = parseInt(value, 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  static normalizeTheme(theme) {
+    const aliases = { cyber: 'tokyo', candy: 'paris', tropics: 'istanbul' };
+    const t = aliases[theme] || theme;
+    return ['istanbul', 'tokyo', 'paris', 'newyork'].includes(t) ? t : 'istanbul';
+  }
+
   constructor(roomId, hostSessionId, hostName, settings = {}) {
     this.id = roomId;
     this.hostSessionId = hostSessionId;
     this.state = 'lobby'; // 'lobby' | 'playing' | 'minigame' | 'gameover'
-    this.totalRounds = settings.totalRounds || 10;
-    this.mapTheme = settings.mapTheme || 'tropics';
+    this.totalRounds = this.constructor.cleanInt(settings.totalRounds, 3, 30, 10);
+    this.mapTheme = this.constructor.normalizeTheme(settings.mapTheme || 'istanbul');
     this.currentRound = 1;
     this.turnIndex = 0; // index in players array
     this.players = []; // list of Player objects
@@ -254,9 +285,49 @@ class Room {
     this.botActionTimeout = null;
     this.isProcessingTurn = false;
     this.gameSpeed = 1;
+    // Incremented on every finished turn; deferred callbacks capture it so a stale
+    // timer (shop auto-close, double finish, etc.) can never end a later turn.
+    this.turnSerial = 0;
+    this.shopOpenFor = null; // player id allowed to buy from the shop right now
+    this.destroyed = false;
+    this.bankPool = 10;
+  }
+
+  // Run a callback later, but only if the same turn is still in progress.
+  deferForTurn(ms, fn) {
+    const serial = this.turnSerial;
+    setTimeout(() => {
+      if (this.destroyed || this.turnSerial !== serial) return;
+      fn();
+    }, ms);
+  }
+
+  deferFinishTurn(ms) {
+    this.deferForTurn(ms, () => this.finishTurn());
+  }
+
+  destroy() {
+    this.destroyed = true;
+    this.turnSerial++;
+    clearTimeout(this.botActionTimeout);
+    clearTimeout(this.minigameTimeout);
+    this.players.forEach(p => { p.ws = null; });
+  }
+
+  hasConnectedHumans() {
+    return this.players.some(p => !p.isBot && p.ws && p.ws.readyState === 1);
   }
 
   addPlayer(sessionId, name, avatar = 'builder', diceSkin = 'default', level = 1, title = 'Acemi Zarcı', ws = null, hat = 'none', customColor = null) {
+    const R = this.constructor;
+    name = R.cleanText(name, 16, '');
+    title = R.cleanText(title, 24, 'Acemi Zarcı');
+    avatar = R.cleanSlug(avatar, 'builder');
+    diceSkin = R.cleanSlug(diceSkin, 'default');
+    hat = R.cleanSlug(hat, 'none');
+    customColor = R.cleanColor(customColor, null);
+    level = R.cleanInt(level, 1, 100, 1);
+
     let existing = this.players.find(p => p.sessionId === sessionId);
     if (existing) {
       // Reconnection!
@@ -272,6 +343,8 @@ class Room {
     }
 
     if (this.players.length >= 6) return null;
+    // New humans can only join while the room is still in the lobby
+    if (this.state !== 'lobby') return null;
 
     const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#1E293B'];
     const playerColor = customColor || colors[this.players.length % colors.length];
@@ -310,12 +383,13 @@ class Room {
   updatePlayerProfile(sessionId, profileData = {}) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
-    if (profileData.name) player.name = profileData.name;
-    if (profileData.avatar) player.avatar = profileData.avatar;
-    if (profileData.hat) player.hat = profileData.hat;
-    if (profileData.color) player.color = profileData.color;
-    if (profileData.diceSkin) player.diceSkin = profileData.diceSkin;
-    if (profileData.title) player.title = profileData.title;
+    const R = this.constructor;
+    player.name = R.cleanText(profileData.name, 16, player.name);
+    player.avatar = R.cleanSlug(profileData.avatar, player.avatar);
+    player.hat = R.cleanSlug(profileData.hat, player.hat);
+    player.color = R.cleanColor(profileData.color, player.color);
+    player.diceSkin = R.cleanSlug(profileData.diceSkin, player.diceSkin);
+    player.title = R.cleanText(profileData.title, 24, player.title);
   }
 
   addBot(personality = null) {
@@ -363,10 +437,22 @@ class Room {
     if (idx !== -1) {
       const removed = this.players.splice(idx, 1)[0];
       this.addLog(`🚪 ${removed.name} ayrıldı.`);
+      // Keep the turn pointer on the same player when someone before them leaves
+      if (idx < this.turnIndex) this.turnIndex--;
       if (this.turnIndex >= this.players.length) {
         this.turnIndex = 0;
       }
+      // Hand the host role to the next human so the lobby is not orphaned
+      if (removed.sessionId === this.hostSessionId) {
+        const nextHost = this.players.find(p => !p.isBot);
+        this.hostSessionId = nextHost ? nextHost.sessionId : null;
+        if (nextHost) this.addLog(`👑 ${nextHost.name} artık oda sahibi!`);
+      }
     }
+  }
+
+  isHost(sessionId) {
+    return !!sessionId && sessionId === this.hostSessionId;
   }
 
   handleDisconnect(sessionId) {
@@ -401,12 +487,29 @@ class Room {
     if (this.log.length > 25) this.log.pop();
   }
 
+  // Session ids act as reconnect secrets, so each recipient only ever sees its own.
+  static redactSessionIds(list, viewerSessionId) {
+    return list.map(entry => {
+      if (!entry || entry.sessionId === undefined || entry.sessionId === viewerSessionId) return entry;
+      const { sessionId, ...rest } = entry;
+      return rest;
+    });
+  }
+
   broadcast(type, payload = {}) {
-    const message = JSON.stringify({ type, ...payload });
+    const needsRedaction = Array.isArray(payload.players) || Array.isArray(payload.leaderboard) || (payload.winner && payload.winner.sessionId);
+    const shared = needsRedaction ? null : JSON.stringify({ type, ...payload });
     this.players.forEach(p => {
-      if (p.ws && p.ws.readyState === WebSocket.OPEN) {
-        p.ws.send(message);
+      if (!p.ws || p.ws.readyState !== WebSocket.OPEN) return;
+      if (shared) {
+        p.ws.send(shared);
+        return;
       }
+      const personal = { type, ...payload };
+      if (Array.isArray(payload.players)) personal.players = Room.redactSessionIds(payload.players, p.sessionId);
+      if (Array.isArray(payload.leaderboard)) personal.leaderboard = Room.redactSessionIds(payload.leaderboard, p.sessionId);
+      if (payload.winner) personal.winner = Room.redactSessionIds([payload.winner], p.sessionId)[0];
+      p.ws.send(JSON.stringify(personal));
     });
   }
 
@@ -459,7 +562,8 @@ class Room {
     this.state = 'playing';
     this.currentRound = 1;
     this.turnIndex = 0;
-    this.activeStarTile = [7, 15, 23, 31][Math.floor(Math.random() * 4)];
+    const starTiles = this.getStarTiles();
+    this.activeStarTile = starTiles[Math.floor(Math.random() * starTiles.length)];
     this.addLog(`🚀 Parti başladı! Toplam ${this.totalRounds} tur oynanacak. Yıldız kaidesi ${this.activeStarTile}. karoda!`);
 
     this.broadcastState();
@@ -479,6 +583,7 @@ class Room {
 
   scheduleBotTurn() {
     clearTimeout(this.botActionTimeout);
+    if (this.destroyed) return;
     const spd = this.gameSpeed || 1;
     this.botActionTimeout = setTimeout(() => {
       this.executeBotTurn();
@@ -505,9 +610,9 @@ class Room {
 
     // Bot rolls dice after small pause
     const spd = this.gameSpeed || 1;
-    setTimeout(() => {
+    this.deferForTurn(Math.max(180, Math.round(800 / spd)), () => {
       this.rollDice(bot.sessionId);
-    }, Math.max(180, Math.round(800 / spd)));
+    });
   }
 
   rollDice(sessionId) {
@@ -529,7 +634,7 @@ class Room {
         player.jailedTurns--;
         this.addLog(`⛓️ ${player.name} Kodes cezasını çekiyor, bu turu pas geçti!`);
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
+        this.deferFinishTurn(Math.max(300, Math.round(1200 / spd)));
         return;
       }
     }
@@ -563,9 +668,9 @@ class Room {
     });
 
     // Move player step by step AFTER dice modal finishes and closes completely
-    setTimeout(() => {
+    this.deferForTurn(Math.max(300, Math.round(1500 / spd)), () => {
       this.movePlayerSteps(player, totalRoll);
-    }, Math.max(300, Math.round(1500 / spd)));
+    });
   }
 
   movePlayerSteps(player, steps) {
@@ -622,13 +727,20 @@ class Room {
     // Trigger Tile Effect strictly after Monopoly-style hopping completes
     const spd = this.gameSpeed || 1;
     const hopDurationMs = Math.max(300, Math.round(((Math.abs(steps) * 380) + 400) / spd));
-    setTimeout(() => {
+    this.deferForTurn(hopDurationMs, () => {
       this.resolveTileEffect(player, newPos);
-    }, hopDurationMs);
+    });
+  }
+
+  // Indices of the board's star pedestal tiles (falls back to the classic layout)
+  getStarTiles() {
+    const stars = this.board.filter(t => t.type === 'star').map(t => t.id);
+    return stars.length > 0 ? stars : [7, 15, 23, 31];
   }
 
   relocateStar() {
-    const starCandidates = [3, 7, 11, 15, 19, 23, 27, 31].filter(idx => idx !== this.activeStarTile);
+    const starCandidates = this.getStarTiles().filter(idx => idx !== this.activeStarTile);
+    if (starCandidates.length === 0) return;
     this.activeStarTile = starCandidates[Math.floor(Math.random() * starCandidates.length)];
     this.addLog(`🌟 Yıldız yeni bir konuma ışınlandı: ${this.activeStarTile}. Karo!`);
   }
@@ -656,7 +768,7 @@ class Room {
           sound: 'slip'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+        this.deferFinishTurn(Math.max(350, Math.round(1800 / spd)));
         return;
       }
     }
@@ -665,7 +777,7 @@ class Room {
     if (player.ghostCloakActive > 0 && (tile.type === 'trap' || tile.type === 'tax' || tile.type === 'jail' || tile.type === 'slip' || tile.type === 'freeze')) {
       this.addLog(`👻 Hayalet Pelerin devrede! ${player.name} ${tile.type.toUpperCase()} cezasını dokunmadan es geçti!`);
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(900 / spd)));
+      this.deferFinishTurn(Math.max(250, Math.round(900 / spd)));
       return;
     }
 
@@ -685,7 +797,7 @@ class Room {
           sound: 'coin'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        this.deferFinishTurn(2000);
         break;
       }
 
@@ -706,7 +818,7 @@ class Room {
           sound: 'fanfare'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -742,7 +854,7 @@ class Room {
           });
         }
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -768,7 +880,7 @@ class Room {
           sound: 'warp'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -786,7 +898,7 @@ class Room {
           sound: 'slip'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -804,7 +916,7 @@ class Room {
           sound: 'jail'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -841,12 +953,14 @@ class Room {
           });
         }
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
       case 'freeze': {
-        player.frozenTurns = 1;
+        // Status counters tick down at the end of the owner's turn (finishTurn).
+        // Landing happens at the end of this turn, so 2 = "the whole next turn".
+        player.frozenTurns = 2;
         this.addLog(`🧊 BUZ TUZAĞI! ${player.name} donduruldu! Bir tur boyunca eşya kullanamaz!`);
         this.broadcast('tile_event', {
           playerId: player.id,
@@ -859,7 +973,7 @@ class Room {
           sound: 'freeze'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        this.deferFinishTurn(2000);
         break;
       }
 
@@ -877,7 +991,7 @@ class Room {
           sound: 'reverse'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1600 / spd)));
+        this.deferFinishTurn(Math.max(350, Math.round(1600 / spd)));
         break;
       }
 
@@ -887,7 +1001,7 @@ class Room {
 
       default:
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(200, Math.round(700 / spd)));
+        this.deferFinishTurn(Math.max(200, Math.round(700 / spd)));
         break;
     }
   }
@@ -897,7 +1011,7 @@ class Room {
     const events = [
       { name: 'Gökten Altın', fn: () => { player.coins += 12; this.addLog(`🎁 Şans Çarkı: ${player.name} gökten düşen sandıktan +12 Altın kaptı!`); } },
       { name: 'Çifte Şans', fn: () => { player.inventory.push('double_dice'); this.addLog(`🎁 Şans Çarkı: ${player.name} ücretsiz Çift Zar kazandı!`); } },
-      { name: 'Kalkan Hediyesi', fn: () => { player.shieldActive = 2; this.addLog(`🎁 Şans Çarkı: ${player.name} 2 turluk koruma kalkanı kazandı!`); } },
+      { name: 'Kalkan Hediyesi', fn: () => { player.shieldActive = 3; /* granted at turn end: covers the next 2 turns */ this.addLog(`🎁 Şans Çarkı: ${player.name} 2 turluk koruma kalkanı kazandı!`); } },
       { name: 'Liderden Arakla', fn: () => {
         const others = this.players.filter(p => p.id !== player.id && p.coins > 0);
         if (others.length > 0) {
@@ -921,43 +1035,62 @@ class Room {
       eventName: chosen.name
     });
 
-    setTimeout(() => {
+    this.deferForTurn(Math.max(350, Math.round(1400 / spd)), () => {
       chosen.fn();
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(1000 / spd)));
-    }, Math.max(350, Math.round(1400 / spd)));
+      this.deferFinishTurn(Math.max(250, Math.round(1000 / spd)));
+    });
   }
 
   triggerShop(player) {
     const spd = this.gameSpeed || 1;
     // If bot, auto buy useful item if afford
     if (player.isBot) {
-      if (player.coins >= 10 && !player.inventory.includes('double_dice')) {
-        player.coins -= 7;
+      const costOf = (id) => (SHOP_ITEMS.find(i => i.id === id) || { cost: 999 }).cost;
+      if (player.coins >= costOf('double_dice') + 3 && !player.inventory.includes('double_dice')) {
+        player.coins -= costOf('double_dice');
         player.inventory.push('double_dice');
         this.addLog(`🏪 ${player.name} Dükkandan Çift Zar satın aldı!`);
-      } else if (player.coins >= 12 && !player.inventory.includes('magnet')) {
-        player.coins -= 10;
+      } else if (player.coins >= costOf('magnet') + 2 && !player.inventory.includes('magnet')) {
+        player.coins -= costOf('magnet');
         player.inventory.push('magnet');
         this.addLog(`🏪 ${player.name} Dükkandan Altın Mıknatısı aldı!`);
       }
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(200, Math.round(800 / spd)));
+      this.deferFinishTurn(Math.max(200, Math.round(800 / spd)));
       return;
     }
 
-    // If human, notify client to open shop modal
+    // If human, notify client to open shop modal; only this player may buy until the turn ends
+    this.shopOpenFor = player.id;
     this.broadcast('open_shop', {
       playerId: player.id,
       items: SHOP_ITEMS
     });
 
-    // Auto close shop after 15 seconds if player is idle
-    setTimeout(() => {
-      if (this.getCurrentPlayer() && this.getCurrentPlayer().id === player.id) {
-        this.finishTurn();
-      }
-    }, 15000);
+    // Auto close shop after 15 seconds if player is idle (turn-guarded: never ends a later turn)
+    this.deferFinishTurn(15000);
+  }
+
+  buyItem(sessionId, itemId) {
+    const player = this.players.find(p => p.sessionId === sessionId);
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    const current = this.getCurrentPlayer();
+    if (!player || !item || this.state !== 'playing') return 'invalid';
+    if (!current || current.id !== player.id || this.shopOpenFor !== player.id) return 'shop_closed';
+    if (player.coins < item.cost) return 'no_coins';
+    player.coins -= item.cost;
+    player.inventory.push(item.id);
+    this.addLog(`🛍️ ${player.name} ${item.name} satın aldı!`);
+    this.broadcastState();
+    return null;
+  }
+
+  closeShop(sessionId) {
+    const current = this.getCurrentPlayer();
+    if (current && current.sessionId === sessionId && this.shopOpenFor === current.id) {
+      this.finishTurn();
+    }
   }
 
   triggerDuel(player) {
@@ -987,20 +1120,33 @@ class Room {
     this.addLog(`⚔️ Düello! ${duelResult}`);
     this.broadcast('duel_result', { text: duelResult });
     this.broadcastState();
-    setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
+    this.deferFinishTurn(Math.max(300, Math.round(1200 / spd)));
   }
 
   useItem(sessionId, itemId, targetPlayerId = null) {
     const player = this.players.find(p => p.sessionId === sessionId);
-    if (!player) return;
+    if (!player) return 'invalid';
+
+    // Items can only be used on your own turn, before the dice are rolled
+    const current = this.getCurrentPlayer();
+    if (this.state !== 'playing' || !current || current.id !== player.id) return 'not_your_turn';
+    if (this.isProcessingTurn) return 'turn_in_progress';
 
     if (player.frozenTurns > 0) {
       this.addLog(`🧊 ${player.name} donmuş durumda, eşya kullanamaz!`);
-      return;
+      this.broadcastState();
+      return 'frozen';
     }
 
     const idx = player.inventory.indexOf(itemId);
-    if (idx === -1) return;
+    if (idx === -1) return 'no_item';
+
+    let swapTarget = null;
+    if (itemId === 'swap_wand') {
+      swapTarget = this.players.find(p => p.id === targetPlayerId && p.id !== player.id)
+        || this.players.find(p => p.id !== player.id);
+      if (!swapTarget) return 'no_target';
+    }
 
     player.inventory.splice(idx, 1);
 
@@ -1012,8 +1158,10 @@ class Room {
 
       case 'rocket':
         this.addLog(`🚀 ${player.name} Roket ateşledi ve 7 adım ileri fırladı!`);
+        // The rocket replaces this turn's roll: lock the turn so dice can't also be rolled
+        this.isProcessingTurn = true;
         this.movePlayerSteps(player, 7);
-        return;
+        return null;
 
       case 'shield':
         player.shieldActive = 2;
@@ -1038,15 +1186,13 @@ class Room {
         this.addLog(`🍌 ${player.name} ${player.position}. karoya muz kabuğu tuzağı bıraktı!`);
         break;
 
-      case 'swap_wand':
-        const target = this.players.find(p => p.id === targetPlayerId) || this.players.find(p => p.id !== player.id);
-        if (target) {
-          const tempPos = player.position;
-          player.position = target.position;
-          target.position = tempPos;
-          this.addLog(`🪄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
-        }
+      case 'swap_wand': {
+        const tempPos = player.position;
+        player.position = swapTarget.position;
+        swapTarget.position = tempPos;
+        this.addLog(`🪄 ${player.name} Takas Asası ile ${swapTarget.name} ile konumlarını değiştirdi!`);
         break;
+      }
 
       case 'ghost_cloak':
         player.ghostCloakActive = 2;
@@ -1054,16 +1200,21 @@ class Room {
         break;
 
       case 'lucky_die':
-        const fixedVal = Math.min(6, Math.max(1, parseInt(targetPlayerId) || 6));
+        const fixedVal = this.constructor.cleanInt(targetPlayerId, 1, 6, 6);
         player.fixedRollNext = fixedVal;
         this.addLog(`🎯 ${player.name} Şanslı Altın Zar ayarladı: Sıradaki zarı garanti [${fixedVal}] gelecek!`);
         break;
     }
 
     this.broadcastState();
+    return null;
   }
 
   finishTurn() {
+    if (this.destroyed) return;
+    // Invalidate every timer that belongs to the turn that is ending
+    this.turnSerial++;
+    this.shopOpenFor = null;
     this.isProcessingTurn = false;
     const current = this.getCurrentPlayer();
     if (current) {
@@ -1094,26 +1245,40 @@ class Room {
   }
 
   handleTradeOffer(fromSessionId, offer) {
+    if (!offer || typeof offer !== 'object') return;
+    if (this.state !== 'playing') return;
     const sender = this.players.find(p => p.sessionId === fromSessionId);
     const receiver = this.players.find(p => p.id === offer.toPlayerId);
-    if (!sender || !receiver) return;
+    if (!sender || !receiver || sender.id === receiver.id) return;
 
-    const offerCoins = parseInt(offer.offerCoins) || 0;
-    const requestCoins = parseInt(offer.requestCoins) || 0;
+    // Only non-negative whole coin amounts and real item ids are tradable
+    const offerCoins = this.constructor.cleanInt(offer.offerCoins, 0, 9999, 0);
+    const requestCoins = this.constructor.cleanInt(offer.requestCoins, 0, 9999, 0);
+    const isItem = (id) => typeof id === 'string' && SHOP_ITEMS.some(i => i.id === id);
+    const offerItem = isItem(offer.offerItem) ? offer.offerItem : null;
+    const requestItem = isItem(offer.requestItem) ? offer.requestItem : null;
+    if (!offerCoins && !requestCoins && !offerItem && !requestItem) return;
 
     if (sender.coins < offerCoins) return;
-    if (offer.offerItem && !sender.inventory.includes(offer.offerItem)) return;
+    if (offerItem && !sender.inventory.includes(offerItem)) return;
 
-    const tradeId = 'tr_' + Math.random().toString(36).substr(2, 6);
+    // Drop any older offer between the same two players so pending offers can't pile up
+    Object.keys(this.pendingTrades).forEach(id => {
+      const t = this.pendingTrades[id];
+      if (t.senderId === sender.id && t.receiverId === receiver.id) delete this.pendingTrades[id];
+    });
+
+    const tradeId = 'tr_' + Math.random().toString(36).substr(2, 10);
     this.pendingTrades[tradeId] = {
       id: tradeId,
       senderId: sender.id,
       receiverId: receiver.id,
       offerCoins,
-      offerItem: offer.offerItem || null,
+      offerItem,
       requestCoins,
-      requestItem: offer.requestItem || null
+      requestItem
     };
+    offer = { offerItem, requestItem };
 
     if (receiver.isBot) {
       // Bot evaluates trade offer
@@ -1139,13 +1304,17 @@ class Room {
     }
   }
 
-  resolveTrade(tradeId, accepted) {
+  // responderSessionId: the session answering the offer. Only the receiver may answer;
+  // internal callers (bot decisions) pass null.
+  resolveTrade(tradeId, accepted, responderSessionId = null) {
     const trade = this.pendingTrades[tradeId];
     if (!trade) return;
-    delete this.pendingTrades[tradeId];
 
     const sender = this.players.find(p => p.id === trade.senderId);
     const receiver = this.players.find(p => p.id === trade.receiverId);
+    if (responderSessionId !== null && (!receiver || receiver.sessionId !== responderSessionId)) return;
+    delete this.pendingTrades[tradeId];
+    accepted = accepted === true;
     if (!sender || !receiver) return;
 
     if (!accepted) {
@@ -1187,11 +1356,13 @@ class Room {
   sendQuickChat(sessionId, text) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
+    const cleanText = this.constructor.cleanText(text, 80, '');
+    if (!cleanText) return;
 
     this.broadcast('player_chat', {
       playerId: player.id,
       playerName: player.name,
-      text: text
+      text: cleanText
     });
   }
 
@@ -1222,6 +1393,8 @@ class Room {
     this.players.forEach(p => {
       this.minigame.scores[p.id] = 0;
     });
+    // Each player may report exactly one score per mini-game
+    this.minigameSubmitted = new Set();
 
     this.addLog(`🎮 ${this.currentRound - 1}. Tur bitti! Mini-Oyun Başlıyor: "${chosenGame.title}"!`);
 
@@ -1242,16 +1415,21 @@ class Room {
     });
 
     // Auto finish minigame after duration + 2s
-    setTimeout(() => {
-      this.resolveMiniGame();
+    clearTimeout(this.minigameTimeout);
+    this.minigameTimeout = setTimeout(() => {
+      if (!this.destroyed) this.resolveMiniGame();
     }, (chosenGame.duration + 3) * 1000);
   }
 
   handleMiniGameScore(sessionId, score) {
     if (this.state !== 'minigame' || !this.minigame || this.minigame.finished) return;
     const player = this.players.find(p => p.sessionId === sessionId);
-    if (!player) return;
+    if (!player || player.isBot) return;
+    if (this.minigameSubmitted && this.minigameSubmitted.has(player.id)) return;
+    if (this.minigameSubmitted) this.minigameSubmitted.add(player.id);
 
+    // Scores are still client-reported; clamp them to the range the mini-games can produce
+    score = this.constructor.cleanInt(score, 0, 150, 0);
     this.minigame.scores[player.id] = score;
     this.broadcast('minigame_score_update', { playerId: player.id, score: score });
   }
@@ -1342,6 +1520,8 @@ class Room {
   sendEmote(sessionId, emoteId) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
+    emoteId = this.constructor.cleanSlug(emoteId, null);
+    if (!emoteId) return;
 
     this.broadcast('player_emote', {
       playerId: player.id,
@@ -1371,92 +1551,170 @@ class Room {
    WEBSOCKET CONNECTION ROUTING
    ========================================================================== */
 
+const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // drop rooms 10 min after the last human leaves
+const MAX_ROOMS = 500;
+const RATE_WINDOW_MS = 5000;
+const RATE_MAX_MESSAGES = 40;
+const ALLOWED_SPEEDS = [1, 2, 4];
+
+// Room codes are always generated by the server so nobody can overwrite an existing room
+function generateRoomCode() {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const bytes = crypto.randomBytes(6);
+    let code = '';
+    for (let i = 0; i < 6; i++) code += ROOM_CODE_ALPHABET[bytes[i] % ROOM_CODE_ALPHABET.length];
+    if (!ROOMS.has(code)) return code;
+  }
+  return null;
+}
+
+function cleanSessionId(value) {
+  return (typeof value === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(value)) ? value : null;
+}
+
+function newSessionId() {
+  return 's_' + crypto.randomBytes(12).toString('hex');
+}
+
+// Never serialize the live socket (circular) or anything but the player's own data
+function safePlayer(player) {
+  if (!player) return null;
+  const { ws: _ws, ...rest } = player;
+  return rest;
+}
+
+function scheduleRoomCleanup(room) {
+  clearTimeout(room.cleanupTimer);
+  room.cleanupTimer = setTimeout(() => {
+    if (!room.hasConnectedHumans()) {
+      room.destroy();
+      ROOMS.delete(room.id);
+    }
+  }, ROOM_IDLE_TTL_MS);
+}
+
+const ERROR_MESSAGES = {
+  not_your_turn: 'Eşyaları yalnızca kendi sıranda, zar atmadan önce kullanabilirsin!',
+  turn_in_progress: 'Hamlen devam ediyor, şu an eşya kullanamazsın!',
+  frozen: 'Donmuş durumdasın, bu tur eşya kullanamazsın!',
+  no_item: 'Bu eşya çantanda yok!',
+  no_target: 'Takas edilecek rakip bulunamadı!',
+  shop_closed: 'Dükkân şu anda senin için açık değil!',
+  no_coins: 'Yeterli altının yok!',
+  invalid: 'Geçersiz istek!'
+};
+
 wss.on('connection', (ws) => {
   let boundSessionId = null;
   let boundRoomId = null;
+  let rateWindowStart = Date.now();
+  let rateCount = 0;
+
+  const send = (payload) => {
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
+  };
+  const sendError = (code) => send({ type: 'error', message: ERROR_MESSAGES[code] || code });
+  const getRoom = () => (boundRoomId ? ROOMS.get(boundRoomId) || null : null);
+
+  // Release this socket's seat (lobby: leave, in-game: a bot takes over)
+  const detach = () => {
+    const room = getRoom();
+    if (room && boundSessionId) {
+      const player = room.players.find(p => p.sessionId === boundSessionId);
+      // Only act if this socket still owns the seat (a newer tab may have reconnected)
+      if (player && player.ws === ws) {
+        room.handleDisconnect(boundSessionId);
+        room.broadcastState();
+      }
+      if (!room.hasConnectedHumans()) scheduleRoomCleanup(room);
+    }
+    boundRoomId = null;
+  };
 
   ws.on('message', (raw) => {
+    const now = Date.now();
+    if (now - rateWindowStart > RATE_WINDOW_MS) {
+      rateWindowStart = now;
+      rateCount = 0;
+    }
+    if (++rateCount > RATE_MAX_MESSAGES) return; // flood protection
+
+    let data;
     try {
-      const data = JSON.parse(raw);
+      data = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    if (!data || typeof data !== 'object' || typeof data.type !== 'string') return;
+
+    try {
+      const room = getRoom();
+      const isHost = !!room && room.isHost(boundSessionId);
 
       switch (data.type) {
         case 'create_room': {
-          const roomId = (data.roomId || Math.random().toString(36).substr(2, 4)).toUpperCase();
-          const hostSessionId = data.sessionId || ('s_' + Math.random().toString(36).substr(2, 8));
-          const room = new Room(roomId, hostSessionId, data.playerName, {
-            totalRounds: parseInt(data.rounds) || 10,
-            mapTheme: data.mapTheme || 'tropics'
+          if (ROOMS.size >= MAX_ROOMS) {
+            sendError('Sunucu şu anda dolu, lütfen biraz sonra tekrar dene.');
+            return;
+          }
+          const roomId = generateRoomCode();
+          if (!roomId) {
+            sendError('Oda kodu üretilemedi, tekrar dene.');
+            return;
+          }
+          detach();
+          const sessionId = cleanSessionId(data.sessionId) || newSessionId();
+          const newRoom = new Room(roomId, sessionId, data.playerName, {
+            totalRounds: data.rounds,
+            mapTheme: data.mapTheme
           });
+          ROOMS.set(roomId, newRoom);
 
-          boundSessionId = hostSessionId;
+          const player = newRoom.addPlayer(sessionId, data.playerName, data.avatar, data.diceSkin,
+            data.level, data.title, ws, data.hat, data.color);
+          boundSessionId = sessionId;
           boundRoomId = roomId;
 
-          ROOMS.set(roomId, room);
-          const player = room.addPlayer(
-            hostSessionId,
-            data.playerName,
-            data.avatar,
-            data.diceSkin,
-            data.level,
-            data.title,
-            ws,
-            data.hat,
-            data.color
-          );
-
-          ws.send(JSON.stringify({
-            type: 'room_created',
-            roomId,
-            sessionId: hostSessionId,
-            player
-          }));
-
-          room.broadcastState();
+          send({ type: 'room_created', roomId, sessionId, player: safePlayer(player) });
+          newRoom.broadcastState();
           break;
         }
 
         case 'join_room': {
-          const roomId = (data.roomId || '').toUpperCase();
-          const room = ROOMS.get(roomId);
-          if (!room) {
-            ws.send(JSON.stringify({ type: 'error', message: `"${roomId}" kodlu oda bulunamadı!` }));
+          const roomId = String(data.roomId || '').trim().toUpperCase().slice(0, 12);
+          const target = ROOMS.get(roomId);
+          if (!target || target.destroyed) {
+            sendError(`"${roomId.replace(/[^A-Z0-9]/g, '')}" kodlu oda bulunamadı!`);
             return;
           }
 
-          const sessionId = data.sessionId || ('s_' + Math.random().toString(36).substr(2, 8));
+          const sessionId = cleanSessionId(data.sessionId) || newSessionId();
+          const returning = target.players.some(p => p.sessionId === sessionId);
+          if (!returning && target.state !== 'lobby') {
+            sendError('Bu odada oyun başladı, yeni oyuncu katılamaz!');
+            return;
+          }
+
+          if (boundRoomId !== roomId || boundSessionId !== sessionId) detach();
+          const player = target.addPlayer(sessionId, data.playerName, data.avatar, data.diceSkin,
+            data.level, data.title, ws, data.hat, data.color);
+          if (!player) {
+            sendError('Oda dolu (Maksimum 6 oyuncu)!');
+            return;
+          }
+          clearTimeout(target.cleanupTimer);
           boundSessionId = sessionId;
           boundRoomId = roomId;
 
-          const player = room.addPlayer(
-            sessionId,
-            data.playerName,
-            data.avatar,
-            data.diceSkin,
-            data.level,
-            data.title,
-            ws,
-            data.hat,
-            data.color
-          );
-
-          if (!player) {
-            ws.send(JSON.stringify({ type: 'error', message: 'Oda dolu (Maksimum 6 oyuncu)!' }));
-            return;
-          }
-
-          ws.send(JSON.stringify({
-            type: 'room_joined',
-            roomId,
-            sessionId,
-            player
-          }));
-
-          room.broadcastState();
+          send({ type: 'room_joined', roomId, sessionId, player: safePlayer(player) });
+          target.broadcastState();
+          // A returning player whose turn it is needs to see the turn prompt again
+          if (target.state === 'playing') target.checkNextTurnAction();
           break;
         }
 
         case 'update_profile': {
-          const room = ROOMS.get(boundRoomId);
           if (room) {
             room.updatePlayerProfile(boundSessionId, data);
             room.broadcastState();
@@ -1465,8 +1723,7 @@ wss.on('connection', (ws) => {
         }
 
         case 'add_bot': {
-          const room = ROOMS.get(boundRoomId);
-          if (room && (room.hostSessionId === boundSessionId || room.state === 'lobby')) {
+          if (room && isHost && room.state === 'lobby') {
             room.addBot();
             room.broadcastState();
           }
@@ -1474,81 +1731,57 @@ wss.on('connection', (ws) => {
         }
 
         case 'start_game': {
-          const room = ROOMS.get(boundRoomId) || (data.roomId ? ROOMS.get(data.roomId) : null);
-          if (room) {
-            boundRoomId = room.id;
+          if (room && isHost && room.state === 'lobby') {
             room.startGame();
           }
           break;
         }
 
         case 'roll_dice': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.rollDice(boundSessionId);
-          }
+          if (room) room.rollDice(boundSessionId);
           break;
         }
 
         case 'set_game_speed': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.gameSpeed = data.speed || 1;
+          const speed = parseInt(data.speed, 10);
+          if (room && isHost && ALLOWED_SPEEDS.includes(speed)) {
+            room.gameSpeed = speed;
           }
           break;
         }
 
         case 'buy_item': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            const player = room.players.find(p => p.sessionId === boundSessionId);
-            const item = SHOP_ITEMS.find(i => i.id === data.itemId);
-            if (player && item && player.coins >= item.cost) {
-              player.coins -= item.cost;
-              player.inventory.push(item.id);
-              room.addLog(`🛍️ ${player.name} ${item.name} satın aldı!`);
-              room.broadcastState();
-            }
-          }
+          if (!room) break;
+          const err = room.buyItem(boundSessionId, data.itemId);
+          if (err) sendError(err);
           break;
         }
 
         case 'use_item': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.useItem(boundSessionId, data.itemId, data.targetPlayerId);
-          }
+          if (!room) break;
+          const err = room.useItem(boundSessionId, data.itemId, data.targetPlayerId);
+          if (err) sendError(err);
           break;
         }
 
         case 'close_shop': {
-          const room = ROOMS.get(boundRoomId);
-          if (room && room.getCurrentPlayer() && room.getCurrentPlayer().sessionId === boundSessionId) {
-            room.finishTurn();
-          }
+          if (room) room.closeShop(boundSessionId);
           break;
         }
 
         case 'minigame_score': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.handleMiniGameScore(boundSessionId, data.score);
-          }
+          if (room) room.handleMiniGameScore(boundSessionId, data.score);
           break;
         }
 
         case 'send_emote': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.sendEmote(boundSessionId, data.emoteId);
-          }
+          if (room) room.sendEmote(boundSessionId, data.emoteId);
           break;
         }
 
         case 'switch_map': {
-          const room = ROOMS.get(boundRoomId);
-          if (room && (room.hostSessionId === boundSessionId || room.state === 'lobby')) {
-            room.mapTheme = data.mapTheme || 'tropics';
+          if (room && isHost && room.state === 'lobby') {
+            room.mapTheme = Room.normalizeTheme(data.mapTheme);
             room.board = generateBoardForTheme(room.mapTheme);
             room.addLog(`🗺️ Harita seçildi: ${room.mapTheme.toUpperCase()}`);
             room.broadcastState();
@@ -1557,26 +1790,24 @@ wss.on('connection', (ws) => {
         }
 
         case 'send_trade_offer': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.handleTradeOffer(boundSessionId, data.offer);
-          }
+          if (room) room.handleTradeOffer(boundSessionId, data.offer);
           break;
         }
 
         case 'respond_trade_offer': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.resolveTrade(data.tradeId, data.accepted);
+          if (room && typeof data.tradeId === 'string') {
+            room.resolveTrade(data.tradeId, data.accepted === true, boundSessionId);
           }
           break;
         }
 
         case 'send_quick_chat': {
-          const room = ROOMS.get(boundRoomId);
-          if (room) {
-            room.sendQuickChat(boundSessionId, data.text);
-          }
+          if (room) room.sendQuickChat(boundSessionId, data.text);
+          break;
+        }
+
+        case 'leave_room': {
+          detach();
           break;
         }
       }
@@ -1586,13 +1817,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    if (boundRoomId && boundSessionId) {
-      const room = ROOMS.get(boundRoomId);
-      if (room) {
-        room.handleDisconnect(boundSessionId);
-        room.broadcastState();
-      }
-    }
+    detach();
   });
 });
 

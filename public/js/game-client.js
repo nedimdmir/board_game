@@ -358,6 +358,8 @@ class ClientEngine {
         UI.showDiceRollAnimation(res);
         setTimeout(() => {
           if (res.state) this.handleServerMessage(res.state);
+          // The server opens the shop for this player after landing on a shop tile
+          if (res.shopItems) UI.openShopModal(res.shopItems, true);
         }, 1600);
       }
       return;
@@ -461,11 +463,13 @@ class ClientEngine {
       case 'room_joined':
         this.roomId = msg.roomId;
         this.player = msg.player;
+        this.playerId = msg.player ? msg.player.id : null;
         UI.showLobbyScreen(msg.roomId, this.player);
-        if (msg.state) UI.updateGameState(msg.state);
+        if (msg.state) this.handleServerMessage(msg.state.type ? msg.state : { type: 'state_update', ...msg.state });
         break;
 
       case 'state_update':
+        if (typeof msg.isHost === 'boolean') this.isHost = msg.isHost;
         this.state = msg;
         window.CURRENT_ROOM_STATE = msg;
         UI.updateGameState(msg);
