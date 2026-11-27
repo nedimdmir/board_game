@@ -1,6 +1,16 @@
 /**
  * UI Controller, Screen Transitions, Modals, Micro-interactions & Social Trade Engine
  */
+// Escape player-controlled text before it is placed into innerHTML templates
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 class UIEngine {
   constructor() {
     this.homeScreen = document.getElementById('screen-home');
@@ -671,8 +681,8 @@ class UIEngine {
       card.innerHTML = `
         <div class="lobby-player-avatar">${avatarDef.svg}</div>
         <div class="lobby-player-info">
-          <div class="lobby-player-name">${p.name} ${hatDef.id !== 'none' ? hatDef.icon : ''} ${p.isBot ? '🤖' : ''}</div>
-          <div class="lobby-player-title">${p.title} • Lv.${p.level}</div>
+          <div class="lobby-player-name">${escapeHtml(p.name)} ${hatDef.id !== 'none' ? hatDef.icon : ''} ${p.isBot ? '🤖' : ''}</div>
+          <div class="lobby-player-title">${escapeHtml(p.title)} • Lv.${escapeHtml(p.level)}</div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <div class="lobby-player-badge">${idx === 0 ? '👑 Oda Sahibi' : 'Hazır'}</div>
@@ -786,7 +796,7 @@ class UIEngine {
           <div class="hud-badges-row">${statusIcons}</div>
         </div>
         <div class="hud-player-stats">
-          <div class="hud-pname">${p.name}</div>
+          <div class="hud-pname">${escapeHtml(p.name)}</div>
           <div class="hud-scores">
             <span class="hud-star">⭐ ${p.stars}</span>
             <span class="hud-coin">🪙 ${p.coins}</span>
@@ -871,7 +881,7 @@ class UIEngine {
           dockStatus.innerHTML = '👉 <strong>Sıra Sende!</strong> Zarı at ya da takas teklif et!';
         }
       } else if (activePlayer) {
-        dockStatus.innerHTML = `⏳ <strong>${activePlayer.name}</strong> hamlesini yapıyor...`;
+        dockStatus.innerHTML = `⏳ <strong>${escapeHtml(activePlayer.name)}</strong> hamlesini yapıyor...`;
       }
     }
 
@@ -1248,7 +1258,7 @@ class UIEngine {
     const targetCard = document.getElementById(`player-card-${playerId}`);
     const bubble = document.createElement('div');
     bubble.className = 'speech-bubble-pop';
-    bubble.innerHTML = `<strong>${playerName}:</strong> ${text}`;
+    bubble.innerHTML = `<strong>${escapeHtml(playerName)}:</strong> ${escapeHtml(text)}`;
 
     if (targetCard) {
       targetCard.appendChild(bubble);
@@ -1858,7 +1868,7 @@ class UIEngine {
           <div style="display:flex; align-items:center; min-width:0;">
             <div class="swap-wand-avatar">${r.avatar === 'cat' ? '🐱' : (r.avatar === 'dino' ? '🦖' : (r.avatar === 'ninja' ? '🥷' : '🤠'))}</div>
             <div class="swap-wand-info">
-              <div class="swap-wand-name">${r.name}</div>
+              <div class="swap-wand-name">${escapeHtml(r.name)}</div>
               <div class="swap-wand-sub">#${r.position} • ⭐${r.stars} • 🪙${r.coins}</div>
             </div>
           </div>
@@ -2002,7 +2012,7 @@ class UIEngine {
       card.innerHTML = `
         <div class="podium-badge">${idx === 0 ? '🥇 1. Şampiyon' : (idx === 1 ? '🥈 2.' : '🥉 3.')}</div>
         <div class="podium-avatar">${avatarDef.svg}</div>
-        <div class="podium-pname">${p.name}</div>
+        <div class="podium-pname">${escapeHtml(p.name)}</div>
         <div class="podium-score">⭐ ${p.stars} Yıldız • 🪙 ${p.coins} Altın</div>
       `;
       list.appendChild(card);
@@ -2038,7 +2048,7 @@ class UIEngine {
     logs.slice(0, 3).forEach(log => {
       const item = document.createElement('div');
       item.className = 'hud-log-item';
-      item.innerHTML = `<span class="log-time">${log.time}</span> ${log.text}`;
+      item.innerHTML = `<span class="log-time">${escapeHtml(log.time)}</span> ${escapeHtml(log.text)}`;
       feed.appendChild(item);
     });
   }

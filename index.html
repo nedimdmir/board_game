@@ -9315,12 +9315,42 @@ const BOT_NAMES = [
 ];
 
 class LocalRoom {
+  // ---------------------------------------------------------------------------
+  // Input sanitizers (static so the single-file build's LocalRoom copy keeps them)
+  // ---------------------------------------------------------------------------
+  static cleanText(value, maxLen, fallback = '') {
+    if (typeof value !== 'string') return fallback;
+    // Strip HTML-significant characters and control characters
+    const cleaned = value.replace(/[<>"'`&\\]/g, '').replace(/[\u0000-\u001F\u007F]/g, '').trim();
+    return cleaned ? Array.from(cleaned).slice(0, maxLen).join('') : fallback;
+  }
+
+  static cleanSlug(value, fallback) {
+    return (typeof value === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(value)) ? value : fallback;
+  }
+
+  static cleanColor(value, fallback = null) {
+    return (typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)) ? value : fallback;
+  }
+
+  static cleanInt(value, min, max, fallback) {
+    const n = parseInt(value, 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  static normalizeTheme(theme) {
+    const aliases = { cyber: 'tokyo', candy: 'paris', tropics: 'istanbul' };
+    const t = aliases[theme] || theme;
+    return ['istanbul', 'tokyo', 'paris', 'newyork'].includes(t) ? t : 'istanbul';
+  }
+
   constructor(roomId, hostSessionId, hostName, settings = {}) {
     this.id = roomId;
     this.hostSessionId = hostSessionId;
     this.state = 'lobby'; // 'lobby' | 'playing' | 'minigame' | 'gameover'
-    this.totalRounds = settings.totalRounds || 10;
-    this.mapTheme = settings.mapTheme || 'tropics';
+    this.totalRounds = this.constructor.cleanInt(settings.totalRounds, 3, 30, 10);
+    this.mapTheme = this.constructor.normalizeTheme(settings.mapTheme || 'istanbul');
     this.currentRound = 1;
     this.turnIndex = 0; // index in players array
     this.players = []; // list of Player objects
@@ -9335,9 +9365,49 @@ class LocalRoom {
     this.botActionTimeout = null;
     this.isProcessingTurn = false;
     this.gameSpeed = 1;
+    // Incremented on every finished turn; deferred callbacks capture it so a stale
+    // timer (shop auto-close, double finish, etc.) can never end a later turn.
+    this.turnSerial = 0;
+    this.shopOpenFor = null; // player id allowed to buy from the shop right now
+    this.destroyed = false;
+    this.bankPool = 10;
+  }
+
+  // Run a callback later, but only if the same turn is still in progress.
+  deferForTurn(ms, fn) {
+    const serial = this.turnSerial;
+    setTimeout(() => {
+      if (this.destroyed || this.turnSerial !== serial) return;
+      fn();
+    }, ms);
+  }
+
+  deferFinishTurn(ms) {
+    this.deferForTurn(ms, () => this.finishTurn());
+  }
+
+  destroy() {
+    this.destroyed = true;
+    this.turnSerial++;
+    clearTimeout(this.botActionTimeout);
+    clearTimeout(this.minigameTimeout);
+    this.players.forEach(p => { p.ws = null; });
+  }
+
+  hasConnectedHumans() {
+    return this.players.some(p => !p.isBot && p.ws && p.ws.readyState === 1);
   }
 
   addPlayer(sessionId, name, avatar = 'builder', diceSkin = 'default', level = 1, title = 'Acemi Zarcı', ws = null, hat = 'none', customColor = null) {
+    const R = this.constructor;
+    name = R.cleanText(name, 16, '');
+    title = R.cleanText(title, 24, 'Acemi Zarcı');
+    avatar = R.cleanSlug(avatar, 'builder');
+    diceSkin = R.cleanSlug(diceSkin, 'default');
+    hat = R.cleanSlug(hat, 'none');
+    customColor = R.cleanColor(customColor, null);
+    level = R.cleanInt(level, 1, 100, 1);
+
     let existing = this.players.find(p => p.sessionId === sessionId);
     if (existing) {
       // Reconnection!
@@ -9353,6 +9423,8 @@ class LocalRoom {
     }
 
     if (this.players.length >= 6) return null;
+    // New humans can only join while the room is still in the lobby
+    if (this.state !== 'lobby') return null;
 
     const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#1E293B'];
     const playerColor = customColor || colors[this.players.length % colors.length];
@@ -9391,12 +9463,13 @@ class LocalRoom {
   updatePlayerProfile(sessionId, profileData = {}) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
-    if (profileData.name) player.name = profileData.name;
-    if (profileData.avatar) player.avatar = profileData.avatar;
-    if (profileData.hat) player.hat = profileData.hat;
-    if (profileData.color) player.color = profileData.color;
-    if (profileData.diceSkin) player.diceSkin = profileData.diceSkin;
-    if (profileData.title) player.title = profileData.title;
+    const R = this.constructor;
+    player.name = R.cleanText(profileData.name, 16, player.name);
+    player.avatar = R.cleanSlug(profileData.avatar, player.avatar);
+    player.hat = R.cleanSlug(profileData.hat, player.hat);
+    player.color = R.cleanColor(profileData.color, player.color);
+    player.diceSkin = R.cleanSlug(profileData.diceSkin, player.diceSkin);
+    player.title = R.cleanText(profileData.title, 24, player.title);
   }
 
   addBot(personality = null) {
@@ -9444,10 +9517,22 @@ class LocalRoom {
     if (idx !== -1) {
       const removed = this.players.splice(idx, 1)[0];
       this.addLog(`🚪 ${removed.name} ayrıldı.`);
+      // Keep the turn pointer on the same player when someone before them leaves
+      if (idx < this.turnIndex) this.turnIndex--;
       if (this.turnIndex >= this.players.length) {
         this.turnIndex = 0;
       }
+      // Hand the host role to the next human so the lobby is not orphaned
+      if (removed.sessionId === this.hostSessionId) {
+        const nextHost = this.players.find(p => !p.isBot);
+        this.hostSessionId = nextHost ? nextHost.sessionId : null;
+        if (nextHost) this.addLog(`👑 ${nextHost.name} artık oda sahibi!`);
+      }
     }
+  }
+
+  isHost(sessionId) {
+    return !!sessionId && sessionId === this.hostSessionId;
   }
 
   handleDisconnect(sessionId) {
@@ -9482,12 +9567,29 @@ class LocalRoom {
     if (this.log.length > 25) this.log.pop();
   }
 
+  // Session ids act as reconnect secrets, so each recipient only ever sees its own.
+  static redactSessionIds(list, viewerSessionId) {
+    return list.map(entry => {
+      if (!entry || entry.sessionId === undefined || entry.sessionId === viewerSessionId) return entry;
+      const { sessionId, ...rest } = entry;
+      return rest;
+    });
+  }
+
   broadcast(type, payload = {}) {
-    const message = JSON.stringify({ type, ...payload });
+    const needsRedaction = Array.isArray(payload.players) || Array.isArray(payload.leaderboard) || (payload.winner && payload.winner.sessionId);
+    const shared = needsRedaction ? null : JSON.stringify({ type, ...payload });
     this.players.forEach(p => {
-      if (p.ws && p.ws.readyState === WebSocket.OPEN) {
-        p.ws.send(message);
+      if (!p.ws || p.ws.readyState !== WebSocket.OPEN) return;
+      if (shared) {
+        p.ws.send(shared);
+        return;
       }
+      const personal = { type, ...payload };
+      if (Array.isArray(payload.players)) personal.players = Room.redactSessionIds(payload.players, p.sessionId);
+      if (Array.isArray(payload.leaderboard)) personal.leaderboard = Room.redactSessionIds(payload.leaderboard, p.sessionId);
+      if (payload.winner) personal.winner = Room.redactSessionIds([payload.winner], p.sessionId)[0];
+      p.ws.send(JSON.stringify(personal));
     });
   }
 
@@ -9540,7 +9642,8 @@ class LocalRoom {
     this.state = 'playing';
     this.currentRound = 1;
     this.turnIndex = 0;
-    this.activeStarTile = [7, 15, 23, 31][Math.floor(Math.random() * 4)];
+    const starTiles = this.getStarTiles();
+    this.activeStarTile = starTiles[Math.floor(Math.random() * starTiles.length)];
     this.addLog(`🚀 Parti başladı! Toplam ${this.totalRounds} tur oynanacak. Yıldız kaidesi ${this.activeStarTile}. karoda!`);
 
     this.broadcastState();
@@ -9560,6 +9663,7 @@ class LocalRoom {
 
   scheduleBotTurn() {
     clearTimeout(this.botActionTimeout);
+    if (this.destroyed) return;
     const spd = this.gameSpeed || 1;
     this.botActionTimeout = setTimeout(() => {
       this.executeBotTurn();
@@ -9586,9 +9690,9 @@ class LocalRoom {
 
     // Bot rolls dice after small pause
     const spd = this.gameSpeed || 1;
-    setTimeout(() => {
+    this.deferForTurn(Math.max(180, Math.round(800 / spd)), () => {
       this.rollDice(bot.sessionId);
-    }, Math.max(180, Math.round(800 / spd)));
+    });
   }
 
   rollDice(sessionId) {
@@ -9610,7 +9714,7 @@ class LocalRoom {
         player.jailedTurns--;
         this.addLog(`⛓️ ${player.name} Kodes cezasını çekiyor, bu turu pas geçti!`);
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
+        this.deferFinishTurn(Math.max(300, Math.round(1200 / spd)));
         return;
       }
     }
@@ -9644,9 +9748,9 @@ class LocalRoom {
     });
 
     // Move player step by step AFTER dice modal finishes and closes completely
-    setTimeout(() => {
+    this.deferForTurn(Math.max(300, Math.round(1500 / spd)), () => {
       this.movePlayerSteps(player, totalRoll);
-    }, Math.max(300, Math.round(1500 / spd)));
+    });
   }
 
   movePlayerSteps(player, steps) {
@@ -9703,13 +9807,20 @@ class LocalRoom {
     // Trigger Tile Effect strictly after Monopoly-style hopping completes
     const spd = this.gameSpeed || 1;
     const hopDurationMs = Math.max(300, Math.round(((Math.abs(steps) * 380) + 400) / spd));
-    setTimeout(() => {
+    this.deferForTurn(hopDurationMs, () => {
       this.resolveTileEffect(player, newPos);
-    }, hopDurationMs);
+    });
+  }
+
+  // Indices of the board's star pedestal tiles (falls back to the classic layout)
+  getStarTiles() {
+    const stars = this.board.filter(t => t.type === 'star').map(t => t.id);
+    return stars.length > 0 ? stars : [7, 15, 23, 31];
   }
 
   relocateStar() {
-    const starCandidates = [3, 7, 11, 15, 19, 23, 27, 31].filter(idx => idx !== this.activeStarTile);
+    const starCandidates = this.getStarTiles().filter(idx => idx !== this.activeStarTile);
+    if (starCandidates.length === 0) return;
     this.activeStarTile = starCandidates[Math.floor(Math.random() * starCandidates.length)];
     this.addLog(`🌟 Yıldız yeni bir konuma ışınlandı: ${this.activeStarTile}. Karo!`);
   }
@@ -9737,7 +9848,7 @@ class LocalRoom {
           sound: 'slip'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1800 / spd)));
+        this.deferFinishTurn(Math.max(350, Math.round(1800 / spd)));
         return;
       }
     }
@@ -9746,7 +9857,7 @@ class LocalRoom {
     if (player.ghostCloakActive > 0 && (tile.type === 'trap' || tile.type === 'tax' || tile.type === 'jail' || tile.type === 'slip' || tile.type === 'freeze')) {
       this.addLog(`👻 Hayalet Pelerin devrede! ${player.name} ${tile.type.toUpperCase()} cezasını dokunmadan es geçti!`);
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(900 / spd)));
+      this.deferFinishTurn(Math.max(250, Math.round(900 / spd)));
       return;
     }
 
@@ -9766,7 +9877,7 @@ class LocalRoom {
           sound: 'coin'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        this.deferFinishTurn(2000);
         break;
       }
 
@@ -9787,7 +9898,7 @@ class LocalRoom {
           sound: 'fanfare'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -9823,7 +9934,7 @@ class LocalRoom {
           });
         }
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -9849,7 +9960,7 @@ class LocalRoom {
           sound: 'warp'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -9867,7 +9978,7 @@ class LocalRoom {
           sound: 'slip'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -9885,7 +9996,7 @@ class LocalRoom {
           sound: 'jail'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
@@ -9922,12 +10033,14 @@ class LocalRoom {
           });
         }
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2200);
+        this.deferFinishTurn(2200);
         break;
       }
 
       case 'freeze': {
-        player.frozenTurns = 1;
+        // Status counters tick down at the end of the owner's turn (finishTurn).
+        // Landing happens at the end of this turn, so 2 = "the whole next turn".
+        player.frozenTurns = 2;
         this.addLog(`🧊 BUZ TUZAĞI! ${player.name} donduruldu! Bir tur boyunca eşya kullanamaz!`);
         this.broadcast('tile_event', {
           playerId: player.id,
@@ -9940,7 +10053,7 @@ class LocalRoom {
           sound: 'freeze'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), 2000);
+        this.deferFinishTurn(2000);
         break;
       }
 
@@ -9958,7 +10071,7 @@ class LocalRoom {
           sound: 'reverse'
         });
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(350, Math.round(1600 / spd)));
+        this.deferFinishTurn(Math.max(350, Math.round(1600 / spd)));
         break;
       }
 
@@ -9968,7 +10081,7 @@ class LocalRoom {
 
       default:
         this.broadcastState();
-        setTimeout(() => this.finishTurn(), Math.max(200, Math.round(700 / spd)));
+        this.deferFinishTurn(Math.max(200, Math.round(700 / spd)));
         break;
     }
   }
@@ -9978,7 +10091,7 @@ class LocalRoom {
     const events = [
       { name: 'Gökten Altın', fn: () => { player.coins += 12; this.addLog(`🎁 Şans Çarkı: ${player.name} gökten düşen sandıktan +12 Altın kaptı!`); } },
       { name: 'Çifte Şans', fn: () => { player.inventory.push('double_dice'); this.addLog(`🎁 Şans Çarkı: ${player.name} ücretsiz Çift Zar kazandı!`); } },
-      { name: 'Kalkan Hediyesi', fn: () => { player.shieldActive = 2; this.addLog(`🎁 Şans Çarkı: ${player.name} 2 turluk koruma kalkanı kazandı!`); } },
+      { name: 'Kalkan Hediyesi', fn: () => { player.shieldActive = 3; /* granted at turn end: covers the next 2 turns */ this.addLog(`🎁 Şans Çarkı: ${player.name} 2 turluk koruma kalkanı kazandı!`); } },
       { name: 'Liderden Arakla', fn: () => {
         const others = this.players.filter(p => p.id !== player.id && p.coins > 0);
         if (others.length > 0) {
@@ -10002,43 +10115,62 @@ class LocalRoom {
       eventName: chosen.name
     });
 
-    setTimeout(() => {
+    this.deferForTurn(Math.max(350, Math.round(1400 / spd)), () => {
       chosen.fn();
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(250, Math.round(1000 / spd)));
-    }, Math.max(350, Math.round(1400 / spd)));
+      this.deferFinishTurn(Math.max(250, Math.round(1000 / spd)));
+    });
   }
 
   triggerShop(player) {
     const spd = this.gameSpeed || 1;
     // If bot, auto buy useful item if afford
     if (player.isBot) {
-      if (player.coins >= 10 && !player.inventory.includes('double_dice')) {
-        player.coins -= 7;
+      const costOf = (id) => (SHOP_ITEMS.find(i => i.id === id) || { cost: 999 }).cost;
+      if (player.coins >= costOf('double_dice') + 3 && !player.inventory.includes('double_dice')) {
+        player.coins -= costOf('double_dice');
         player.inventory.push('double_dice');
         this.addLog(`🏪 ${player.name} Dükkandan Çift Zar satın aldı!`);
-      } else if (player.coins >= 12 && !player.inventory.includes('magnet')) {
-        player.coins -= 10;
+      } else if (player.coins >= costOf('magnet') + 2 && !player.inventory.includes('magnet')) {
+        player.coins -= costOf('magnet');
         player.inventory.push('magnet');
         this.addLog(`🏪 ${player.name} Dükkandan Altın Mıknatısı aldı!`);
       }
       this.broadcastState();
-      setTimeout(() => this.finishTurn(), Math.max(200, Math.round(800 / spd)));
+      this.deferFinishTurn(Math.max(200, Math.round(800 / spd)));
       return;
     }
 
-    // If human, notify client to open shop modal
+    // If human, notify client to open shop modal; only this player may buy until the turn ends
+    this.shopOpenFor = player.id;
     this.broadcast('open_shop', {
       playerId: player.id,
       items: SHOP_ITEMS
     });
 
-    // Auto close shop after 15 seconds if player is idle
-    setTimeout(() => {
-      if (this.getCurrentPlayer() && this.getCurrentPlayer().id === player.id) {
-        this.finishTurn();
-      }
-    }, 15000);
+    // Auto close shop after 15 seconds if player is idle (turn-guarded: never ends a later turn)
+    this.deferFinishTurn(15000);
+  }
+
+  buyItem(sessionId, itemId) {
+    const player = this.players.find(p => p.sessionId === sessionId);
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    const current = this.getCurrentPlayer();
+    if (!player || !item || this.state !== 'playing') return 'invalid';
+    if (!current || current.id !== player.id || this.shopOpenFor !== player.id) return 'shop_closed';
+    if (player.coins < item.cost) return 'no_coins';
+    player.coins -= item.cost;
+    player.inventory.push(item.id);
+    this.addLog(`🛍️ ${player.name} ${item.name} satın aldı!`);
+    this.broadcastState();
+    return null;
+  }
+
+  closeShop(sessionId) {
+    const current = this.getCurrentPlayer();
+    if (current && current.sessionId === sessionId && this.shopOpenFor === current.id) {
+      this.finishTurn();
+    }
   }
 
   triggerDuel(player) {
@@ -10068,20 +10200,33 @@ class LocalRoom {
     this.addLog(`⚔️ Düello! ${duelResult}`);
     this.broadcast('duel_result', { text: duelResult });
     this.broadcastState();
-    setTimeout(() => this.finishTurn(), Math.max(300, Math.round(1200 / spd)));
+    this.deferFinishTurn(Math.max(300, Math.round(1200 / spd)));
   }
 
   useItem(sessionId, itemId, targetPlayerId = null) {
     const player = this.players.find(p => p.sessionId === sessionId);
-    if (!player) return;
+    if (!player) return 'invalid';
+
+    // Items can only be used on your own turn, before the dice are rolled
+    const current = this.getCurrentPlayer();
+    if (this.state !== 'playing' || !current || current.id !== player.id) return 'not_your_turn';
+    if (this.isProcessingTurn) return 'turn_in_progress';
 
     if (player.frozenTurns > 0) {
       this.addLog(`🧊 ${player.name} donmuş durumda, eşya kullanamaz!`);
-      return;
+      this.broadcastState();
+      return 'frozen';
     }
 
     const idx = player.inventory.indexOf(itemId);
-    if (idx === -1) return;
+    if (idx === -1) return 'no_item';
+
+    let swapTarget = null;
+    if (itemId === 'swap_wand') {
+      swapTarget = this.players.find(p => p.id === targetPlayerId && p.id !== player.id)
+        || this.players.find(p => p.id !== player.id);
+      if (!swapTarget) return 'no_target';
+    }
 
     player.inventory.splice(idx, 1);
 
@@ -10093,8 +10238,10 @@ class LocalRoom {
 
       case 'rocket':
         this.addLog(`🚀 ${player.name} Roket ateşledi ve 7 adım ileri fırladı!`);
+        // The rocket replaces this turn's roll: lock the turn so dice can't also be rolled
+        this.isProcessingTurn = true;
         this.movePlayerSteps(player, 7);
-        return;
+        return null;
 
       case 'shield':
         player.shieldActive = 2;
@@ -10119,15 +10266,13 @@ class LocalRoom {
         this.addLog(`🍌 ${player.name} ${player.position}. karoya muz kabuğu tuzağı bıraktı!`);
         break;
 
-      case 'swap_wand':
-        const target = this.players.find(p => p.id === targetPlayerId) || this.players.find(p => p.id !== player.id);
-        if (target) {
-          const tempPos = player.position;
-          player.position = target.position;
-          target.position = tempPos;
-          this.addLog(`🪄 ${player.name} Takas Asası ile ${target.name} ile konumlarını değiştirdi!`);
-        }
+      case 'swap_wand': {
+        const tempPos = player.position;
+        player.position = swapTarget.position;
+        swapTarget.position = tempPos;
+        this.addLog(`🪄 ${player.name} Takas Asası ile ${swapTarget.name} ile konumlarını değiştirdi!`);
         break;
+      }
 
       case 'ghost_cloak':
         player.ghostCloakActive = 2;
@@ -10135,16 +10280,21 @@ class LocalRoom {
         break;
 
       case 'lucky_die':
-        const fixedVal = Math.min(6, Math.max(1, parseInt(targetPlayerId) || 6));
+        const fixedVal = this.constructor.cleanInt(targetPlayerId, 1, 6, 6);
         player.fixedRollNext = fixedVal;
         this.addLog(`🎯 ${player.name} Şanslı Altın Zar ayarladı: Sıradaki zarı garanti [${fixedVal}] gelecek!`);
         break;
     }
 
     this.broadcastState();
+    return null;
   }
 
   finishTurn() {
+    if (this.destroyed) return;
+    // Invalidate every timer that belongs to the turn that is ending
+    this.turnSerial++;
+    this.shopOpenFor = null;
     this.isProcessingTurn = false;
     const current = this.getCurrentPlayer();
     if (current) {
@@ -10175,26 +10325,40 @@ class LocalRoom {
   }
 
   handleTradeOffer(fromSessionId, offer) {
+    if (!offer || typeof offer !== 'object') return;
+    if (this.state !== 'playing') return;
     const sender = this.players.find(p => p.sessionId === fromSessionId);
     const receiver = this.players.find(p => p.id === offer.toPlayerId);
-    if (!sender || !receiver) return;
+    if (!sender || !receiver || sender.id === receiver.id) return;
 
-    const offerCoins = parseInt(offer.offerCoins) || 0;
-    const requestCoins = parseInt(offer.requestCoins) || 0;
+    // Only non-negative whole coin amounts and real item ids are tradable
+    const offerCoins = this.constructor.cleanInt(offer.offerCoins, 0, 9999, 0);
+    const requestCoins = this.constructor.cleanInt(offer.requestCoins, 0, 9999, 0);
+    const isItem = (id) => typeof id === 'string' && SHOP_ITEMS.some(i => i.id === id);
+    const offerItem = isItem(offer.offerItem) ? offer.offerItem : null;
+    const requestItem = isItem(offer.requestItem) ? offer.requestItem : null;
+    if (!offerCoins && !requestCoins && !offerItem && !requestItem) return;
 
     if (sender.coins < offerCoins) return;
-    if (offer.offerItem && !sender.inventory.includes(offer.offerItem)) return;
+    if (offerItem && !sender.inventory.includes(offerItem)) return;
 
-    const tradeId = 'tr_' + Math.random().toString(36).substr(2, 6);
+    // Drop any older offer between the same two players so pending offers can't pile up
+    Object.keys(this.pendingTrades).forEach(id => {
+      const t = this.pendingTrades[id];
+      if (t.senderId === sender.id && t.receiverId === receiver.id) delete this.pendingTrades[id];
+    });
+
+    const tradeId = 'tr_' + Math.random().toString(36).substr(2, 10);
     this.pendingTrades[tradeId] = {
       id: tradeId,
       senderId: sender.id,
       receiverId: receiver.id,
       offerCoins,
-      offerItem: offer.offerItem || null,
+      offerItem,
       requestCoins,
-      requestItem: offer.requestItem || null
+      requestItem
     };
+    offer = { offerItem, requestItem };
 
     if (receiver.isBot) {
       // Bot evaluates trade offer
@@ -10220,13 +10384,17 @@ class LocalRoom {
     }
   }
 
-  resolveTrade(tradeId, accepted) {
+  // responderSessionId: the session answering the offer. Only the receiver may answer;
+  // internal callers (bot decisions) pass null.
+  resolveTrade(tradeId, accepted, responderSessionId = null) {
     const trade = this.pendingTrades[tradeId];
     if (!trade) return;
-    delete this.pendingTrades[tradeId];
 
     const sender = this.players.find(p => p.id === trade.senderId);
     const receiver = this.players.find(p => p.id === trade.receiverId);
+    if (responderSessionId !== null && (!receiver || receiver.sessionId !== responderSessionId)) return;
+    delete this.pendingTrades[tradeId];
+    accepted = accepted === true;
     if (!sender || !receiver) return;
 
     if (!accepted) {
@@ -10268,11 +10436,13 @@ class LocalRoom {
   sendQuickChat(sessionId, text) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
+    const cleanText = this.constructor.cleanText(text, 80, '');
+    if (!cleanText) return;
 
     this.broadcast('player_chat', {
       playerId: player.id,
       playerName: player.name,
-      text: text
+      text: cleanText
     });
   }
 
@@ -10303,6 +10473,8 @@ class LocalRoom {
     this.players.forEach(p => {
       this.minigame.scores[p.id] = 0;
     });
+    // Each player may report exactly one score per mini-game
+    this.minigameSubmitted = new Set();
 
     this.addLog(`🎮 ${this.currentRound - 1}. Tur bitti! Mini-Oyun Başlıyor: "${chosenGame.title}"!`);
 
@@ -10323,16 +10495,21 @@ class LocalRoom {
     });
 
     // Auto finish minigame after duration + 2s
-    setTimeout(() => {
-      this.resolveMiniGame();
+    clearTimeout(this.minigameTimeout);
+    this.minigameTimeout = setTimeout(() => {
+      if (!this.destroyed) this.resolveMiniGame();
     }, (chosenGame.duration + 3) * 1000);
   }
 
   handleMiniGameScore(sessionId, score) {
     if (this.state !== 'minigame' || !this.minigame || this.minigame.finished) return;
     const player = this.players.find(p => p.sessionId === sessionId);
-    if (!player) return;
+    if (!player || player.isBot) return;
+    if (this.minigameSubmitted && this.minigameSubmitted.has(player.id)) return;
+    if (this.minigameSubmitted) this.minigameSubmitted.add(player.id);
 
+    // Scores are still client-reported; clamp them to the range the mini-games can produce
+    score = this.constructor.cleanInt(score, 0, 150, 0);
     this.minigame.scores[player.id] = score;
     this.broadcast('minigame_score_update', { playerId: player.id, score: score });
   }
@@ -10423,6 +10600,8 @@ class LocalRoom {
   sendEmote(sessionId, emoteId) {
     const player = this.players.find(p => p.sessionId === sessionId);
     if (!player) return;
+    emoteId = this.constructor.cleanSlug(emoteId, null);
+    if (!emoteId) return;
 
     this.broadcast('player_emote', {
       playerId: player.id,
@@ -10465,6 +10644,7 @@ class LocalGameServer {
 
   createRoom(hostPlayer, settings = {}) {
     const roomId = 'SOLO';
+    if (this.currentRoom) this.currentRoom.destroy();
     this.currentRoom = new LocalRoom(roomId, hostPlayer.sessionId, hostPlayer.name, settings);
     
     // Register the host player into the room
@@ -10495,6 +10675,20 @@ class LocalGameServer {
     return this.currentRoom;
   }
 
+  reportError(code) {
+    if (!code || !window.GameClient) return;
+    const messages = {
+      not_your_turn: 'Eşyaları yalnızca kendi sıranda, zar atmadan önce kullanabilirsin!',
+      turn_in_progress: 'Hamlen devam ediyor, şu an eşya kullanamazsın!',
+      frozen: 'Donmuş durumdasın, bu tur eşya kullanamazsın!',
+      no_target: 'Takas edilecek rakip bulunamadı!',
+      shop_closed: 'Dükkân şu anda senin için açık değil!',
+      no_coins: 'Yeterli altının yok!'
+    };
+    if (!messages[code]) return;
+    window.GameClient.handleServerMessage({ type: 'error', message: messages[code] });
+  }
+
   handleMessage(sessionId, type, data = {}) {
     if (!this.currentRoom) return;
     const room = this.currentRoom;
@@ -10506,14 +10700,15 @@ class LocalGameServer {
         break;
 
       case 'switch_map':
-        room.mapTheme = data.mapTheme || 'istanbul';
+        if (room.state !== 'lobby') break;
+        room.mapTheme = LocalRoom.normalizeTheme(data.mapTheme);
         room.board = generateBoardForTheme(room.mapTheme);
         room.addLog('🗺️ Harita seçildi: ' + room.mapTheme.toUpperCase());
         room.broadcastState();
         break;
 
       case 'start_game':
-        room.startGame();
+        if (room.state === 'lobby') room.startGame();
         break;
 
       case 'roll_dice':
@@ -10521,29 +10716,19 @@ class LocalGameServer {
         break;
 
       case 'set_game_speed':
-        room.gameSpeed = data.speed || 1;
+        room.gameSpeed = [1, 2, 4].includes(Number(data.speed)) ? Number(data.speed) : 1;
         break;
 
-      case 'buy_item': {
-        const player = room.players.find(p => p.sessionId === sessionId);
-        const item = SHOP_ITEMS.find(i => i.id === data.itemId);
-        if (player && item && player.coins >= item.cost) {
-          player.coins -= item.cost;
-          player.inventory.push(item.id);
-          room.addLog('🛍️ ' + player.name + ' ' + item.name + ' satın aldı!');
-          room.broadcastState();
-        }
+      case 'buy_item':
+        this.reportError(room.buyItem(sessionId, data.itemId));
         break;
-      }
 
       case 'use_item':
-        room.useItem(sessionId, data.itemId, data.targetPlayerId);
+        this.reportError(room.useItem(sessionId, data.itemId, data.targetPlayerId));
         break;
 
       case 'close_shop':
-        if (room.getCurrentPlayer() && room.getCurrentPlayer().sessionId === sessionId) {
-          room.finishTurn();
-        }
+        room.closeShop(sessionId);
         break;
 
       case 'send_trade_offer':
@@ -10551,7 +10736,7 @@ class LocalGameServer {
         break;
 
       case 'respond_trade_offer':
-        room.resolveTrade(data.tradeId, data.accepted);
+        room.resolveTrade(data.tradeId, data.accepted === true, sessionId);
         break;
 
       case 'send_emote':
@@ -10559,6 +10744,8 @@ class LocalGameServer {
         break;
 
       case 'leave_room': {
+        // Stop the abandoned room's bot and turn timers
+        room.destroy();
         this.currentRoom = null;
         break;
       }
@@ -10948,6 +11135,8 @@ class ClientEngine {
         UI.showDiceRollAnimation(res);
         setTimeout(() => {
           if (res.state) this.handleServerMessage(res.state);
+          // The server opens the shop for this player after landing on a shop tile
+          if (res.shopItems) UI.openShopModal(res.shopItems, true);
         }, 1600);
       }
       return;
@@ -11051,11 +11240,13 @@ class ClientEngine {
       case 'room_joined':
         this.roomId = msg.roomId;
         this.player = msg.player;
+        this.playerId = msg.player ? msg.player.id : null;
         UI.showLobbyScreen(msg.roomId, this.player);
-        if (msg.state) UI.updateGameState(msg.state);
+        if (msg.state) this.handleServerMessage(msg.state.type ? msg.state : { type: 'state_update', ...msg.state });
         break;
 
       case 'state_update':
+        if (typeof msg.isHost === 'boolean') this.isHost = msg.isHost;
         this.state = msg;
         window.CURRENT_ROOM_STATE = msg;
         UI.updateGameState(msg);
@@ -11128,6 +11319,16 @@ window.GameClient = GameClient;
 /**
  * UI Controller, Screen Transitions, Modals, Micro-interactions & Social Trade Engine
  */
+// Escape player-controlled text before it is placed into innerHTML templates
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 class UIEngine {
   constructor() {
     this.homeScreen = document.getElementById('screen-home');
@@ -11798,8 +11999,8 @@ class UIEngine {
       card.innerHTML = `
         <div class="lobby-player-avatar">${avatarDef.svg}</div>
         <div class="lobby-player-info">
-          <div class="lobby-player-name">${p.name} ${hatDef.id !== 'none' ? hatDef.icon : ''} ${p.isBot ? '🤖' : ''}</div>
-          <div class="lobby-player-title">${p.title} • Lv.${p.level}</div>
+          <div class="lobby-player-name">${escapeHtml(p.name)} ${hatDef.id !== 'none' ? hatDef.icon : ''} ${p.isBot ? '🤖' : ''}</div>
+          <div class="lobby-player-title">${escapeHtml(p.title)} • Lv.${escapeHtml(p.level)}</div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <div class="lobby-player-badge">${idx === 0 ? '👑 Oda Sahibi' : 'Hazır'}</div>
@@ -11913,7 +12114,7 @@ class UIEngine {
           <div class="hud-badges-row">${statusIcons}</div>
         </div>
         <div class="hud-player-stats">
-          <div class="hud-pname">${p.name}</div>
+          <div class="hud-pname">${escapeHtml(p.name)}</div>
           <div class="hud-scores">
             <span class="hud-star">⭐ ${p.stars}</span>
             <span class="hud-coin">🪙 ${p.coins}</span>
@@ -11998,7 +12199,7 @@ class UIEngine {
           dockStatus.innerHTML = '👉 <strong>Sıra Sende!</strong> Zarı at ya da takas teklif et!';
         }
       } else if (activePlayer) {
-        dockStatus.innerHTML = `⏳ <strong>${activePlayer.name}</strong> hamlesini yapıyor...`;
+        dockStatus.innerHTML = `⏳ <strong>${escapeHtml(activePlayer.name)}</strong> hamlesini yapıyor...`;
       }
     }
 
@@ -12375,7 +12576,7 @@ class UIEngine {
     const targetCard = document.getElementById(`player-card-${playerId}`);
     const bubble = document.createElement('div');
     bubble.className = 'speech-bubble-pop';
-    bubble.innerHTML = `<strong>${playerName}:</strong> ${text}`;
+    bubble.innerHTML = `<strong>${escapeHtml(playerName)}:</strong> ${escapeHtml(text)}`;
 
     if (targetCard) {
       targetCard.appendChild(bubble);
@@ -12985,7 +13186,7 @@ class UIEngine {
           <div style="display:flex; align-items:center; min-width:0;">
             <div class="swap-wand-avatar">${r.avatar === 'cat' ? '🐱' : (r.avatar === 'dino' ? '🦖' : (r.avatar === 'ninja' ? '🥷' : '🤠'))}</div>
             <div class="swap-wand-info">
-              <div class="swap-wand-name">${r.name}</div>
+              <div class="swap-wand-name">${escapeHtml(r.name)}</div>
               <div class="swap-wand-sub">#${r.position} • ⭐${r.stars} • 🪙${r.coins}</div>
             </div>
           </div>
@@ -13129,7 +13330,7 @@ class UIEngine {
       card.innerHTML = `
         <div class="podium-badge">${idx === 0 ? '🥇 1. Şampiyon' : (idx === 1 ? '🥈 2.' : '🥉 3.')}</div>
         <div class="podium-avatar">${avatarDef.svg}</div>
-        <div class="podium-pname">${p.name}</div>
+        <div class="podium-pname">${escapeHtml(p.name)}</div>
         <div class="podium-score">⭐ ${p.stars} Yıldız • 🪙 ${p.coins} Altın</div>
       `;
       list.appendChild(card);
@@ -13165,7 +13366,7 @@ class UIEngine {
     logs.slice(0, 3).forEach(log => {
       const item = document.createElement('div');
       item.className = 'hud-log-item';
-      item.innerHTML = `<span class="log-time">${log.time}</span> ${log.text}`;
+      item.innerHTML = `<span class="log-time">${escapeHtml(log.time)}</span> ${escapeHtml(log.text)}`;
       feed.appendChild(item);
     });
   }

@@ -60,6 +60,7 @@ class LocalGameServer {
 
   createRoom(hostPlayer, settings = {}) {
     const roomId = 'SOLO';
+    if (this.currentRoom) this.currentRoom.destroy();
     this.currentRoom = new LocalRoom(roomId, hostPlayer.sessionId, hostPlayer.name, settings);
     
     // Register the host player into the room
@@ -90,6 +91,20 @@ class LocalGameServer {
     return this.currentRoom;
   }
 
+  reportError(code) {
+    if (!code || !window.GameClient) return;
+    const messages = {
+      not_your_turn: 'Eşyaları yalnızca kendi sıranda, zar atmadan önce kullanabilirsin!',
+      turn_in_progress: 'Hamlen devam ediyor, şu an eşya kullanamazsın!',
+      frozen: 'Donmuş durumdasın, bu tur eşya kullanamazsın!',
+      no_target: 'Takas edilecek rakip bulunamadı!',
+      shop_closed: 'Dükkân şu anda senin için açık değil!',
+      no_coins: 'Yeterli altının yok!'
+    };
+    if (!messages[code]) return;
+    window.GameClient.handleServerMessage({ type: 'error', message: messages[code] });
+  }
+
   handleMessage(sessionId, type, data = {}) {
     if (!this.currentRoom) return;
     const room = this.currentRoom;
@@ -101,14 +116,15 @@ class LocalGameServer {
         break;
 
       case 'switch_map':
-        room.mapTheme = data.mapTheme || 'istanbul';
+        if (room.state !== 'lobby') break;
+        room.mapTheme = LocalRoom.normalizeTheme(data.mapTheme);
         room.board = generateBoardForTheme(room.mapTheme);
         room.addLog('🗺️ Harita seçildi: ' + room.mapTheme.toUpperCase());
         room.broadcastState();
         break;
 
       case 'start_game':
-        room.startGame();
+        if (room.state === 'lobby') room.startGame();
         break;
 
       case 'roll_dice':
@@ -116,29 +132,19 @@ class LocalGameServer {
         break;
 
       case 'set_game_speed':
-        room.gameSpeed = data.speed || 1;
+        room.gameSpeed = [1, 2, 4].includes(Number(data.speed)) ? Number(data.speed) : 1;
         break;
 
-      case 'buy_item': {
-        const player = room.players.find(p => p.sessionId === sessionId);
-        const item = SHOP_ITEMS.find(i => i.id === data.itemId);
-        if (player && item && player.coins >= item.cost) {
-          player.coins -= item.cost;
-          player.inventory.push(item.id);
-          room.addLog('🛍️ ' + player.name + ' ' + item.name + ' satın aldı!');
-          room.broadcastState();
-        }
+      case 'buy_item':
+        this.reportError(room.buyItem(sessionId, data.itemId));
         break;
-      }
 
       case 'use_item':
-        room.useItem(sessionId, data.itemId, data.targetPlayerId);
+        this.reportError(room.useItem(sessionId, data.itemId, data.targetPlayerId));
         break;
 
       case 'close_shop':
-        if (room.getCurrentPlayer() && room.getCurrentPlayer().sessionId === sessionId) {
-          room.finishTurn();
-        }
+        room.closeShop(sessionId);
         break;
 
       case 'send_trade_offer':
@@ -146,7 +152,7 @@ class LocalGameServer {
         break;
 
       case 'respond_trade_offer':
-        room.resolveTrade(data.tradeId, data.accepted);
+        room.resolveTrade(data.tradeId, data.accepted === true, sessionId);
         break;
 
       case 'send_emote':
@@ -154,6 +160,8 @@ class LocalGameServer {
         break;
 
       case 'leave_room': {
+        // Stop the abandoned room's bot and turn timers
+        room.destroy();
         this.currentRoom = null;
         break;
       }

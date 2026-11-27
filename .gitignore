@@ -15,3 +15,6 @@ Thumbs.db
 
 # Temporary scratch files
 scratch/
+
+# PHP backend room storage (created at runtime)
+rooms/
